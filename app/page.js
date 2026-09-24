@@ -1,4 +1,5 @@
 import { getContent } from "@/lib/content";
+import { SiteHeader, SiteFooter } from "./SiteChrome";
 
 export const dynamic = "force-dynamic";
 
@@ -28,23 +29,7 @@ export default async function Home() {
 
   return (
     <>
-      <header className="nav">
-        <div className="wrap nav-in">
-          <a className="brand" href="#top">
-            {c.brand.logo && <img src={c.brand.logo} alt="" />}
-            <span>{c.brand.name}</span>
-          </a>
-          <nav className="links">
-            <a href="#packages">الباقات</a>
-            <a href="#addons">الإضافات</a>
-            <a href="#gallery">عروضنا</a>
-            <a href="#contact">تواصل معنا</a>
-          </nav>
-          <a className="btn btn-sm" href={waLink()} target="_blank" rel="noopener">
-            <WaIcon size={18} /> واتساب
-          </a>
-        </div>
-      </header>
+      <SiteHeader c={c} icon={<WaIcon size={18} />} />
 
       <main id="top">
         <section className="hero">
@@ -182,11 +167,7 @@ export default async function Home() {
         </section>
       </main>
 
-      <footer className="foot">
-        <div className="wrap">
-          <span>© {new Date().getFullYear()} {c.brand.name}. {c.footer.text}</span>
-        </div>
-      </footer>
+      <SiteFooter c={c} />
 
       <a className="wa-float" href={waLink()} target="_blank" rel="noopener" aria-label="واتساب">
         <WaIcon size={30} />
