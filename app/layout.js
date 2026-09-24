@@ -1,5 +1,6 @@
 import "./globals.css";
 import { getContent } from "@/lib/content";
+import Tracking from "./Tracking";
 
 export const dynamic = "force-dynamic";
 
@@ -9,6 +10,7 @@ export async function generateMetadata() {
     title: c.seo.title,
     description: c.seo.description,
     icons: { icon: c.brand.logo || "/icon.png" },
+    ...(c.tracking?.searchConsole ? { verification: { google: String(c.tracking.searchConsole).replace(/[^\w-]/g, "") } } : {}),
   };
 }
 
@@ -34,7 +36,10 @@ export default async function RootLayout({ children }) {
           rel="stylesheet"
         />
       </head>
-      <body style={style}>{children}</body>
+      <body style={style}>
+        {children}
+        <Tracking t={c.tracking} />
+      </body>
     </html>
   );
 }

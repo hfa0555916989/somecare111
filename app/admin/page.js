@@ -114,6 +114,7 @@ const TABS = [
   ["titles", "العناوين"],
   ["theme", "الألوان"],
   ["seo", "SEO"],
+  ["tracking", "التتبع والإعلانات"],
 ];
 
 /* ---------- page ---------- */
@@ -349,6 +350,26 @@ export default function Admin() {
           <>
             <Text label="عنوان الصفحة في جوجل" value={d.seo.title} onChange={u(["seo", "title"])} />
             <Text label="وصف الصفحة في جوجل" area value={d.seo.description} onChange={u(["seo", "description"])} />
+          </>
+        )}
+
+        {tab === "tracking" && (
+          <>
+            <div className="note" style={{ background: "#0f1730", borderColor: "#ffffff26", color: "#b6c0de" }}>
+              الصق المعرّفات فقط (وليس الكود كامل). اترك الحقل فارغاً لتعطيل الأداة. بعد الحفظ تُفعَّل الأدوات على الموقع، وتُسجَّل نقرات واتساب كحدث تحويل.
+            </div>
+            <Text label="Google Analytics 4 (Measurement ID مثل G-XXXXXXXXXX)" ltr value={d.tracking.ga4} onChange={u(["tracking", "ga4"])} />
+            <div className="row">
+              <Text label="Google Ads (Conversion ID مثل AW-1234567890)" ltr value={d.tracking.googleAds} onChange={u(["tracking", "googleAds"])} />
+              <Text label="Google Ads Conversion Label (اختياري)" ltr value={d.tracking.googleAdsLabel} onChange={u(["tracking", "googleAdsLabel"])} hint="لتحويل نقرة واتساب" />
+            </div>
+            <Text label="Google Search Console (قيمة content من وسم التحقق فقط)" ltr value={d.tracking.searchConsole} onChange={u(["tracking", "searchConsole"])} hint="إذا تحققت عبر سجل DNS فلا تحتاجه." />
+            <Text label="Snapchat Pixel ID" ltr value={d.tracking.snap} onChange={u(["tracking", "snap"])} />
+            <Text label="TikTok Pixel ID" ltr value={d.tracking.tiktok} onChange={u(["tracking", "tiktok"])} />
+            <div className="row">
+              <Text label="X (Twitter) Pixel ID" ltr value={d.tracking.xPixel} onChange={u(["tracking", "xPixel"])} />
+              <Text label="X Event ID للتحويل (اختياري، مثل tw-xxxx-xxxx)" ltr value={d.tracking.xEventId} onChange={u(["tracking", "xEventId"])} />
+            </div>
           </>
         )}
       </div>
