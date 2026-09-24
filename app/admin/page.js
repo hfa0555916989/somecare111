@@ -376,4 +376,59 @@ export default function Admin() {
               items={d.pages}
               onChange={u(["pages"])}
               addLabel="إضافة صفحة"
-              title={(p) => p.title
+              title={(p) => p.title || "صفحة"}
+              newItem={() => ({ slug: "", title: "صفحة جديدة", subtitle: "", body: "", contactLabel: "", showInHeader: false, showInFooter: true, published: true })}
+              render={(p, set) => (
+                <>
+                  <Text label="عنوان الصفحة" value={p.title} onChange={(v) => set("title", v)} />
+                  <Text
+                    label="الرابط (إنجليزي صغير وأرقام وشرطة فقط)"
+                    ltr
+                    value={p.slug}
+                    onChange={(v) => set("slug", v.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+                    hint={p.slug ? "الرابط: /" + p.slug : "مثال: refund"}
+                  />
+                  <Text label="عنوان فرعي (اختياري)" value={p.subtitle} onChange={(v) => set("subtitle", v)} />
+                  <Text label="النص (كل فقرة في سطر)" area rows={8} value={p.body} onChange={(v) => set("body", v)} />
+                  <Text label="جملة التواصل (اتركها فارغة لإخفاء رقم الجوال)" value={p.contactLabel} onChange={(v) => set("contactLabel", v)} />
+                  <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <input type="checkbox" checked={p.published !== false} onChange={(e) => set("published", e.target.checked)} />
+                    الصفحة منشورة
+                  </label>
+                  <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <input type="checkbox" checked={!!p.showInFooter} onChange={(e) => set("showInFooter", e.target.checked)} />
+                    تظهر في الفوتر (أسفل الموقع)
+                  </label>
+                  <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <input type="checkbox" checked={!!p.showInHeader} onChange={(e) => set("showInHeader", e.target.checked)} />
+                    تظهر في الهيدر (أعلى الموقع)
+                  </label>
+                </>
+              )}
+            />
+          </>
+        )}
+
+        {tab === "tracking" && (
+          <>
+            <div className="note" style={{ background: "#0f1730", borderColor: "#ffffff26", color: "#b6c0de" }}>
+              الصق المعرّفات فقط (وليس الكود كامل). اترك الحقل فارغاً لتعطيل الأداة. بعد الحفظ تُفعَّل الأدوات على الموقع، وتُسجَّل نقرات واتساب كحدث تحويل.
+            </div>
+            <Text label="Google Analytics 4 (Measurement ID مثل G-XXXXXXXXXX)" ltr value={d.tracking.ga4} onChange={u(["tracking", "ga4"])} />
+            <div className="row">
+              <Text label="Google Ads (Conversion ID مثل AW-1234567890)" ltr value={d.tracking.googleAds} onChange={u(["tracking", "googleAds"])} />
+              <Text label="Google Ads Conversion Label (اختياري)" ltr value={d.tracking.googleAdsLabel} onChange={u(["tracking", "googleAdsLabel"])} hint="لتحويل نقرة واتساب" />
+            </div>
+            <Text label="Google Search Console (قيمة content من وسم التحقق فقط)" ltr value={d.tracking.searchConsole} onChange={u(["tracking", "searchConsole"])} hint="إذا تحققت عبر سجل DNS فلا تحتاجه." />
+            <Text label="Snapchat Pixel ID" ltr value={d.tracking.snap} onChange={u(["tracking", "snap"])} />
+            <Text label="TikTok Pixel ID" ltr value={d.tracking.tiktok} onChange={u(["tracking", "tiktok"])} />
+            <div className="row">
+              <Text label="X (Twitter) Pixel ID" ltr value={d.tracking.xPixel} onChange={u(["tracking", "xPixel"])} />
+              <Text label="X Event ID للتحويل (اختياري، مثل tw-xxxx-xxxx)" ltr value={d.tracking.xEventId} onChange={u(["tracking", "xEventId"])} />
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
