@@ -11,12 +11,12 @@ const setIn = (obj, path, val) => {
   return c;
 };
 
-function Text({ label, value, onChange, area, ltr, hint }) {
+function Text({ label, value, onChange, area, ltr, hint, rows }) {
   const P = area ? "textarea" : "input";
   return (
     <label>
       {label}
-      <P type={area ? undefined : "text"} value={value ?? ""} dir={ltr ? "ltr" : undefined} onChange={(e) => onChange(e.target.value)} />
+      <P {...(area ? { rows: rows || 4 } : { type: "text" })} value={value ?? ""} dir={ltr ? "ltr" : undefined} onChange={(e) => onChange(e.target.value)} />
       {hint && <span className="adm-hint">{hint}</span>}
     </label>
   );
@@ -114,6 +114,7 @@ const TABS = [
   ["titles", "العناوين"],
   ["theme", "الألوان"],
   ["seo", "SEO"],
+  ["pages", "الصفحات والفوتر"],
   ["tracking", "التتبع والإعلانات"],
 ];
 
@@ -151,6 +152,14 @@ export default function Admin() {
     setState("login");
   }
   async function save() {
+    const RESERVED = ["admin", "api", "_next", "images", "icon.png", "robots.txt", "sitemap.xml", "favicon.ico", "admin552255"];
+    const seen = new Set();
+    for (const p of data.pages || []) {
+      if (!p.slug) return setMsg(`الصفحة "${p.title || ""}" ليس لها رابط. اكتب رابطاً إنجليزياً مثل refund.`);
+      if (RESERVED.includes(p.slug)) return setMsg(`الرابط "${p.slug}" محجوز، اختر رابطاً آخر.`);
+      if (seen.has(p.slug)) return setMsg(`الرابط "${p.slug}" مكرر في أكثر من صفحة.`);
+      seen.add(p.slug);
+    }
     setSaving(true);
     setMsg("");
     const r = await fetch("/api/content", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
@@ -353,26 +362,18 @@ export default function Admin() {
           </>
         )}
 
-        {tab === "tracking" && (
+        {tab === "pages" && (
           <>
+            <div className="adm-card">
+              <b>الفوتر (أسفل الموقع)</b>
+              <Text label="نص حقوق النشر" value={d.footer.text} onChange={u(["footer", "text"])} />
+              <Text label="المدينة (اتركها فارغة لإخفائها)" value={d.footer.city} onChange={u(["footer", "city"])} />
+            </div>
             <div className="note" style={{ background: "#0f1730", borderColor: "#ffffff26", color: "#b6c0de" }}>
-              الصق المعرّفات فقط (وليس الكود كامل). اترك الحقل فارغاً لتعطيل الأداة. بعد الحفظ تُفعَّل الأدوات على الموقع، وتُسجَّل نقرات واتساب كحدث تحويل.
+              كل صفحة تضيفها تفتح على رابط الموقع مباشرة (مثال: الرابط refund يفتح somecare.shop/refund). اختر أين تظهر: الفوتر أو الهيدر أو الاثنين. في النص: سطر يبدأ بـ # يصير عنوان فرعي، وسطر يبدأ بـ - يصير نقطة.
             </div>
-            <Text label="Google Analytics 4 (Measurement ID مثل G-XXXXXXXXXX)" ltr value={d.tracking.ga4} onChange={u(["tracking", "ga4"])} />
-            <div className="row">
-              <Text label="Google Ads (Conversion ID مثل AW-1234567890)" ltr value={d.tracking.googleAds} onChange={u(["tracking", "googleAds"])} />
-              <Text label="Google Ads Conversion Label (اختياري)" ltr value={d.tracking.googleAdsLabel} onChange={u(["tracking", "googleAdsLabel"])} hint="لتحويل نقرة واتساب" />
-            </div>
-            <Text label="Google Search Console (قيمة content من وسم التحقق فقط)" ltr value={d.tracking.searchConsole} onChange={u(["tracking", "searchConsole"])} hint="إذا تحققت عبر سجل DNS فلا تحتاجه." />
-            <Text label="Snapchat Pixel ID" ltr value={d.tracking.snap} onChange={u(["tracking", "snap"])} />
-            <Text label="TikTok Pixel ID" ltr value={d.tracking.tiktok} onChange={u(["tracking", "tiktok"])} />
-            <div className="row">
-              <Text label="X (Twitter) Pixel ID" ltr value={d.tracking.xPixel} onChange={u(["tracking", "xPixel"])} />
-              <Text label="X Event ID للتحويل (اختياري، مثل tw-xxxx-xxxx)" ltr value={d.tracking.xEventId} onChange={u(["tracking", "xEventId"])} />
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
+            <List
+              items={d.pages}
+              onChange={u(["pages"])}
+              addLabel="إضافة صفحة"
+              title={(p) => p.title
