@@ -1,7 +1,8 @@
 "use client";
 import { useState } from "react";
+import Script from "next/script";
 
-export default function ContactForm({ title, services = [] }) {
+export default function ContactForm({ title, services = [], siteKey }) {
   const [state, setState] = useState("idle"); // idle | sending | done
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
@@ -24,6 +25,9 @@ export default function ContactForm({ title, services = [] }) {
     } catch (x) {
       setErr(x.message);
       setState("idle");
+      try {
+        window.turnstile?.reset();
+      } catch (_) {}
     }
   }
 
@@ -69,6 +73,12 @@ export default function ContactForm({ title, services = [] }) {
       </label>
       {/* حقل مخفي لاصطياد الروبوتات */}
       <input name="website" tabIndex={-1} autoComplete="off" className="cf-hp" aria-hidden="true" />
+      {siteKey && (
+        <>
+          <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="afterInteractive" />
+          <div className="cf-turnstile" data-sitekey={siteKey} data-language="ar" data-theme="auto" />
+        </>
+      )}
       {err && <p className="cf-err">{err}</p>}
       <button className="btn" type="submit" disabled={state === "sending"}>
         {state === "sending" ? "جارٍ الإرسال..." : "إرسال الاستفسار"}

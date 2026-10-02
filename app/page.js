@@ -2,6 +2,7 @@ import { getContent } from "@/lib/content";
 import { SiteHeader, SiteFooter, SocialRow } from "./SiteChrome";
 import { Icon, Hl } from "./Icons";
 import ContactForm from "./ContactForm";
+import { turnstileSiteKey } from "@/lib/turnstile";
 
 export const dynamic = "force-dynamic";
 
@@ -180,7 +181,7 @@ export default async function Home() {
               أو اتصل مباشرة: <a href={`tel:${digits(c.contact.phone)}`} dir="ltr">{c.contact.phone}</a>
             </p>
             {c.form?.show !== false && (
-              <ContactForm title={c.form?.title} services={c.packages.map((p) => p.name).filter(Boolean)} />
+              <ContactForm title={c.form?.title} services={c.packages.map((p) => p.name).filter(Boolean)} siteKey={turnstileSiteKey()} />
             )}
             <SocialRow c={c} />
           </div>

@@ -69,7 +69,7 @@ function Img({ label, value, onChange, accept = "image/*", isVideo }) {
       const blob = await upload(f.name, f, { access: "public", handleUploadUrl: "/api/upload" });
       onChange(blob.url);
     } catch (x) {
-      setErr("فشل الرفع. تأكد من ربط Vercel Blob بالمشروع.");
+      setErr("فشل الرفع: تخزين الصور (Vercel Blob) غير مربوط بالمشروع، أو انتهت جلسة الدخول. يمكنك مؤقتاً لصق رابط صورة في الحقل.");
     }
     setBusy(false);
     e.target.value = "";
@@ -171,7 +171,7 @@ const STATUS = { new: "جديد", progress: "قيد المتابعة", done: "ت
 /* ---------- الاستفسارات ---------- */
 function Inquiries({ form, setForm, onCount }) {
   const [items, setItems] = useState(null);
-  const [info, setInfo] = useState({ db: true });
+  const [info, setInfo] = useState({ db: true, turnstile: false });
   const [filter, setFilter] = useState("open");
   const [q, setQ] = useState("");
   const [err, setErr] = useState("");
@@ -181,7 +181,7 @@ function Inquiries({ form, setForm, onCount }) {
     const j = await r.json().catch(() => ({}));
     if (!r.ok) return setErr(j.error || "تعذر التحميل");
     setItems(j.items);
-    setInfo({ db: j.db });
+    setInfo({ db: j.db, turnstile: j.turnstile });
     onCount(j.items.filter((i) => i.status === "new").length);
   }
   useEffect(() => {
@@ -220,6 +220,10 @@ function Inquiries({ form, setForm, onCount }) {
         </label>
         <Text label="عنوان النموذج" value={form.title} onChange={(v) => setForm("title", v)} />
         <Text label="رسالة النجاح ({number} = رقم الاستفسار)" value={form.success} onChange={(v) => setForm("success", v)} />
+        <span className="adm-hint">
+          التحقق من الروبوتات (Cloudflare Turnstile):{" "}
+          {info.turnstile ? <span className="ok">مفعّل ✓</span> : <span className="err">غير مفعّل، أضف TURNSTILE_SITE_KEY و TURNSTILE_SECRET_KEY في Vercel</span>}
+        </span>
         <span className="adm-hint">الاستفسارات تصل هنا فقط (بدون بريد). إعدادات النموذج تُحفظ بزر «حفظ التغييرات» أعلى الصفحة، أما حالة الاستفسار والملاحظة فتُحفظ فوراً.</span>
       </div>
 
@@ -298,6 +302,7 @@ export default function Admin() {
   const [msg, setMsg] = useState("");
   const [saving, setSaving] = useState(false);
   const [newCount, setNewCount] = useState(0);
+  const [blob, setBlob] = useState(true);
 
   async function load() {
     const r = await fetch("/api/content");
@@ -306,6 +311,10 @@ export default function Admin() {
     setData(j.content);
     setDb(j.dbConnected);
     setState("ready");
+    fetch("/api/upload")
+      .then((x) => (x.ok ? x.json() : null))
+      .then((x) => x && setBlob(x.blob))
+      .catch(() => {});
     fetch("/api/inquiries")
       .then((x) => (x.ok ? x.json() : null))
       .then((x) => x && setNewCount(x.items.filter((i) => i.status === "new").length))
@@ -390,6 +399,12 @@ export default function Admin() {
         {!db && (
           <div className="note">
             قاعدة البيانات غير مربوطة بعد، لذلك لن يُحفظ أي تعديل. من Vercel: Storage ← Create Database ← Upstash Redis، ثم اربطها بالمشروع وأعد النشر.
+          </div>
+        )}
+
+        {!blob && (
+          <div className="note">
+            تخزين الصور غير مربوط، لذلك رفع الصور والفيديو لن يعمل. من Vercel: Storage ← Create ← Blob ← Connect to Project، ثم أعد النشر.
           </div>
         )}
 

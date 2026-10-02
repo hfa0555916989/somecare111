@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { handleUpload } from "@vercel/blob/client";
 import { isAuthed } from "@/lib/auth";
 
+// هل تخزين الصور (Vercel Blob) مربوط؟
+export async function GET() {
+  if (!isAuthed()) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  return NextResponse.json({ blob: !!process.env.BLOB_READ_WRITE_TOKEN });
+}
+
 export async function POST(request) {
   const body = await request.json();
   try {

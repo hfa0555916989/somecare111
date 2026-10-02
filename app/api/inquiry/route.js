@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getContent } from "@/lib/content";
 import { createInquiry, rateLimit, clientIp } from "@/lib/inquiries";
+import { verifyTurnstile } from "@/lib/turnstile";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,9 @@ export async function POST(req) {
   if (!data.email && data.phone.replace(/\D/g, "").length < 9)
     return NextResponse.json({ error: "اكتب رقم جوال أو بريداً إلكترونياً للتواصل" }, { status: 400 });
   if (data.message.length < 5) return NextResponse.json({ error: "اكتب تفاصيل استفسارك" }, { status: 400 });
+
+  if (!(await verifyTurnstile(b["cf-turnstile-response"], clientIp(req))))
+    return NextResponse.json({ error: "فشل التحقق من أنك لست روبوتاً، أعد المحاولة" }, { status: 400 });
 
   if (!(await rateLimit(`inq:${clientIp(req)}`, 5, 3600)))
     return NextResponse.json({ error: "أرسلت عدة استفسارات، حاول بعد قليل أو تواصل واتساب" }, { status: 429 });
