@@ -253,6 +253,11 @@ function About({ a }) {
                 <img src={a.badgeImage} alt="بطاقة العمل الحر" loading="lazy" />
               </a>
             )}
+            {a.badgePdf && (
+              <a className="btn btn-ghost btn-sm cert-pdf" href={a.badgePdf} target="_blank" rel="noopener" download>
+                تحميل بطاقة العمل الحر (PDF)
+              </a>
+            )}
           </div>
         )}
       </div>

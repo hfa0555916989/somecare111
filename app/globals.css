@@ -172,6 +172,7 @@ p{margin:0}
 .cert-facts a{color:var(--price);font-weight:600;text-decoration:none}
 .cert-img img{width:100%;height:auto;border-radius:14px;background:#fff;border:1px solid color-mix(in srgb,var(--text) 12%,transparent)}
 .cert-badge{justify-self:center;width:min(300px,100%)}
+.cert-pdf{justify-self:center}
 .cert-badge img{width:100%;height:auto;border-radius:16px;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,.25)}
 .cert-img img,.cert-badge img{transition:transform .15s}
 .cert-img:hover img,.cert-badge:hover img{transform:translateY(-3px)}

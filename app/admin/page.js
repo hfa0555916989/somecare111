@@ -403,8 +403,8 @@ export default function Admin() {
         )}
 
         {!blob && (
-          <div className="note">
-            تخزين الصور غير مربوط، لذلك رفع الصور والفيديو لن يعمل. من Vercel: Storage ← Create ← Blob ← Connect to Project، ثم أعد النشر.
+          <div className="note info">
+            صور الموقع محفوظة في المشروع على GitHub وتعمل طبيعي. زر «اختيار ملف» للرفع من اللوحة غير مفعّل لأن Vercel Blob غير مربوط؛ لتفعيله أنشئ Blob بنوع <b>Public</b> (وليس Private) واربطه بالمشروع ثم أعد النشر. ويمكنك دائماً كتابة مسار صورة موجودة مثل /images/about-photo.jpg.
           </div>
         )}
 
@@ -626,6 +626,13 @@ export default function Admin() {
               <Text label="رابط التحقق من الوثيقة (اختياري، الرابط الذي يفتحه الباركود)" ltr value={d.about.verifyUrl} onChange={u(["about", "verifyUrl"])} />
               <Img label="صورة شهادة العمل الحر" value={d.about.certImage} onChange={u(["about", "certImage"])} />
               <Img label="بطاقة العمل الحر (تظهر تحت الشهادة)" value={d.about.badgeImage} onChange={u(["about", "badgeImage"])} />
+              <Text
+                label="ملف PDF للبطاقة (زر تحميل تحت البطاقة)"
+                ltr
+                value={d.about.badgePdf}
+                onChange={u(["about", "badgePdf"])}
+                hint="الملف الحالي: /images/freelance-badge.pdf. اتركه فارغاً لإخفاء الزر."
+              />
             </div>
           </>
         )}
