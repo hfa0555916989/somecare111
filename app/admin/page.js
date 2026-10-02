@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { upload } from "@vercel/blob/client";
-import { BRAND_THEME, BRAND_ASSETS, FONTS, SITE_URL, SIZE_FIELDS, RATIOS, RATIO_FIELDS, DEFAULT_SIZES, sizeVars } from "@/lib/defaults";
+import { BRAND_THEME, BRAND_ASSETS, FONTS, LATIN_FONTS, isFont, fontsHref, SITE_URL, SIZE_FIELDS, RATIOS, RATIO_FIELDS, DEFAULT_SIZES, sizeVars } from "@/lib/defaults";
 import { ICONS, SOCIALS, Icon } from "../Icons";
 import { BrandLogo, BrandText } from "../SiteChrome";
 
@@ -60,15 +60,19 @@ function IconPick({ value, onChange }) {
   );
 }
 
-function FontPick({ label, value, onChange }) {
+// inherit: نص خيار «نفس الخط الافتراضي» (القيمة الفارغة)
+function FontPick({ label, value, onChange, inherit }) {
+  const ok = isFont(value);
+  const opt = (f) => (
+    <option key={f} value={f} style={{ fontFamily: `"${f}"` }}>{f}</option>
+  );
   return (
     <label>
       {label}
-      <select value={FONTS[value] ? value : ""} onChange={(e) => onChange(e.target.value)}>
-        {!FONTS[value] && <option value="">اختر خطاً</option>}
-        {Object.keys(FONTS).map((f) => (
-          <option key={f} value={f}>{f}</option>
-        ))}
+      <select value={ok ? value : ""} onChange={(e) => onChange(e.target.value)}>
+        {inherit ? <option value="">{inherit}</option> : !ok && <option value="">اختر خطاً</option>}
+        <optgroup label="خطوط عربية">{Object.keys(FONTS).filter((f) => !LATIN_FONTS.includes(f)).map(opt)}</optgroup>
+        <optgroup label="خطوط إنجليزية">{LATIN_FONTS.map(opt)}</optgroup>
       </select>
     </label>
   );
@@ -185,10 +189,17 @@ function Range({ field, value, onChange }) {
   );
 }
 
-function Sizes({ d, set, reset }) {
+function Sizes({ d, set, reset, setTheme }) {
   const s = { ...DEFAULT_SIZES, ...d.sizes };
+  const t = d.theme;
+  const fam = (f, fallback) => `"${isFont(f) ? f : fallback}", system-ui, sans-serif`;
   // نفس متغيرات الموقع لكن على المعاينة فقط، فترى التغيير قبل الحفظ
-  const vars = Object.fromEntries(sizeVars(s));
+  const vars = {
+    ...Object.fromEntries(sizeVars(s)),
+    "--font-brand": fam(t.brandFont, t.headingFont || BRAND_THEME.headingFont),
+    "--font-tag": fam(t.taglineFont, t.bodyFont || BRAND_THEME.bodyFont),
+  };
+  const fonts = fontsHref([t.brandFont, t.taglineFont, t.headingFont, t.bodyFont]);
   const ratio = ([key, label]) => (
     <label key={key}>
       {label}
@@ -201,13 +212,18 @@ function Sizes({ d, set, reset }) {
   );
   return (
     <>
+      {fonts && <link rel="stylesheet" href={fonts} />}
       <div className="note info">
         حرّك الشريط أو اكتب الرقم. المعاينة تتغير فوراً، والتعديل يظهر في الموقع بعد «حفظ التغييرات».
       </div>
       <div className="adm-card">
         <div className="adm-card-h">
           <b>الهيدر (أعلى الموقع)</b>
-          <button type="button" className="mini" onClick={() => reset(SIZE_FIELDS.header.map((f) => f[0]).concat("showBrandText"))}>إرجاع الكل</button>
+          <button type="button" className="mini" onClick={() => {
+              reset(SIZE_FIELDS.header.map((f) => f[0]).concat("showBrandText"));
+              setTheme("brandFont", "");
+              setTheme("taglineFont", "");
+            }}>إرجاع الكل</button>
         </div>
         {[
           ["على الكمبيوتر", vars],
@@ -228,6 +244,11 @@ function Sizes({ d, set, reset }) {
           <input type="checkbox" checked={s.showBrandText !== false} onChange={(e) => set("showBrandText", e.target.checked)} />
           إظهار الاسم والسطر الإنجليزي بجانب الشعار (أخفِه إذا كان الشعار نفسه فيه كتابة)
         </label>
+        <div className="row">
+          <FontPick label="خط اسم الموقع بجانب الشعار" value={t.brandFont} onChange={(v) => setTheme("brandFont", v)} inherit={`نفس خط العناوين (${t.headingFont || BRAND_THEME.headingFont})`} />
+          <FontPick label="خط السطر الإنجليزي تحت الاسم" value={t.taglineFont} onChange={(v) => setTheme("taglineFont", v)} inherit={`نفس خط النصوص (${t.bodyFont || BRAND_THEME.bodyFont})`} />
+        </div>
+        <span className="adm-hint">خط الاسم يُستخدم أيضاً في الفوتر. للسطر الإنجليزي جرّب الخطوط الإنجليزية مثل Montserrat أو Cinzel.</span>
         {SIZE_FIELDS.header.map((f) => (
           <Range key={f[0]} field={f} value={s[f[0]]} onChange={(v) => set(f[0], v)} />
         ))}
@@ -264,7 +285,7 @@ function Sizes({ d, set, reset }) {
 
 const TABS = [
   ["brand", "الهوية والشعار"],
-  ["sizes", "الأحجام"],
+  ["sizes", "الأحجام والخطوط"],
   ["inquiries", "الاستفسارات"],
   ["hero", "الواجهة"],
   ["packages", "الباقات والأسعار"],
@@ -639,14 +660,14 @@ export default function Admin() {
             <Text label="سطر تحت الاسم (مثل Hassan Developer)" value={d.brand.tagline} onChange={u(["brand", "tagline"])} />
             <Img label="الشعار في أعلى الموقع وأسفله (الوضع الليلي)" value={d.brand.logo} onChange={u(["brand", "logo"])} />
             <Img label="الشعار في الوضع النهاري (اختياري، اتركه فارغاً لاستخدام نفس الشعار)" value={d.brand.logoLight} onChange={u(["brand", "logoLight"])} />
-            <button type="button" className="gold" onClick={() => setTab("sizes")}>تكبير / تصغير الشعار والكتابة بجانبه ←</button>
+            <button type="button" className="gold" onClick={() => setTab("sizes")}>حجم وخط الشعار والكتابة بجانبه ←</button>
             <Img label="أيقونة المتصفح Favicon (مربعة، SVG أو PNG)" value={d.brand.favicon} onChange={u(["brand", "favicon"])} />
             <Img label="أيقونة الجوال عند الإضافة للشاشة الرئيسية (PNG مربع)" value={d.brand.appleIcon} onChange={u(["brand", "appleIcon"])} />
             <Text label="نص الفوتر" value={d.footer.text} onChange={u(["footer", "text"])} />
           </>
         )}
 
-        {tab === "sizes" && <Sizes d={d} set={setSize} reset={resetSizes} />}
+        {tab === "sizes" && <Sizes d={d} set={setSize} reset={resetSizes} setTheme={(k, v) => u(["theme", k])(v)} />}
 
         {tab === "hero" && (
           <>

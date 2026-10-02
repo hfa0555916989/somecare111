@@ -35,12 +35,12 @@ p{margin:0}
 .nav{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid color-mix(in srgb,var(--text) 10%,transparent)}
 .nav-in{display:flex;align-items:center;gap:24px;padding-block:10px}
 /* أحجام الشعار والكتابة بجانبه تأتي من لوحة التحكم ← الأحجام (متغيرات --logo-* و --brand-*) */
-.brand{display:flex;align-items:center;gap:var(--logo-gap,12px);text-decoration:none;font-family:var(--font-head);font-weight:700;min-width:0}
+.brand{display:flex;align-items:center;gap:var(--logo-gap,12px);text-decoration:none;font-family:var(--font-brand,var(--font-head));font-weight:var(--brand-w,700);min-width:0}
 .brand img{flex:none;height:var(--logo-h,40px);width:auto;border-radius:var(--logo-r,10px)}
 .brand-txt{display:grid;gap:var(--brand-lines,3px);min-width:0;white-space:nowrap}
 .brand-txt>*{overflow:hidden;text-overflow:ellipsis}
 .brand-name{font-size:var(--brand-name,20px);line-height:1.45}
-.brand-txt small{font-family:var(--font-body);font-size:var(--brand-tag,11.5px);line-height:1.35;font-weight:500;letter-spacing:var(--brand-tag-ls,.18em);color:var(--price);text-transform:uppercase}
+.brand-txt small{font-family:var(--font-tag,var(--font-body));font-size:var(--brand-tag,11.5px);line-height:1.35;font-weight:var(--brand-tag-w,500);letter-spacing:var(--brand-tag-ls,.18em);color:var(--price);text-transform:uppercase}
 .links{display:flex;gap:26px;margin-inline-start:auto}
 .links a{text-decoration:none;opacity:.8}
 .links a:hover{opacity:1;color:var(--primary)}

@@ -1,6 +1,6 @@
 import "./globals.css";
 import { getContent } from "@/lib/content";
-import { BRAND_THEME, FONTS, fontsHref, siteUrl, safeColor, sizesCss, themeCss } from "@/lib/defaults";
+import { BRAND_THEME, isFont, fontsHref, siteUrl, safeColor, sizesCss, themeCss } from "@/lib/defaults";
 import { socialLinks, xHandle, plain } from "./Icons";
 import Tracking from "./Tracking";
 
@@ -43,7 +43,7 @@ export async function generateViewport() {
   };
 }
 
-const font = (name, fallback) => `"${FONTS[name] ? name : fallback}", system-ui, sans-serif`;
+const font = (name, fallback) => `"${isFont(name) ? name : fallback}", system-ui, sans-serif`;
 
 // يُنفَّذ قبل رسم الصفحة: يطبّق اختيار الزائر المحفوظ (ليلي/نهاري) لتجنّب وميض الألوان
 const initScript = (mode) =>
@@ -56,8 +56,10 @@ export default async function RootLayout({ children }) {
   const css =
     themeCss(t) +
     sizesCss(c.sizes) +
-    `:root{--font-head:${font(t.headingFont, BRAND_THEME.headingFont)};--font-body:${font(t.bodyFont, BRAND_THEME.bodyFont)}}`;
-  const fonts = fontsHref([t.headingFont, t.bodyFont, BRAND_THEME.headingFont, BRAND_THEME.bodyFont]);
+    `:root{--font-head:${font(t.headingFont, BRAND_THEME.headingFont)};--font-body:${font(t.bodyFont, BRAND_THEME.bodyFont)};` +
+    // خط الكتابة بجانب الشعار، وإذا لم يُختر يتبع خط العناوين / النصوص
+    `--font-brand:${isFont(t.brandFont) ? font(t.brandFont) : "var(--font-head)"};--font-tag:${isFont(t.taglineFont) ? font(t.taglineFont) : "var(--font-body)"}}`;
+  const fonts = fontsHref([t.headingFont, t.bodyFont, t.brandFont, t.taglineFont, BRAND_THEME.headingFont, BRAND_THEME.bodyFont]);
   const abs = (p) => (p ? new URL(p, site).href : undefined);
   const digits = String(c.contact.whatsapp || "").replace(/\D/g, "");
   const a = c.about || {};
