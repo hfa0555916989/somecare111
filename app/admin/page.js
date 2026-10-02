@@ -139,10 +139,12 @@ function List({ items, onChange, newItem, addLabel, title, render }) {
 
 const TABS = [
   ["brand", "الهوية والشعار"],
+  ["inquiries", "الاستفسارات"],
   ["hero", "الواجهة"],
   ["packages", "الباقات والأسعار"],
   ["addons", "الإضافات"],
   ["features", "المميزات"],
+  ["about", "من أنا والترخيص"],
   ["gallery", "الصور والعروض"],
   ["video", "الفيديو"],
   ["contact", "التواصل"],
@@ -154,6 +156,150 @@ const TABS = [
   ["tracking", "التتبع والإعلانات"],
 ];
 
+const COLOR_FIELDS = [
+  ["bg", "لون الخلفية"],
+  ["surface", "لون البطاقات"],
+  ["text", "لون النص"],
+  ["muted", "لون النص الثانوي"],
+  ["primary", "اللون الرئيسي (الأزرار)"],
+  ["buttonText", "لون نص الأزرار"],
+  ["price", "لون الأسعار والأيقونات"],
+];
+
+const STATUS = { new: "جديد", progress: "قيد المتابعة", done: "تم الحل", archived: "مؤرشف" };
+
+/* ---------- الاستفسارات ---------- */
+function Inquiries({ form, setForm, onCount }) {
+  const [items, setItems] = useState(null);
+  const [info, setInfo] = useState({ db: true, resend: false });
+  const [filter, setFilter] = useState("open");
+  const [q, setQ] = useState("");
+  const [err, setErr] = useState("");
+
+  async function load() {
+    const r = await fetch("/api/inquiries");
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) return setErr(j.error || "تعذر التحميل");
+    setItems(j.items);
+    setInfo({ db: j.db, resend: j.resend });
+    onCount(j.items.filter((i) => i.status === "new").length);
+  }
+  useEffect(() => {
+    load();
+  }, []);
+
+  async function patch(id, body) {
+    const r = await fetch("/api/inquiries", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, ...body }) });
+    if (r.ok) load();
+    else setErr("تعذر التحديث");
+  }
+  async function remove(id) {
+    if (!confirm(`حذف الاستفسار ${id} نهائياً؟`)) return;
+    const r = await fetch(`/api/inquiries?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+    if (r.ok) load();
+  }
+
+  const list = (items || []).filter((i) => {
+    if (filter === "open" && (i.status === "done" || i.status === "archived")) return false;
+    if (filter !== "open" && filter !== "all" && i.status !== filter) return false;
+    const t = q.trim();
+    return !t || [i.id, i.name, i.phone, i.email, i.message, i.service].some((v) => String(v || "").includes(t));
+  });
+  const wa = (p) => {
+    const d = String(p || "").replace(/\D/g, "");
+    return d ? `https://wa.me/${d.startsWith("0") ? "966" + d.slice(1) : d}` : null;
+  };
+
+  return (
+    <>
+      <div className="adm-card">
+        <b>إعدادات نموذج «تواصل معنا»</b>
+        <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <input type="checkbox" checked={form.show !== false} onChange={(e) => setForm("show", e.target.checked)} />
+          إظهار النموذج في قسم التواصل
+        </label>
+        <Text label="عنوان النموذج" value={form.title} onChange={(v) => setForm("title", v)} />
+        <Text label="رسالة النجاح ({number} = رقم الاستفسار)" value={form.success} onChange={(v) => setForm("success", v)} />
+        <div className="row">
+          <Text label="بريد استلام التنبيهات" ltr value={form.notifyEmail} onChange={(v) => setForm("notifyEmail", v)} />
+          <Text label="بريد الإرسال (من دومين موثّق في Resend)" ltr value={form.fromEmail} onChange={(v) => setForm("fromEmail", v)} />
+        </div>
+        <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <input type="checkbox" checked={form.sendConfirmation !== false} onChange={(e) => setForm("sendConfirmation", e.target.checked)} />
+          إرسال رسالة للعميل برقم استفساره (إذا كتب بريده)
+        </label>
+        <span className="adm-hint">
+          الإرسال بالبريد:{" "}
+          {info.resend ? <span className="ok">Resend مربوط ✓</span> : <span className="err">Resend غير مربوط، الاستفسارات تُحفظ هنا فقط بدون بريد</span>}
+        </span>
+        <span className="adm-hint">إعدادات النموذج تُحفظ بزر «حفظ التغييرات» أعلى الصفحة. أما حالة الاستفسار والملاحظة فتُحفظ فوراً.</span>
+      </div>
+
+      {!info.db && <div className="note">قاعدة البيانات غير مربوطة، لذلك لن تُحفظ الاستفسارات.</div>}
+      {err && <span className="err">{err}</span>}
+
+      <div className="row">
+        <label>
+          عرض
+          <select value={filter} onChange={(e) => setFilter(e.target.value)}>
+            <option value="open">المفتوحة (جديد + قيد المتابعة)</option>
+            {Object.entries(STATUS).map(([k, l]) => (
+              <option key={k} value={k}>{l}</option>
+            ))}
+            <option value="all">الكل</option>
+          </select>
+        </label>
+        <Text label="بحث (رقم، اسم، جوال...)" value={q} onChange={setQ} />
+      </div>
+
+      {items === null ? (
+        <p>جارٍ التحميل...</p>
+      ) : list.length === 0 ? (
+        <p className="adm-hint">لا توجد استفسارات هنا.</p>
+      ) : (
+        list.map((i) => (
+          <div key={i.id} className="adm-card adm-inq">
+            <div className="adm-inq-h">
+              <b>{i.id}</b>
+              <span className={"adm-pill " + i.status}>{STATUS[i.status] || i.status}</span>
+              <time>{new Date(i.createdAt).toLocaleString("ar-SA-u-nu-latn", { dateStyle: "medium", timeStyle: "short" })}</time>
+            </div>
+            <div>
+              <strong>{i.name}</strong>
+              {i.service && <span className="adm-hint"> · {i.service}</span>}
+            </div>
+            <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
+              {i.phone && <a href={`tel:${i.phone}`} dir="ltr" style={{ color: "#d4a84b" }}>{i.phone}</a>}
+              {wa(i.phone) && <a href={wa(i.phone)} target="_blank" rel="noopener" style={{ color: "#7dffb0" }}>واتساب</a>}
+              {i.email && (
+                <a href={`mailto:${i.email}?subject=${encodeURIComponent("بخصوص استفسارك " + i.id)}`} dir="ltr" style={{ color: "#7cc4ff" }}>{i.email}</a>
+              )}
+            </div>
+            <div className="msg">{i.message}</div>
+            <div className="row">
+              <label>
+                الحالة
+                <select value={i.status} onChange={(e) => patch(i.id, { status: e.target.value })}>
+                  {Object.entries(STATUS).map(([k, l]) => (
+                    <option key={k} value={k}>{l}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                ملاحظة داخلية (لا تظهر للعميل)
+                <input type="text" defaultValue={i.note} onBlur={(e) => e.target.value !== (i.note || "") && patch(i.id, { note: e.target.value })} />
+              </label>
+            </div>
+            <div>
+              <button type="button" className="mini danger" onClick={() => remove(i.id)}>حذف</button>
+            </div>
+          </div>
+        ))
+      )}
+    </>
+  );
+}
+
 /* ---------- page ---------- */
 export default function Admin() {
   const [state, setState] = useState("loading"); // loading | login | ready
@@ -163,6 +309,7 @@ export default function Admin() {
   const [pw, setPw] = useState("");
   const [msg, setMsg] = useState("");
   const [saving, setSaving] = useState(false);
+  const [newCount, setNewCount] = useState(0);
 
   async function load() {
     const r = await fetch("/api/content");
@@ -171,6 +318,10 @@ export default function Admin() {
     setData(j.content);
     setDb(j.dbConnected);
     setState("ready");
+    fetch("/api/inquiries")
+      .then((x) => (x.ok ? x.json() : null))
+      .then((x) => x && setNewCount(x.items.filter((i) => i.status === "new").length))
+      .catch(() => {});
   }
   useEffect(() => {
     load();
@@ -241,7 +392,10 @@ export default function Admin() {
       </div>
       <div className="adm-tabs">
         {TABS.map(([k, l]) => (
-          <button key={k} className={tab === k ? "on" : ""} onClick={() => setTab(k)}>{l}</button>
+          <button key={k} className={tab === k ? "on" : ""} onClick={() => setTab(k)}>
+            {l}
+            {k === "inquiries" && newCount > 0 && <span className="count">{newCount}</span>}
+          </button>
         ))}
       </div>
       <div className="adm-body">
@@ -259,7 +413,8 @@ export default function Admin() {
             <button type="button" className="gold" onClick={applyBrand}>تطبيق هوية المطوّر حسن</button>
             <Text label="اسم الشركة / الموقع" value={d.brand.name} onChange={u(["brand", "name"])} />
             <Text label="سطر تحت الاسم (مثل Hassan Developer)" value={d.brand.tagline} onChange={u(["brand", "tagline"])} />
-            <Img label="الشعار في أعلى الموقع وأسفله (SVG أو PNG شفاف)" value={d.brand.logo} onChange={u(["brand", "logo"])} />
+            <Img label="الشعار في أعلى الموقع وأسفله (الوضع الليلي)" value={d.brand.logo} onChange={u(["brand", "logo"])} />
+            <Img label="الشعار في الوضع النهاري (اختياري، اتركه فارغاً لاستخدام نفس الشعار)" value={d.brand.logoLight} onChange={u(["brand", "logoLight"])} />
             <Img label="أيقونة المتصفح Favicon (مربعة، SVG أو PNG)" value={d.brand.favicon} onChange={u(["brand", "favicon"])} />
             <Img label="أيقونة الجوال عند الإضافة للشاشة الرئيسية (PNG مربع)" value={d.brand.appleIcon} onChange={u(["brand", "appleIcon"])} />
             <Text label="نص الفوتر" value={d.footer.text} onChange={u(["footer", "text"])} />
@@ -398,16 +553,9 @@ export default function Admin() {
         {tab === "theme" && (
           <>
             <button type="button" className="gold" onClick={applyBrand}>إرجاع ألوان وخطوط هوية المطوّر حسن</button>
+            <b>ألوان الوضع الليلي</b>
             <div className="row">
-              {[
-                ["bg", "لون الخلفية"],
-                ["surface", "لون البطاقات"],
-                ["text", "لون النص"],
-                ["muted", "لون النص الثانوي"],
-                ["primary", "اللون الرئيسي (الأزرار)"],
-                ["buttonText", "لون نص الأزرار"],
-                ["price", "لون الأسعار والأيقونات"],
-              ].map(([k, l]) => (
+              {COLOR_FIELDS.map(([k, l]) => (
                 <label key={k}>
                   {l}
                   <input type="color" value={d.theme[k] || BRAND_THEME[k]} onChange={(e) => u(["theme", k])(e.target.value)} />
@@ -418,8 +566,68 @@ export default function Admin() {
               <FontPick label="خط العناوين" value={d.theme.headingFont} onChange={u(["theme", "headingFont"])} />
               <FontPick label="خط النصوص" value={d.theme.bodyFont} onChange={u(["theme", "bodyFont"])} />
             </div>
+            <label>
+              الوضع الافتراضي للزائر (يستطيع تغييره بزر الشمس/القمر أعلى الموقع)
+              <select value={d.theme.mode || "auto"} onChange={(e) => u(["theme", "mode"])(e.target.value)}>
+                <option value="auto">تلقائي حسب جهاز الزائر</option>
+                <option value="dark">ليلي دائماً</option>
+                <option value="light">نهاري دائماً</option>
+              </select>
+            </label>
+            <div className="adm-card">
+              <b>ألوان الوضع النهاري</b>
+              <div className="row">
+                {COLOR_FIELDS.map(([k, l]) => (
+                  <label key={k}>
+                    {l}
+                    <input
+                      type="color"
+                      value={d.theme.light?.[k] || BRAND_THEME.light[k]}
+                      onChange={(e) => setData((x) => ({ ...x, theme: { ...x.theme, light: { ...BRAND_THEME.light, ...x.theme.light, [k]: e.target.value } } }))}
+                    />
+                  </label>
+                ))}
+              </div>
+            </div>
           </>
         )}
+
+        {tab === "about" && (
+          <>
+            <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input type="checkbox" checked={d.about.show !== false} onChange={(e) => u(["about", "show"])(e.target.checked)} />
+              إظهار قسم «من أنا» في الموقع
+            </label>
+            <div className="row">
+              <Text label="عنوان القسم (الكلمة بين { } تظهر بالذهبي)" value={d.about.title} onChange={u(["about", "title"])} />
+              <Text label="الاسم" value={d.about.name} onChange={u(["about", "name"])} />
+            </div>
+            <Text label="المسمى / التخصص" value={d.about.role} onChange={u(["about", "role"])} />
+            <Img label="صورتك الشخصية (مربعة)" value={d.about.photo} onChange={u(["about", "photo"])} />
+            <Text label="نبذة عنك (كل فقرة في سطر)" area rows={5} value={d.about.bio} onChange={u(["about", "bio"])} />
+            <Text
+              label="نقاط مميزة (كل نقطة في سطر)"
+              area
+              value={(d.about.highlights || []).join("\n")}
+              onChange={(v) => u(["about", "highlights"])(v.split("\n").filter((x) => x.trim()))}
+            />
+            <div className="adm-card">
+              <b>وثيقة العمل الحر</b>
+              <div className="note">انتبه: لا ترفع صورة الوثيقة ورقم الهوية الوطنية ظاهر فيها. الصورة الحالية مخفي فيها رقم الهوية.</div>
+              <Text label="عنوان الوثيقة" value={d.about.certTitle} onChange={u(["about", "certTitle"])} />
+              <Text label="وصف الوثيقة" area value={d.about.certText} onChange={u(["about", "certText"])} />
+              <div className="row">
+                <Text label="رقم الوثيقة" ltr value={d.about.certNumber} onChange={u(["about", "certNumber"])} />
+                <Text label="تاريخ الانتهاء" value={d.about.certExpiry} onChange={u(["about", "certExpiry"])} />
+              </div>
+              <Text label="رابط التحقق من الوثيقة (اختياري، الرابط الذي يفتحه الباركود)" ltr value={d.about.verifyUrl} onChange={u(["about", "verifyUrl"])} />
+              <Img label="صورة شهادة العمل الحر" value={d.about.certImage} onChange={u(["about", "certImage"])} />
+              <Img label="بطاقة العمل الحر (تظهر تحت الشهادة)" value={d.about.badgeImage} onChange={u(["about", "badgeImage"])} />
+            </div>
+          </>
+        )}
+
+        {tab === "inquiries" && <Inquiries form={d.form} setForm={(k, v) => u(["form", k])(v)} onCount={setNewCount} />}
 
         {tab === "seo" && (
           <>

@@ -1,6 +1,7 @@
 import { getContent } from "@/lib/content";
 import { SiteHeader, SiteFooter, SocialRow } from "./SiteChrome";
 import { Icon, Hl } from "./Icons";
+import ContactForm from "./ContactForm";
 
 export const dynamic = "force-dynamic";
 
@@ -128,6 +129,8 @@ export default async function Home() {
           </div>
         </section>
 
+        {c.about?.show !== false && c.about?.name && <About a={c.about} />}
+
         {c.gallery.length > 0 && (
           <section id="gallery" className="sec sec-alt">
             <div className="wrap">
@@ -176,6 +179,9 @@ export default async function Home() {
             <p className="or">
               أو اتصل مباشرة: <a href={`tel:${digits(c.contact.phone)}`} dir="ltr">{c.contact.phone}</a>
             </p>
+            {c.form?.show !== false && (
+              <ContactForm title={c.form?.title} services={c.packages.map((p) => p.name).filter(Boolean)} />
+            )}
             <SocialRow c={c} />
           </div>
         </section>
@@ -187,5 +193,68 @@ export default async function Home() {
         <WaIcon size={30} />
       </a>
     </>
+  );
+}
+
+function About({ a }) {
+  const lines = String(a.bio || "").split("\n").filter((l) => l.trim());
+  return (
+    <section id="about" className="sec">
+      <div className="wrap">
+        <h2><Hl text={a.title} /></h2>
+        <div className="about">
+          {a.photo && (
+            <div className="about-photo">
+              <img src={a.photo} alt={a.name} loading="lazy" />
+            </div>
+          )}
+          <div className="about-txt">
+            <h3>{a.name}</h3>
+            {a.role && <p className="about-role">{a.role}</p>}
+            {lines.map((l, i) => (
+              <p key={i} className="about-bio">{l}</p>
+            ))}
+            {(a.highlights || []).length > 0 && (
+              <ul className="about-hl">
+                {a.highlights.map((h, i) => (
+                  <li key={i}>{h}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+
+        {(a.certImage || a.badgeImage) && (
+          <div className="cert">
+            <div className="cert-head">
+              <span className="ic-ring"><Icon name="award" size={26} /></span>
+              <div>
+                <h3>{a.certTitle}</h3>
+                {a.certText && <p>{a.certText}</p>}
+              </div>
+            </div>
+            {(a.certNumber || a.certExpiry || a.verifyUrl) && (
+              <div className="cert-facts">
+                {a.certNumber && <span>رقم الوثيقة: <b dir="ltr">{a.certNumber}</b></span>}
+                {a.certExpiry && <span>سارية حتى: <b>{a.certExpiry}</b></span>}
+                {/^https?:\/\//i.test(a.verifyUrl || "") && (
+                  <a href={a.verifyUrl} target="_blank" rel="noopener">التحقق من الوثيقة ↗</a>
+                )}
+              </div>
+            )}
+            {a.certImage && (
+              <a className="cert-img" href={a.certImage} target="_blank" rel="noopener">
+                <img src={a.certImage} alt={a.certTitle || "وثيقة العمل الحر"} loading="lazy" />
+              </a>
+            )}
+            {a.badgeImage && (
+              <a className="cert-badge" href={a.badgeImage} target="_blank" rel="noopener">
+                <img src={a.badgeImage} alt="بطاقة العمل الحر" loading="lazy" />
+              </a>
+            )}
+          </div>
+        )}
+      </div>
+    </section>
   );
 }

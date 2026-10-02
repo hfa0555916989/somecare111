@@ -1,4 +1,5 @@
 import { socialLinks } from "./Icons";
+import ThemeToggle from "./ThemeToggle";
 
 const digits = (s) => String(s || "").replace(/\D/g, "");
 const live = (c, key) => (c.pages || []).filter((p) => p.published !== false && p[key] && p.slug);
@@ -11,7 +12,7 @@ export function SiteHeader({ c, icon }) {
       <header className="nav">
         <div className="wrap nav-in">
           <a className="brand" href="/">
-            {c.brand.logo && <img src={c.brand.logo} alt={c.brand.name} />}
+            <BrandLogo b={c.brand} alt={c.brand.name} />
             <span className="brand-txt">
               <span>{c.brand.name}</span>
               {c.brand.tagline && <small dir="auto">{c.brand.tagline}</small>}
@@ -20,12 +21,14 @@ export function SiteHeader({ c, icon }) {
           <nav className={"links" + (extra.length ? " links-wrap" : "")}>
             <a href="/#packages">الباقات</a>
             <a href="/#addons">الإضافات</a>
+            {c.about?.show !== false && c.about?.name && <a href="/#about">من أنا</a>}
             <a href="/#gallery">عروضنا</a>
             <a href="/#contact">تواصل معنا</a>
             {extra.map((p) => (
               <a key={p.slug} href={`/${p.slug}`}>{p.title}</a>
             ))}
           </nav>
+          <ThemeToggle mode={c.theme.mode} />
           <a className="btn btn-sm" href={wa} target="_blank" rel="noopener">
             {icon} واتساب
           </a>
@@ -59,7 +62,7 @@ export function SiteFooter({ c }) {
     <footer className="foot">
       <div className="wrap">
         <a className="brand foot-brand" href="/">
-          {c.brand.logo && <img src={c.brand.logo} alt="" />}
+          <BrandLogo b={c.brand} alt="" />
           <span>{c.brand.name}</span>
         </a>
         <SocialRow c={c} />
@@ -77,5 +80,17 @@ export function SiteFooter({ c }) {
         <span>© {new Date().getFullYear()} {c.brand.name}. {c.footer.text}</span>
       </div>
     </footer>
+  );
+}
+
+// الشعار: نسخة للوضع الليلي ونسخة اختيارية للوضع النهاري
+function BrandLogo({ b, alt }) {
+  if (!b.logo && !b.logoLight) return null;
+  if (!b.logo || !b.logoLight || b.logoLight === b.logo) return <img src={b.logo || b.logoLight} alt={alt} />;
+  return (
+    <>
+      <img className="logo-dark" src={b.logo} alt={alt} />
+      <img className="logo-light" src={b.logoLight} alt={alt} />
+    </>
   );
 }
