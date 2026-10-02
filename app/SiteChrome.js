@@ -58,10 +58,7 @@ export function SiteFooter({ c }) {
   return (
     <footer className="foot">
       <div className="wrap">
-        <a className="brand foot-brand" href="/" aria-label={c.brand.name}>
-          <BrandLogo b={c.brand} alt="" />
-          {c.sizes?.showBrandText !== false && <span>{c.brand.name}</span>}
-        </a>
+        <FooterBrand c={c} />
         <SocialRow c={c} />
         {(links.length > 0 || city) && (
           <p style={{ margin: "0 0 6px" }}>
@@ -80,12 +77,30 @@ export function SiteFooter({ c }) {
   );
 }
 
+// شعار الفوتر واسم الموقع بجانبه (تُستخدم أيضاً في معاينة لوحة التحكم)
+// إذا اختير شعار خاص للفوتر يُستخدم، وإلا نفس شعار الهيدر
+export function FooterBrand({ c, as: Tag = "a" }) {
+  const b = c.brand;
+  const logos = b.footerLogo
+    ? { logo: b.footerLogo, logoLight: b.footerLogoLight || "" }
+    : { logo: b.logo, logoLight: b.logoLight };
+  const showName = b.footerLogo ? !!b.footerShowName : c.sizes?.showBrandText !== false;
+  return (
+    <Tag className="brand foot-brand" {...(Tag === "a" ? { href: "/", "aria-label": b.name } : {})}>
+      <BrandLogo b={logos} alt={showName ? "" : b.name} />
+      {showName && <span>{b.name}</span>}
+    </Tag>
+  );
+}
+
 // اسم الموقع والسطر الإنجليزي بجانب الشعار (تُستخدم أيضاً في معاينة لوحة التحكم)
+// تباعد الحروف والأحرف الكبيرة للسطر الإنجليزي فقط، لأنها تقطّع الحروف العربية المتصلة
 export function BrandText({ b }) {
+  const en = b.tagline && !/[\u0600-\u06FF]/.test(b.tagline);
   return (
     <span className="brand-txt">
       <span className="brand-name">{b.name}</span>
-      {b.tagline && <small dir="auto">{b.tagline}</small>}
+      {b.tagline && <small dir="auto" className={en ? "en" : undefined}>{b.tagline}</small>}
     </span>
   );
 }

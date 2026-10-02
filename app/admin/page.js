@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { upload } from "@vercel/blob/client";
 import { BRAND_THEME, BRAND_ASSETS, FONTS, LATIN_FONTS, isFont, fontsHref, SITE_URL, SIZE_FIELDS, RATIOS, RATIO_FIELDS, DEFAULT_SIZES, sizeVars } from "@/lib/defaults";
 import { ICONS, SOCIALS, Icon } from "../Icons";
-import { BrandLogo, BrandText } from "../SiteChrome";
+import { BrandLogo, BrandText, FooterBrand } from "../SiteChrome";
 
 // مسودة التعديلات على هذا الجهاز (تُحفظ تلقائياً حتى لا تضيع قبل الضغط على «حفظ التغييرات»)
 const DRAFT_KEY = "admin-draft";
@@ -78,7 +78,7 @@ function FontPick({ label, value, onChange, inherit }) {
   );
 }
 
-function Img({ label, value, onChange, accept = "image/*", isVideo }) {
+function Img({ label, value, onChange, accept = "image/*", isVideo, presets }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   async function pick(e) {
@@ -111,10 +111,28 @@ function Img({ label, value, onChange, accept = "image/*", isVideo }) {
           )}
         </div>
         {err && <span className="err">{err}</span>}
+        {presets && (
+          <div className="adm-presets">
+            {presets.map(([src, name, bg]) => (
+              <button type="button" key={src} className={value === src ? "on" : ""} onClick={() => onChange(src)} title={src}>
+                <img src={src} alt="" style={{ background: bg }} />
+                <span>{name}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 }
+
+// الشعارات الجاهزة المرفوعة في المشروع على GitHub (تُختار بضغطة)
+const LOGOS = [
+  ["/images/brand-icon.svg", "الأيقونة (مربع كحلي)", "#0b1628"],
+  ["/images/brand-mark-dark.svg", "الرمز بدون خلفية (للنهاري فقط)", "#f6f4ef"],
+  ["/images/logo-horizontal-dark.svg", "الشعار الكامل الليلي", "#0b1628"],
+  ["/images/logo-horizontal-light.svg", "الشعار الكامل النهاري", "#f6f4ef"],
+];
 
 function ItemCard({ title, index, total, onMove, onDelete, children }) {
   return (
@@ -259,10 +277,7 @@ function Sizes({ d, set, reset, setTheme }) {
           <button type="button" className="mini" onClick={() => reset(SIZE_FIELDS.footer.map((f) => f[0]))}>إرجاع الكل</button>
         </div>
         <div className="adm-preview" style={{ ...vars, justifyContent: "center" }}>
-          <span className="brand foot-brand">
-            <BrandLogo b={d.brand} alt="" />
-            {s.showBrandText !== false && <span>{d.brand.name}</span>}
-          </span>
+          <FooterBrand c={{ ...d, sizes: s }} as="span" />
         </div>
         {SIZE_FIELDS.footer.map((f) => (
           <Range key={f[0]} field={f} value={s[f[0]]} onChange={(v) => set(f[0], v)} />
@@ -658,8 +673,21 @@ export default function Admin() {
             <button type="button" className="gold" onClick={applyBrand}>تطبيق هوية المطوّر حسن</button>
             <Text label="اسم الشركة / الموقع" value={d.brand.name} onChange={u(["brand", "name"])} />
             <Text label="سطر تحت الاسم (مثل Hassan Developer)" value={d.brand.tagline} onChange={u(["brand", "tagline"])} />
-            <Img label="الشعار في أعلى الموقع وأسفله (الوضع الليلي)" value={d.brand.logo} onChange={u(["brand", "logo"])} />
-            <Img label="الشعار في الوضع النهاري (اختياري، اتركه فارغاً لاستخدام نفس الشعار)" value={d.brand.logoLight} onChange={u(["brand", "logoLight"])} />
+            <div className="adm-card">
+              <b>الشعار في الأعلى (الهيدر)</b>
+              <Img label="الوضع الليلي" value={d.brand.logo} onChange={u(["brand", "logo"])} presets={LOGOS} />
+              <Img label="الوضع النهاري (اتركه فارغاً لاستخدام نفس الشعار)" value={d.brand.logoLight} onChange={u(["brand", "logoLight"])} presets={LOGOS} />
+              <span className="adm-hint">لا تختر «الرمز بدون خلفية» للوضع الليلي: حرف H فيه كحلي فيختفي على الخلفية الكحلية.</span>
+            </div>
+            <div className="adm-card">
+              <b>الشعار في الأسفل (الفوتر)</b>
+              <Img label="الوضع الليلي (اتركه فارغاً لاستخدام شعار الهيدر)" value={d.brand.footerLogo} onChange={u(["brand", "footerLogo"])} presets={LOGOS} />
+              <Img label="الوضع النهاري" value={d.brand.footerLogoLight} onChange={u(["brand", "footerLogoLight"])} presets={LOGOS} />
+              <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <input type="checkbox" checked={!!d.brand.footerShowName} onChange={(e) => u(["brand", "footerShowName"])(e.target.checked)} />
+                إظهار اسم الموقع بجانب شعار الفوتر (أطفئه مع الشعار الكامل لأنه يحتوي الاسم)
+              </label>
+            </div>
             <button type="button" className="gold" onClick={() => setTab("sizes")}>حجم وخط الشعار والكتابة بجانبه ←</button>
             <Img label="أيقونة المتصفح Favicon (مربعة، SVG أو PNG)" value={d.brand.favicon} onChange={u(["brand", "favicon"])} />
             <Img label="أيقونة الجوال عند الإضافة للشاشة الرئيسية (PNG مربع)" value={d.brand.appleIcon} onChange={u(["brand", "appleIcon"])} />
