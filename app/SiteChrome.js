@@ -1,3 +1,5 @@
+import { socialLinks } from "./Icons";
+
 const digits = (s) => String(s || "").replace(/\D/g, "");
 const live = (c, key) => (c.pages || []).filter((p) => p.published !== false && p[key] && p.slug);
 
@@ -9,8 +11,11 @@ export function SiteHeader({ c, icon }) {
       <header className="nav">
         <div className="wrap nav-in">
           <a className="brand" href="/">
-            {c.brand.logo && <img src={c.brand.logo} alt="" />}
-            <span>{c.brand.name}</span>
+            {c.brand.logo && <img src={c.brand.logo} alt={c.brand.name} />}
+            <span className="brand-txt">
+              <span>{c.brand.name}</span>
+              {c.brand.tagline && <small dir="auto">{c.brand.tagline}</small>}
+            </span>
           </a>
           <nav className={"links" + (extra.length ? " links-wrap" : "")}>
             <a href="/#packages">الباقات</a>
@@ -33,12 +38,31 @@ export function SiteHeader({ c, icon }) {
   );
 }
 
+export function SocialRow({ c }) {
+  const list = socialLinks(c);
+  if (!list.length) return null;
+  return (
+    <div className="social">
+      {list.map((s) => (
+        <a key={s.key} href={s.href} target={s.key === "email" ? undefined : "_blank"} rel="noopener me" aria-label={s.label} title={s.label}>
+          {s.icon}
+        </a>
+      ))}
+    </div>
+  );
+}
+
 export function SiteFooter({ c }) {
   const links = live(c, "showInFooter");
   const city = c.footer.city;
   return (
     <footer className="foot">
       <div className="wrap">
+        <a className="brand foot-brand" href="/">
+          {c.brand.logo && <img src={c.brand.logo} alt="" />}
+          <span>{c.brand.name}</span>
+        </a>
+        <SocialRow c={c} />
         {(links.length > 0 || city) && (
           <p style={{ margin: "0 0 6px" }}>
             {links.map((p, i) => (

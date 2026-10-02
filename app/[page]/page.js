@@ -30,7 +30,11 @@ export async function generateMetadata({ params }) {
   const p = findPage(c, params.page);
   if (!p) return {};
   const first = String(p.body || "").split("\n").find((l) => l.trim() && !l.startsWith("#")) || p.subtitle || "";
-  return { title: `${p.title} | ${c.brand.name}`, description: first.replace(/^- /, "").slice(0, 150) };
+  return {
+    title: `${p.title} | ${c.brand.name}`,
+    description: first.replace(/^- /, "").slice(0, 150),
+    alternates: { canonical: `/${p.slug}` },
+  };
 }
 
 export default async function DynamicPage({ params }) {

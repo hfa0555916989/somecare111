@@ -1,7 +1,10 @@
 import { getContent } from "@/lib/content";
-import { SiteHeader, SiteFooter } from "./SiteChrome";
+import { SiteHeader, SiteFooter, SocialRow } from "./SiteChrome";
+import { Icon, Hl } from "./Icons";
 
 export const dynamic = "force-dynamic";
+
+export const metadata = { alternates: { canonical: "/" } };
 
 const digits = (s) => String(s || "").replace(/\D/g, "");
 
@@ -36,7 +39,7 @@ export default async function Home() {
           <div className="wrap hero-in">
             <div className="hero-text">
               <p className="hero-badge">{c.hero.badge}</p>
-              <h1>{c.hero.title}</h1>
+              <h1><Hl text={c.hero.title} /></h1>
               <p className="lead">{c.hero.subtitle}</p>
               <div className="cta-row">
                 <a className="btn" href={waLink()} target="_blank" rel="noopener">
@@ -56,13 +59,19 @@ export default async function Home() {
 
         <section id="packages" className="sec">
           <div className="wrap">
-            <h2>{c.titles.packages}</h2>
+            <h2><Hl text={c.titles.packages} /></h2>
             <p className="sub">{c.titles.packagesSub}</p>
             <div className="pk-grid">
               {c.packages.map((p, i) => (
                 <article key={i} className={"pk" + (p.featured ? " pk-featured" : "")}>
                   {p.image && <img className="pk-img" src={p.image} alt="" />}
-                  <h3>{p.name}</h3>
+                  <div className="pk-head">
+                    {p.icon && <span className="ic-ring"><Icon name={p.icon} size={26} /></span>}
+                    <div>
+                      {p.label && <p className="pk-label">{p.label}</p>}
+                      <h3>{p.name}</h3>
+                    </div>
+                  </div>
                   <p className="pk-price">
                     {p.pricePrefix && <small>{p.pricePrefix}</small>}
                     <strong>{p.price}</strong>
@@ -85,11 +94,13 @@ export default async function Home() {
 
         <section id="addons" className="sec sec-alt">
           <div className="wrap narrow">
-            <h2>{c.titles.addons}</h2>
+            <h2><Hl text={c.titles.addons} /></h2>
+            {c.titles.addonsSub && <p className="sub">{c.titles.addonsSub}</p>}
             <div className="addons">
               {c.addons.map((a, i) => (
                 <div key={i} className="addon">
-                  <div>
+                  {a.icon && <span className="ic-ring"><Icon name={a.icon} size={24} /></span>}
+                  <div className="addon-txt">
                     <h3>{a.title}</h3>
                     {a.desc && <p>{a.desc}</p>}
                   </div>
@@ -102,11 +113,11 @@ export default async function Home() {
 
         <section className="sec">
           <div className="wrap">
-            <h2>{c.titles.features}</h2>
+            <h2><Hl text={c.titles.features} /></h2>
             <div className="ft-grid">
               {c.features.map((f, i) => (
                 <div key={i} className="ft">
-                  <span className="ft-ic" aria-hidden="true">{f.icon}</span>
+                  <span className="ic-ring" aria-hidden="true"><Icon name={f.icon} size={24} /></span>
                   <div>
                     <h3>{f.title}</h3>
                     <p>{f.desc}</p>
@@ -120,11 +131,13 @@ export default async function Home() {
         {c.gallery.length > 0 && (
           <section id="gallery" className="sec sec-alt">
             <div className="wrap">
-              <h2>{c.titles.gallery}</h2>
+              <h2><Hl text={c.titles.gallery} /></h2>
               <div className="gal">
                 {c.gallery.map((g, i) => (
                   <figure key={i}>
-                    <img src={g.src} alt={g.caption || ""} loading="lazy" />
+                    <a href={g.src} target="_blank" rel="noopener">
+                      <img src={g.src} alt={g.caption || ""} loading="lazy" />
+                    </a>
                     {g.caption && <figcaption>{g.caption}</figcaption>}
                   </figure>
                 ))}
@@ -136,7 +149,7 @@ export default async function Home() {
         {c.video.url && (
           <section className="sec">
             <div className="wrap narrow">
-              <h2>{c.titles.video}</h2>
+              <h2><Hl text={c.titles.video} /></h2>
               <div className="video">
                 {yt ? (
                   <iframe
@@ -155,7 +168,7 @@ export default async function Home() {
 
         <section id="contact" className="contact">
           <div className="wrap narrow center">
-            <h2>{c.titles.contact}</h2>
+            <h2><Hl text={c.titles.contact} /></h2>
             <p className="sub">{c.contact.availability}</p>
             <a className="btn btn-lg" href={waLink()} target="_blank" rel="noopener">
               <WaIcon size={26} /> واتساب {c.contact.phone}
@@ -163,6 +176,7 @@ export default async function Home() {
             <p className="or">
               أو اتصل مباشرة: <a href={`tel:${digits(c.contact.phone)}`} dir="ltr">{c.contact.phone}</a>
             </p>
+            <SocialRow c={c} />
           </div>
         </section>
       </main>

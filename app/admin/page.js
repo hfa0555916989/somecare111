@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { upload } from "@vercel/blob/client";
+import { BRAND_THEME, BRAND_ASSETS, FONTS, SITE_URL } from "@/lib/defaults";
+import { ICONS, SOCIALS, Icon } from "../Icons";
 
 /* ---------- helpers ---------- */
 const setIn = (obj, path, val) => {
@@ -18,6 +20,39 @@ function Text({ label, value, onChange, area, ltr, hint, rows }) {
       {label}
       <P {...(area ? { rows: rows || 4 } : { type: "text" })} value={value ?? ""} dir={ltr ? "ltr" : undefined} onChange={(e) => onChange(e.target.value)} />
       {hint && <span className="adm-hint">{hint}</span>}
+    </label>
+  );
+}
+
+function IconPick({ value, onChange }) {
+  const custom = value && !ICONS[value];
+  return (
+    <label>
+      الأيقونة
+      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+        <span className="adm-ic"><Icon name={value} size={22} /></span>
+        <select value={value || ""} onChange={(e) => onChange(e.target.value)}>
+          <option value="">بدون أيقونة</option>
+          {custom && <option value={value}>{value} (إيموجي قديم)</option>}
+          {Object.entries(ICONS).map(([k, [l]]) => (
+            <option key={k} value={k}>{l}</option>
+          ))}
+        </select>
+      </div>
+    </label>
+  );
+}
+
+function FontPick({ label, value, onChange }) {
+  return (
+    <label>
+      {label}
+      <select value={FONTS[value] ? value : ""} onChange={(e) => onChange(e.target.value)}>
+        {!FONTS[value] && <option value="">اختر خطاً</option>}
+        {Object.keys(FONTS).map((f) => (
+          <option key={f} value={f}>{f}</option>
+        ))}
+      </select>
     </label>
   );
 }
@@ -111,6 +146,7 @@ const TABS = [
   ["gallery", "الصور والعروض"],
   ["video", "الفيديو"],
   ["contact", "التواصل"],
+  ["social", "وسائل التواصل"],
   ["titles", "العناوين"],
   ["theme", "الألوان"],
   ["seo", "SEO"],
@@ -170,6 +206,11 @@ export default function Admin() {
 
   const u = (path) => (v) => setData((d) => setIn(d, path, v));
 
+  function applyBrand() {
+    if (!confirm("تطبيق هوية «المطوّر حسن» (الشعار والأيقونة والألوان والخطوط)؟ لن تُحفظ حتى تضغط «حفظ التغييرات».")) return;
+    setData((d) => ({ ...d, theme: { ...BRAND_THEME }, brand: { ...d.brand, ...BRAND_ASSETS } }));
+  }
+
   if (state === "loading") return <div className="adm"><p style={{ padding: 30 }}>جارٍ التحميل...</p></div>;
 
   if (state === "login")
@@ -192,7 +233,7 @@ export default function Admin() {
     <div className="adm">
       <div className="adm-top">
         <strong>لوحة التحكم</strong>
-        <a href="/" target="_blank" className="mini" style={{ color: "#00e5ff" }}>عرض الموقع</a>
+        <a href="/" target="_blank" className="mini" style={{ color: "#d4a84b" }}>عرض الموقع</a>
         <button className="mini" onClick={logout}>خروج</button>
         <button className="primary" onClick={save} disabled={saving}>{saving ? "جارٍ الحفظ..." : "حفظ التغييرات"}</button>
         {msg === "ok" && <span className="ok">تم الحفظ ✓</span>}
@@ -212,9 +253,15 @@ export default function Admin() {
 
         {tab === "brand" && (
           <>
+            <div className="note info">
+              لإرجاع هوية «المطوّر حسن» الأصلية (الشعار الذهبي والكحلي والأيقونة والألوان والخطوط) بضغطة واحدة:
+            </div>
+            <button type="button" className="gold" onClick={applyBrand}>تطبيق هوية المطوّر حسن</button>
             <Text label="اسم الشركة / الموقع" value={d.brand.name} onChange={u(["brand", "name"])} />
-            <Text label="وصف قصير" value={d.brand.tagline} onChange={u(["brand", "tagline"])} />
-            <Img label="الشعار (يفضّل PNG شفاف)" value={d.brand.logo} onChange={u(["brand", "logo"])} />
+            <Text label="سطر تحت الاسم (مثل Hassan Developer)" value={d.brand.tagline} onChange={u(["brand", "tagline"])} />
+            <Img label="الشعار في أعلى الموقع وأسفله (SVG أو PNG شفاف)" value={d.brand.logo} onChange={u(["brand", "logo"])} />
+            <Img label="أيقونة المتصفح Favicon (مربعة، SVG أو PNG)" value={d.brand.favicon} onChange={u(["brand", "favicon"])} />
+            <Img label="أيقونة الجوال عند الإضافة للشاشة الرئيسية (PNG مربع)" value={d.brand.appleIcon} onChange={u(["brand", "appleIcon"])} />
             <Text label="نص الفوتر" value={d.footer.text} onChange={u(["footer", "text"])} />
           </>
         )}
@@ -238,10 +285,14 @@ export default function Admin() {
             onChange={u(["packages"])}
             addLabel="إضافة باقة"
             title={(p) => p.name || "باقة"}
-            newItem={() => ({ name: "باقة جديدة", pricePrefix: "", price: "0", unit: "ريال", desc: "", features: [], image: "", featured: false })}
+            newItem={() => ({ label: "", icon: "", name: "باقة جديدة", pricePrefix: "", price: "0", unit: "ريال", desc: "", features: [], image: "", featured: false })}
             render={(p, set) => (
               <>
-                <Text label="اسم الباقة" value={p.name} onChange={(v) => set("name", v)} />
+                <div className="row">
+                  <Text label="اسم الباقة" value={p.name} onChange={(v) => set("name", v)} />
+                  <Text label="عنوان صغير فوق الاسم (مثل: الباقة الأولى)" value={p.label} onChange={(v) => set("label", v)} />
+                </div>
+                <IconPick value={p.icon} onChange={(v) => set("icon", v)} />
                 <div className="row">
                   <Text label="قبل السعر (مثل: يبدأ من)" value={p.pricePrefix} onChange={(v) => set("pricePrefix", v)} />
                   <Text label="السعر (يقبل نطاق مثل 16,000 - 18,000)" value={p.price} onChange={(v) => set("price", v)} />
@@ -265,9 +316,10 @@ export default function Admin() {
             onChange={u(["addons"])}
             addLabel="إضافة خدمة"
             title={(a) => a.title || "إضافة"}
-            newItem={() => ({ title: "إضافة جديدة", desc: "", price: "" })}
+            newItem={() => ({ icon: "", title: "إضافة جديدة", desc: "", price: "" })}
             render={(a, set) => (
               <>
+                <IconPick value={a.icon} onChange={(v) => set("icon", v)} />
                 <Text label="العنوان" value={a.title} onChange={(v) => set("title", v)} />
                 <Text label="الوصف" value={a.desc} onChange={(v) => set("desc", v)} />
                 <Text label="السعر (مع الوحدة)" value={a.price} onChange={(v) => set("price", v)} />
@@ -282,13 +334,11 @@ export default function Admin() {
             onChange={u(["features"])}
             addLabel="إضافة ميزة"
             title={(f) => f.title || "ميزة"}
-            newItem={() => ({ icon: "✨", title: "ميزة جديدة", desc: "" })}
+            newItem={() => ({ icon: "star", title: "ميزة جديدة", desc: "" })}
             render={(f, set) => (
               <>
-                <div className="row">
-                  <Text label="الأيقونة (إيموجي)" value={f.icon} onChange={(v) => set("icon", v)} />
-                  <Text label="العنوان" value={f.title} onChange={(v) => set("title", v)} />
-                </div>
+                <IconPick value={f.icon} onChange={(v) => set("icon", v)} />
+                <Text label="العنوان" value={f.title} onChange={(v) => set("title", v)} />
                 <Text label="الوصف" area value={f.desc} onChange={(v) => set("desc", v)} />
               </>
             )}
@@ -327,38 +377,71 @@ export default function Admin() {
           </>
         )}
 
-        {tab === "titles" &&
-          [
-            ["packages", "عنوان الباقات"],
-            ["packagesSub", "وصف الباقات"],
-            ["addons", "عنوان الإضافات"],
-            ["features", "عنوان المميزات"],
-            ["gallery", "عنوان العروض"],
-            ["video", "عنوان الفيديو"],
-            ["contact", "عنوان التواصل"],
-          ].map(([k, l]) => <Text key={k} label={l} value={d.titles[k]} onChange={u(["titles", k])} />)}
+        {tab === "titles" && (
+          <>
+            <div className="note info">
+              ضع أي كلمة بين أقواس {"{ }"} لتظهر باللون الذهبي، مثال: إضافات {"{اختيارية}"}. يعمل أيضاً في العنوان الرئيسي للواجهة.
+            </div>
+            {[
+              ["packages", "عنوان الباقات"],
+              ["packagesSub", "وصف الباقات"],
+              ["addons", "عنوان الإضافات"],
+              ["addonsSub", "وصف الإضافات"],
+              ["features", "عنوان المميزات"],
+              ["gallery", "عنوان العروض"],
+              ["video", "عنوان الفيديو"],
+              ["contact", "عنوان التواصل"],
+            ].map(([k, l]) => <Text key={k} label={l} value={d.titles[k]} onChange={u(["titles", k])} />)}
+          </>
+        )}
 
         {tab === "theme" && (
-          <div className="row">
-            {[
-              ["bg", "لون الخلفية"],
-              ["surface", "لون البطاقات"],
-              ["text", "لون النص"],
-              ["primary", "اللون الرئيسي (الأزرار)"],
-              ["price", "لون الأسعار"],
-            ].map(([k, l]) => (
-              <label key={k}>
-                {l}
-                <input type="color" value={d.theme[k]} onChange={(e) => u(["theme", k])(e.target.value)} />
-              </label>
-            ))}
-          </div>
+          <>
+            <button type="button" className="gold" onClick={applyBrand}>إرجاع ألوان وخطوط هوية المطوّر حسن</button>
+            <div className="row">
+              {[
+                ["bg", "لون الخلفية"],
+                ["surface", "لون البطاقات"],
+                ["text", "لون النص"],
+                ["muted", "لون النص الثانوي"],
+                ["primary", "اللون الرئيسي (الأزرار)"],
+                ["buttonText", "لون نص الأزرار"],
+                ["price", "لون الأسعار والأيقونات"],
+              ].map(([k, l]) => (
+                <label key={k}>
+                  {l}
+                  <input type="color" value={d.theme[k] || BRAND_THEME[k]} onChange={(e) => u(["theme", k])(e.target.value)} />
+                </label>
+              ))}
+            </div>
+            <div className="row">
+              <FontPick label="خط العناوين" value={d.theme.headingFont} onChange={u(["theme", "headingFont"])} />
+              <FontPick label="خط النصوص" value={d.theme.bodyFont} onChange={u(["theme", "bodyFont"])} />
+            </div>
+          </>
         )}
 
         {tab === "seo" && (
           <>
+            <div className="note info">
+              الموقع عربي (lang=ar)، لذلك يُفهرس في جوجل كموقع عربي. خريطة الموقع وملف robots يُبنيان تلقائياً على الرابط المعتمد أدناه:
+              {" "}<span dir="ltr">/sitemap.xml</span> و <span dir="ltr">/robots.txt</span>
+            </div>
+            <Text label="الرابط المعتمد للموقع" ltr value={d.seo.siteUrl} onChange={u(["seo", "siteUrl"])} hint={`مثال: ${SITE_URL}`} />
             <Text label="عنوان الصفحة في جوجل" value={d.seo.title} onChange={u(["seo", "title"])} />
             <Text label="وصف الصفحة في جوجل" area value={d.seo.description} onChange={u(["seo", "description"])} />
+            <Img label="صورة المشاركة (تظهر عند مشاركة الرابط في واتساب وتويتر، يفضّل 1200×630)" value={d.seo.ogImage} onChange={u(["seo", "ogImage"])} />
+          </>
+        )}
+
+        {tab === "social" && (
+          <>
+            <div className="note info">
+              اكتب الرابط كاملاً أو اسم الحساب فقط (مثل @hassandev). اترك الحقل فارغاً لإخفاء الأيقونة. تظهر الأيقونات في قسم التواصل وأسفل الموقع، ويُستخدم حساب X في بطاقات تويتر عند مشاركة الرابط.
+            </div>
+            {SOCIALS.map(([k, l]) => (
+              <Text key={k} label={l} ltr value={d.social?.[k]} onChange={u(["social", k])} />
+            ))}
           </>
         )}
 
@@ -369,8 +452,8 @@ export default function Admin() {
               <Text label="نص حقوق النشر" value={d.footer.text} onChange={u(["footer", "text"])} />
               <Text label="المدينة (اتركها فارغة لإخفائها)" value={d.footer.city} onChange={u(["footer", "city"])} />
             </div>
-            <div className="note" style={{ background: "#0f1730", borderColor: "#ffffff26", color: "#b6c0de" }}>
-              كل صفحة تضيفها تفتح على رابط الموقع مباشرة (مثال: الرابط refund يفتح somecare.shop/refund). اختر أين تظهر: الفوتر أو الهيدر أو الاثنين. في النص: سطر يبدأ بـ # يصير عنوان فرعي، وسطر يبدأ بـ - يصير نقطة.
+            <div className="note info">
+              كل صفحة تضيفها تفتح على رابط الموقع مباشرة (مثال: الرابط refund يفتح hassandev.sa/refund) وتُضاف تلقائياً لخريطة الموقع. اختر أين تظهر: الفوتر أو الهيدر أو الاثنين. في النص: سطر يبدأ بـ # يصير عنوان فرعي، وسطر يبدأ بـ - يصير نقطة.
             </div>
             <List
               items={d.pages}
@@ -411,7 +494,7 @@ export default function Admin() {
 
         {tab === "tracking" && (
           <>
-            <div className="note" style={{ background: "#0f1730", borderColor: "#ffffff26", color: "#b6c0de" }}>
+            <div className="note info">
               الصق المعرّفات فقط (وليس الكود كامل). اترك الحقل فارغاً لتعطيل الأداة. بعد الحفظ تُفعَّل الأدوات على الموقع، وتُسجَّل نقرات واتساب كحدث تحويل.
             </div>
             <Text label="Google Analytics 4 (Measurement ID مثل G-XXXXXXXXXX)" ltr value={d.tracking.ga4} onChange={u(["tracking", "ga4"])} />
