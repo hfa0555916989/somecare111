@@ -11,12 +11,9 @@ export function SiteHeader({ c, icon }) {
     <>
       <header className="nav">
         <div className="wrap nav-in">
-          <a className="brand" href="/">
+          <a className="brand" href="/" aria-label={c.brand.name}>
             <BrandLogo b={c.brand} alt={c.brand.name} />
-            <span className="brand-txt">
-              <span>{c.brand.name}</span>
-              {c.brand.tagline && <small dir="auto">{c.brand.tagline}</small>}
-            </span>
+            {c.sizes?.showBrandText !== false && <BrandText b={c.brand} />}
           </a>
           <nav className={"links" + (extra.length ? " links-wrap" : "")}>
             <a href="/#packages">الباقات</a>
@@ -29,8 +26,8 @@ export function SiteHeader({ c, icon }) {
             ))}
           </nav>
           <ThemeToggle mode={c.theme.mode} />
-          <a className="btn btn-sm" href={wa} target="_blank" rel="noopener">
-            {icon} واتساب
+          <a className="btn btn-sm" href={wa} target="_blank" rel="noopener" aria-label="واتساب">
+            {icon} <span className="nav-wa-txt">واتساب</span>
           </a>
         </div>
       </header>
@@ -61,9 +58,9 @@ export function SiteFooter({ c }) {
   return (
     <footer className="foot">
       <div className="wrap">
-        <a className="brand foot-brand" href="/">
+        <a className="brand foot-brand" href="/" aria-label={c.brand.name}>
           <BrandLogo b={c.brand} alt="" />
-          <span>{c.brand.name}</span>
+          {c.sizes?.showBrandText !== false && <span>{c.brand.name}</span>}
         </a>
         <SocialRow c={c} />
         {(links.length > 0 || city) && (
@@ -83,8 +80,18 @@ export function SiteFooter({ c }) {
   );
 }
 
+// اسم الموقع والسطر الإنجليزي بجانب الشعار (تُستخدم أيضاً في معاينة لوحة التحكم)
+export function BrandText({ b }) {
+  return (
+    <span className="brand-txt">
+      <span className="brand-name">{b.name}</span>
+      {b.tagline && <small dir="auto">{b.tagline}</small>}
+    </span>
+  );
+}
+
 // الشعار: نسخة للوضع الليلي ونسخة اختيارية للوضع النهاري
-function BrandLogo({ b, alt }) {
+export function BrandLogo({ b, alt }) {
   if (!b.logo && !b.logoLight) return null;
   if (!b.logo || !b.logoLight || b.logoLight === b.logo) return <img src={b.logo || b.logoLight} alt={alt} />;
   return (
