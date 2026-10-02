@@ -1,6 +1,6 @@
 import "./globals.css";
 import { getContent } from "@/lib/content";
-import { BRAND_THEME, FONTS, fontsHref, siteUrl, safeColor, themeCss } from "@/lib/defaults";
+import { BRAND_THEME, FONTS, fontsHref, siteUrl, safeColor, sizesCss, themeCss } from "@/lib/defaults";
 import { socialLinks, xHandle, plain } from "./Icons";
 import Tracking from "./Tracking";
 
@@ -55,6 +55,7 @@ export default async function RootLayout({ children }) {
   const site = siteUrl(c);
   const css =
     themeCss(t) +
+    sizesCss(c.sizes) +
     `:root{--font-head:${font(t.headingFont, BRAND_THEME.headingFont)};--font-body:${font(t.bodyFont, BRAND_THEME.bodyFont)}}`;
   const fonts = fontsHref([t.headingFont, t.bodyFont, BRAND_THEME.headingFont, BRAND_THEME.bodyFont]);
   const abs = (p) => (p ? new URL(p, site).href : undefined);

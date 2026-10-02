@@ -1,8 +1,25 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { upload } from "@vercel/blob/client";
-import { BRAND_THEME, BRAND_ASSETS, FONTS, SITE_URL } from "@/lib/defaults";
+import { BRAND_THEME, BRAND_ASSETS, FONTS, SITE_URL, SIZE_FIELDS, RATIOS, RATIO_FIELDS, DEFAULT_SIZES, sizeVars } from "@/lib/defaults";
 import { ICONS, SOCIALS, Icon } from "../Icons";
+import { BrandLogo, BrandText } from "../SiteChrome";
+
+// مسودة التعديلات على هذا الجهاز (تُحفظ تلقائياً حتى لا تضيع قبل الضغط على «حفظ التغييرات»)
+const DRAFT_KEY = "admin-draft";
+const readDraft = () => {
+  try {
+    return JSON.parse(localStorage.getItem(DRAFT_KEY) || "null");
+  } catch {
+    return null;
+  }
+};
+const writeDraft = (v) => {
+  try {
+    if (v) localStorage.setItem(DRAFT_KEY, JSON.stringify(v));
+    else localStorage.removeItem(DRAFT_KEY);
+  } catch {}
+};
 
 /* ---------- helpers ---------- */
 const setIn = (obj, path, val) => {
@@ -137,8 +154,117 @@ function List({ items, onChange, newItem, addLabel, title, render }) {
   );
 }
 
+// شريط لتكبير وتصغير قيمة، مع خانة رقم وزر إرجاع الافتراضي
+function Range({ field, value, onChange }) {
+  const [key, label, min, max, step, unit] = field;
+  const v = Number.isFinite(Number(value)) ? Number(value) : DEFAULT_SIZES[key];
+  return (
+    <label className="adm-range">
+      <span className="adm-range-h">
+        {label}
+        {v !== DEFAULT_SIZES[key] && (
+          <button type="button" className="mini" onClick={() => onChange(DEFAULT_SIZES[key])} title={`الافتراضي ${DEFAULT_SIZES[key]}${unit}`}>
+            افتراضي
+          </button>
+        )}
+      </span>
+      <span className="adm-range-row">
+        <input type="range" min={min} max={max} step={step} value={v} onChange={(e) => onChange(Number(e.target.value))} />
+        <input
+          type="number"
+          min={min}
+          max={max}
+          step={step}
+          value={v}
+          dir="ltr"
+          onChange={(e) => e.target.value !== "" && onChange(Math.min(max, Math.max(min, Number(e.target.value))))}
+        />
+        <span className="adm-hint">{unit}</span>
+      </span>
+    </label>
+  );
+}
+
+function Sizes({ d, set, reset }) {
+  const s = { ...DEFAULT_SIZES, ...d.sizes };
+  // نفس متغيرات الموقع لكن على المعاينة فقط، فترى التغيير قبل الحفظ
+  const vars = Object.fromEntries(sizeVars(s));
+  const ratio = ([key, label]) => (
+    <label key={key}>
+      {label}
+      <select value={RATIOS[s[key]] ? s[key] : DEFAULT_SIZES[key]} onChange={(e) => set(key, e.target.value)}>
+        {Object.entries(RATIOS).map(([k, l]) => (
+          <option key={k} value={k}>{l}</option>
+        ))}
+      </select>
+    </label>
+  );
+  return (
+    <>
+      <div className="note info">
+        حرّك الشريط أو اكتب الرقم. المعاينة تتغير فوراً، والتعديل يظهر في الموقع بعد «حفظ التغييرات».
+      </div>
+      <div className="adm-card">
+        <div className="adm-card-h">
+          <b>الهيدر (أعلى الموقع)</b>
+          <button type="button" className="mini" onClick={() => reset(SIZE_FIELDS.header.map((f) => f[0]).concat("showBrandText"))}>إرجاع الكل</button>
+        </div>
+        {[
+          ["على الكمبيوتر", vars],
+          // نفس قواعد الجوال في globals.css
+          ["على الجوال", { ...vars, "--logo-h": vars["--logo-h-m"], "--brand-name": `calc(${vars["--brand-name"]} * .85)`, "--brand-tag": `calc(${vars["--brand-tag"]} * .9)`, maxWidth: 380 }],
+        ].map(([l, st]) => (
+          <div key={l}>
+            <span className="adm-hint">معاينة {l}</span>
+            <div className="adm-preview" style={st}>
+              <span className="brand">
+                <BrandLogo b={d.brand} alt="" />
+                {s.showBrandText !== false && <BrandText b={d.brand} />}
+              </span>
+            </div>
+          </div>
+        ))}
+        <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <input type="checkbox" checked={s.showBrandText !== false} onChange={(e) => set("showBrandText", e.target.checked)} />
+          إظهار الاسم والسطر الإنجليزي بجانب الشعار (أخفِه إذا كان الشعار نفسه فيه كتابة)
+        </label>
+        {SIZE_FIELDS.header.map((f) => (
+          <Range key={f[0]} field={f} value={s[f[0]]} onChange={(v) => set(f[0], v)} />
+        ))}
+      </div>
+      <div className="adm-card">
+        <div className="adm-card-h">
+          <b>الفوتر (أسفل الموقع)</b>
+          <button type="button" className="mini" onClick={() => reset(SIZE_FIELDS.footer.map((f) => f[0]))}>إرجاع الكل</button>
+        </div>
+        <div className="adm-preview" style={{ ...vars, justifyContent: "center" }}>
+          <span className="brand foot-brand">
+            <BrandLogo b={d.brand} alt="" />
+            {s.showBrandText !== false && <span>{d.brand.name}</span>}
+          </span>
+        </div>
+        {SIZE_FIELDS.footer.map((f) => (
+          <Range key={f[0]} field={f} value={s[f[0]]} onChange={(v) => set(f[0], v)} />
+        ))}
+      </div>
+      <div className="adm-card">
+        <div className="adm-card-h">
+          <b>الصور</b>
+          <button type="button" className="mini" onClick={() => reset(SIZE_FIELDS.images.map((f) => f[0]).concat(RATIO_FIELDS.map((f) => f[0])))}>إرجاع الكل</button>
+        </div>
+        <div className="row">{RATIO_FIELDS.map(ratio)}</div>
+        <span className="adm-hint">«الشكل الأصلي» يعرض الصورة كاملة بدون قص، والأشكال الأخرى تقص أطراف الصورة لتناسب الشكل.</span>
+        {SIZE_FIELDS.images.map((f) => (
+          <Range key={f[0]} field={f} value={s[f[0]]} onChange={(v) => set(f[0], v)} />
+        ))}
+      </div>
+    </>
+  );
+}
+
 const TABS = [
   ["brand", "الهوية والشعار"],
+  ["sizes", "الأحجام"],
   ["inquiries", "الاستفسارات"],
   ["hero", "الواجهة"],
   ["packages", "الباقات والأسعار"],
@@ -303,6 +429,11 @@ export default function Admin() {
   const [saving, setSaving] = useState(false);
   const [newCount, setNewCount] = useState(0);
   const [blob, setBlob] = useState(true);
+  const [storage, setStorage] = useState("redis");
+  // آخر نسخة محفوظة في الموقع (لمعرفة هل توجد تعديلات لم تُحفظ)
+  const [savedJson, setSavedJson] = useState("");
+  const [draft, setDraft] = useState(null);
+  const importRef = useRef(null);
 
   async function load() {
     const r = await fetch("/api/content");
@@ -310,6 +441,12 @@ export default function Admin() {
     const j = await r.json();
     setData(j.content);
     setDb(j.dbConnected);
+    setStorage(j.storage || (j.dbConnected ? "redis" : null));
+    const json = JSON.stringify(j.content);
+    setSavedJson(json);
+    const dr = readDraft();
+    if (dr?.data && JSON.stringify(dr.data) !== json) setDraft(dr);
+    else writeDraft(null);
     setState("ready");
     fetch("/api/upload")
       .then((x) => (x.ok ? x.json() : null))
@@ -323,6 +460,59 @@ export default function Admin() {
   useEffect(() => {
     load();
   }, []);
+
+  const dirty = !!data && !!savedJson && JSON.stringify(data) !== savedJson;
+
+  // حفظ تلقائي على هذا الجهاز عند كل تعديل (لا يُكتب فوق مسودة سابقة لم يُقرَّر بشأنها بعد)
+  useEffect(() => {
+    if (state !== "ready" || draft) return;
+    const t = setTimeout(() => writeDraft(dirty ? { data, at: Date.now() } : null), 400);
+    return () => clearTimeout(t);
+  }, [data, dirty, state, draft]);
+
+  // تنبيه قبل إغلاق الصفحة إذا توجد تعديلات لم تُحفظ في الموقع
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (e) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
+
+  function restoreDraft() {
+    setData(draft.data);
+    setDraft(null);
+  }
+  function discardDraft() {
+    writeDraft(null);
+    setDraft(null);
+  }
+
+  // نسخة احتياطية كملف على جهازك
+  function exportBackup() {
+    const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `hassandev-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+  async function importBackup(e) {
+    const f = e.target.files?.[0];
+    e.target.value = "";
+    if (!f) return;
+    try {
+      const j = JSON.parse(await f.text());
+      if (!j || typeof j !== "object" || !j.brand || !j.hero) throw new Error();
+      if (!confirm("استبدال كل المحتوى في اللوحة بمحتوى الملف؟ لن يُنشر حتى تضغط «حفظ التغييرات».")) return;
+      setData({ ...data, ...j, sizes: { ...DEFAULT_SIZES, ...j.sizes } });
+      setMsg("");
+    } catch {
+      setMsg("الملف غير صالح، اختر ملف نسخة احتياطية من هذه اللوحة.");
+    }
+  }
 
   async function login(e) {
     e.preventDefault();
@@ -349,10 +539,18 @@ export default function Admin() {
     const r = await fetch("/api/content", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
     const j = await r.json().catch(() => ({}));
     setMsg(r.ok ? "ok" : j.error || "تعذر الحفظ");
+    if (r.ok) {
+      setSavedJson(JSON.stringify(data));
+      writeDraft(null);
+      setDraft(null);
+    }
     setSaving(false);
   }
 
   const u = (path) => (v) => setData((d) => setIn(d, path, v));
+  const setSize = (k, v) => setData((d) => ({ ...d, sizes: { ...DEFAULT_SIZES, ...d.sizes, [k]: v } }));
+  const resetSizes = (keys) =>
+    setData((d) => ({ ...d, sizes: { ...DEFAULT_SIZES, ...d.sizes, ...Object.fromEntries(keys.map((k) => [k, DEFAULT_SIZES[k]])) } }));
 
   function applyBrand() {
     if (!confirm("تطبيق هوية «المطوّر حسن» (الشعار والأيقونة والألوان والخطوط)؟ لن تُحفظ حتى تضغط «حفظ التغييرات».")) return;
@@ -384,8 +582,14 @@ export default function Admin() {
         <a href="/" target="_blank" className="mini" style={{ color: "#d4a84b" }}>عرض الموقع</a>
         <button className="mini" onClick={logout}>خروج</button>
         <button className="primary" onClick={save} disabled={saving}>{saving ? "جارٍ الحفظ..." : "حفظ التغييرات"}</button>
-        {msg === "ok" && <span className="ok">تم الحفظ ✓</span>}
+        {msg === "ok" && !dirty && <span className="ok">تم الحفظ{storage === "file" ? " في الملف المحلي .data/content.json" : ""} ✓</span>}
         {msg && msg !== "ok" && <span className="err">{msg}</span>}
+        {dirty && !saving && <span className="adm-hint">تعديلات لم تُنشر بعد (محفوظة مؤقتاً على هذا الجهاز)</span>}
+        <span className="adm-top-tools">
+          <button className="mini" onClick={exportBackup} title="تنزيل كل المحتوى كملف على جهازك">تنزيل نسخة احتياطية</button>
+          <button className="mini" onClick={() => importRef.current?.click()} title="استرجاع المحتوى من ملف نسخة احتياطية">استيراد نسخة</button>
+          <input ref={importRef} type="file" accept="application/json,.json" hidden onChange={importBackup} />
+        </span>
       </div>
       <div className="adm-tabs">
         {TABS.map(([k, l]) => (
@@ -396,9 +600,26 @@ export default function Admin() {
         ))}
       </div>
       <div className="adm-body">
+        {draft && (
+          <div className="note">
+            توجد تعديلات محفوظة على هذا الجهاز ولم تُنشر في الموقع
+            {draft.at ? ` (${new Date(draft.at).toLocaleString("ar-SA-u-nu-latn", { dateStyle: "medium", timeStyle: "short" })})` : ""}.
+            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+              <button type="button" className="mini" onClick={restoreDraft}>استعادتها</button>
+              <button type="button" className="mini danger" onClick={discardDraft}>تجاهلها</button>
+            </div>
+          </div>
+        )}
+
         {!db && (
           <div className="note">
             قاعدة البيانات غير مربوطة بعد، لذلك لن يُحفظ أي تعديل. من Vercel: Storage ← Create Database ← Upstash Redis، ثم اربطها بالمشروع وأعد النشر.
+          </div>
+        )}
+
+        {storage === "file" && (
+          <div className="note info">
+            تعمل الآن على جهازك بدون Upstash، لذلك «حفظ التغييرات» يحفظ في الملف المحلي <span dir="ltr">.data/content.json</span> داخل مجلد المشروع.
           </div>
         )}
 
@@ -418,11 +639,14 @@ export default function Admin() {
             <Text label="سطر تحت الاسم (مثل Hassan Developer)" value={d.brand.tagline} onChange={u(["brand", "tagline"])} />
             <Img label="الشعار في أعلى الموقع وأسفله (الوضع الليلي)" value={d.brand.logo} onChange={u(["brand", "logo"])} />
             <Img label="الشعار في الوضع النهاري (اختياري، اتركه فارغاً لاستخدام نفس الشعار)" value={d.brand.logoLight} onChange={u(["brand", "logoLight"])} />
+            <button type="button" className="gold" onClick={() => setTab("sizes")}>تكبير / تصغير الشعار والكتابة بجانبه ←</button>
             <Img label="أيقونة المتصفح Favicon (مربعة، SVG أو PNG)" value={d.brand.favicon} onChange={u(["brand", "favicon"])} />
             <Img label="أيقونة الجوال عند الإضافة للشاشة الرئيسية (PNG مربع)" value={d.brand.appleIcon} onChange={u(["brand", "appleIcon"])} />
             <Text label="نص الفوتر" value={d.footer.text} onChange={u(["footer", "text"])} />
           </>
         )}
+
+        {tab === "sizes" && <Sizes d={d} set={setSize} reset={resetSizes} />}
 
         {tab === "hero" && (
           <>
