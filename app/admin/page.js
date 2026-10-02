@@ -129,7 +129,8 @@ function Img({ label, value, onChange, accept = "image/*", isVideo, presets }) {
 // الشعارات الجاهزة المرفوعة في المشروع على GitHub (تُختار بضغطة)
 const LOGOS = [
   ["/images/brand-icon.svg", "الأيقونة (مربع كحلي)", "#0b1628"],
-  ["/images/brand-mark-dark.svg", "الرمز بدون خلفية (للنهاري فقط)", "#f6f4ef"],
+  ["/images/brand-mark-light.svg", "الرمز بدون خلفية (ليلي، H أبيض)", "#0b1628"],
+  ["/images/brand-mark-dark.svg", "الرمز بدون خلفية (نهاري، H كحلي)", "#f6f4ef"],
   ["/images/logo-horizontal-dark.svg", "الشعار الكامل الليلي", "#0b1628"],
   ["/images/logo-horizontal-light.svg", "الشعار الكامل النهاري", "#f6f4ef"],
 ];
@@ -677,7 +678,7 @@ export default function Admin() {
               <b>الشعار في الأعلى (الهيدر)</b>
               <Img label="الوضع الليلي" value={d.brand.logo} onChange={u(["brand", "logo"])} presets={LOGOS} />
               <Img label="الوضع النهاري (اتركه فارغاً لاستخدام نفس الشعار)" value={d.brand.logoLight} onChange={u(["brand", "logoLight"])} presets={LOGOS} />
-              <span className="adm-hint">لا تختر «الرمز بدون خلفية» للوضع الليلي: حرف H فيه كحلي فيختفي على الخلفية الكحلية.</span>
+              <span className="adm-hint">إذا اخترت «الرمز بدون خلفية (نهاري)» لليلي، يُستبدل تلقائياً بنسخته ذات H الأبيض حتى لا يختفي.</span>
             </div>
             <div className="adm-card">
               <b>الشعار في الأسفل (الفوتر)</b>

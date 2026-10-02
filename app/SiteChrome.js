@@ -105,14 +105,24 @@ export function BrandText({ b }) {
   );
 }
 
+// الرمز بدون خلفية: حرف H كحلي يختفي على الخلفية الليلية، فنستخدم نسخته البيضاء ليلاً تلقائياً
+const MARK_DARK = "/images/brand-mark-dark.svg";
+const MARK_LIGHT = "/images/brand-mark-light.svg";
+
 // الشعار: نسخة للوضع الليلي ونسخة اختيارية للوضع النهاري
 export function BrandLogo({ b, alt }) {
-  if (!b.logo && !b.logoLight) return null;
-  if (!b.logo || !b.logoLight || b.logoLight === b.logo) return <img src={b.logo || b.logoLight} alt={alt} />;
+  let dark = b.logo;
+  let light = b.logoLight;
+  if (dark === MARK_DARK) {
+    light = light || MARK_DARK;
+    dark = MARK_LIGHT;
+  }
+  if (!dark && !light) return null;
+  if (!dark || !light || light === dark) return <img src={dark || light} alt={alt} />;
   return (
     <>
-      <img className="logo-dark" src={b.logo} alt={alt} />
-      <img className="logo-light" src={b.logoLight} alt={alt} />
+      <img className="logo-dark" src={dark} alt={alt} />
+      <img className="logo-light" src={light} alt={alt} />
     </>
   );
 }
