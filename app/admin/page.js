@@ -171,7 +171,7 @@ const STATUS = { new: "جديد", progress: "قيد المتابعة", done: "ت
 /* ---------- الاستفسارات ---------- */
 function Inquiries({ form, setForm, onCount }) {
   const [items, setItems] = useState(null);
-  const [info, setInfo] = useState({ db: true, resend: false });
+  const [info, setInfo] = useState({ db: true });
   const [filter, setFilter] = useState("open");
   const [q, setQ] = useState("");
   const [err, setErr] = useState("");
@@ -181,7 +181,7 @@ function Inquiries({ form, setForm, onCount }) {
     const j = await r.json().catch(() => ({}));
     if (!r.ok) return setErr(j.error || "تعذر التحميل");
     setItems(j.items);
-    setInfo({ db: j.db, resend: j.resend });
+    setInfo({ db: j.db });
     onCount(j.items.filter((i) => i.status === "new").length);
   }
   useEffect(() => {
@@ -220,19 +220,7 @@ function Inquiries({ form, setForm, onCount }) {
         </label>
         <Text label="عنوان النموذج" value={form.title} onChange={(v) => setForm("title", v)} />
         <Text label="رسالة النجاح ({number} = رقم الاستفسار)" value={form.success} onChange={(v) => setForm("success", v)} />
-        <div className="row">
-          <Text label="بريد استلام التنبيهات" ltr value={form.notifyEmail} onChange={(v) => setForm("notifyEmail", v)} />
-          <Text label="بريد الإرسال (من دومين موثّق في Resend)" ltr value={form.fromEmail} onChange={(v) => setForm("fromEmail", v)} />
-        </div>
-        <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <input type="checkbox" checked={form.sendConfirmation !== false} onChange={(e) => setForm("sendConfirmation", e.target.checked)} />
-          إرسال رسالة للعميل برقم استفساره (إذا كتب بريده)
-        </label>
-        <span className="adm-hint">
-          الإرسال بالبريد:{" "}
-          {info.resend ? <span className="ok">Resend مربوط ✓</span> : <span className="err">Resend غير مربوط، الاستفسارات تُحفظ هنا فقط بدون بريد</span>}
-        </span>
-        <span className="adm-hint">إعدادات النموذج تُحفظ بزر «حفظ التغييرات» أعلى الصفحة. أما حالة الاستفسار والملاحظة فتُحفظ فوراً.</span>
+        <span className="adm-hint">الاستفسارات تصل هنا فقط (بدون بريد). إعدادات النموذج تُحفظ بزر «حفظ التغييرات» أعلى الصفحة، أما حالة الاستفسار والملاحظة فتُحفظ فوراً.</span>
       </div>
 
       {!info.db && <div className="note">قاعدة البيانات غير مربوطة، لذلك لن تُحفظ الاستفسارات.</div>}

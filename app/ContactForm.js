@@ -49,7 +49,7 @@ export default function ContactForm({ title, services = [] }) {
       </div>
       <div className="cf-row">
         <label>
-          البريد الإلكتروني (لتصلك نسخة برقم الاستفسار)
+          البريد الإلكتروني (اختياري)
           <input name="email" type="email" dir="ltr" maxLength={120} autoComplete="email" />
         </label>
         <label>

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { isAuthed } from "@/lib/auth";
 import { dbConnected } from "@/lib/content";
-import { listInquiries, updateInquiry, deleteInquiry, resendConnected } from "@/lib/inquiries";
+import { listInquiries, updateInquiry, deleteInquiry } from "@/lib/inquiries";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +9,7 @@ const deny = () => NextResponse.json({ error: "unauthorized" }, { status: 401 })
 
 export async function GET() {
   if (!isAuthed()) return deny();
-  return NextResponse.json({ items: await listInquiries(), db: dbConnected(), resend: resendConnected() });
+  return NextResponse.json({ items: await listInquiries(), db: dbConnected() });
 }
 
 export async function PATCH(req) {

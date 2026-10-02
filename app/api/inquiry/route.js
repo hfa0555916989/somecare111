@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getContent } from "@/lib/content";
-import { createInquiry, rateLimit, clientIp, sendEmail, emailHtml } from "@/lib/inquiries";
+import { createInquiry, rateLimit, clientIp } from "@/lib/inquiries";
 
 export const dynamic = "force-dynamic";
 
@@ -40,39 +40,6 @@ export async function POST(req) {
     console.error("Inquiry save failed", e);
     return NextResponse.json({ error: "تعذر الإرسال حالياً، تواصل معنا عبر واتساب" }, { status: 503 });
   }
-
-  const brand = c.brand.name;
-  const from = `${brand} <${f.fromEmail || "info@hassandev.sa"}>`;
-  const rows = [
-    ["رقم الاستفسار", item.id],
-    ["الاسم", data.name],
-    ["الجوال", data.phone],
-    ["البريد", data.email],
-    ["الخدمة", data.service],
-    ["الرسالة", data.message],
-  ];
-  await Promise.allSettled([
-    sendEmail({
-      from,
-      to: f.notifyEmail,
-      replyTo: data.email || undefined,
-      subject: `استفسار جديد ${item.id} من ${data.name}`,
-      html: emailHtml({ title: `استفسار جديد ${item.id}`, rows, footer: "تابعه من لوحة التحكم ← الاستفسارات" }),
-    }),
-    f.sendConfirmation !== false && data.email
-      ? sendEmail({
-          from,
-          to: data.email,
-          subject: `تم استلام استفسارك رقم ${item.id}`,
-          html: emailHtml({
-            title: `شكراً ${data.name}`,
-            intro: `استلمنا استفسارك ورقمه ${item.id}، وسنتواصل معك قريباً.`,
-            rows: [["رقم الاستفسار", item.id], ["الخدمة", data.service], ["رسالتك", data.message]],
-            footer: `${brand}${c.contact.phone ? ` · ${c.contact.phone}` : ""}`,
-          }),
-        })
-      : null,
-  ]);
 
   const msg = String(f.success || "تم استلام استفسارك برقم {number}").replace("{number}", item.id);
   return NextResponse.json({ ok: true, id: item.id, message: msg });
