@@ -46,6 +46,15 @@ export default async function DocPage({ params }) {
   const isContract = doc.type === "contract";
   const cl = doc.client || {};
   const logo = c.brand.footerLogoLight || c.brand.logoLight || c.brand.logo;
+  // {الآيبان} {البنك} {المستفيد} داخل أي بند تُستبدل ببيانات الحساب الفعلية
+  const fill = (s) =>
+    String(s)
+      .replace(/\{(الآيبان|الايبان|iban)\}/gi, groupIban(p.iban) || "—")
+      .replace(/\{(البنك|bank)\}/gi, p.bankName || "—")
+      .replace(/\{(المستفيد|beneficiary)\}/gi, p.accountName || p.name);
+  const terms = (doc.terms || []).map(fill);
+  // في العقود يُضاف بند حساب السداد تلقائياً، إلا إذا كُتب الآيبان في أحد البنود
+  const payClause = isContract && !!p.iban && !(doc.terms || []).some((t) => /\{(الآيبان|الايبان|iban)\}/i.test(t));
   // المرفقات الرسمية الثابتة تُرفق مع كل وثيقة، ثم مرفقات هذه الوثيقة
   const attachments = [
     http(p.ibanCert) && { title: "شهادة الآيبان من البنك", url: p.ibanCert },
@@ -189,10 +198,20 @@ export default async function DocPage({ params }) {
           </section>
         )}
 
-        {doc.terms?.length > 0 && (
+        {(terms.length > 0 || payClause) && (
           <section>
             <h3 className="paper-h">{isContract ? "بنود العقد" : "الشروط والملاحظات"}</h3>
-            <ol className="terms">{doc.terms.map((x, i) => <li key={i}>{x}</li>)}</ol>
+            <ol className="terms">
+              {terms.map((x, i) => <li key={i}>{x}</li>)}
+              {payClause && (
+                <li>
+                  <b>حساب السداد المعتمد:</b> يتم السداد بالتحويل البنكي حصراً إلى حساب الطرف الأول
+                  {p.bankName && <> لدى {p.bankName}</>} باسم المستفيد {p.accountName || p.name}، رقم الآيبان{" "}
+                  <b dir="ltr" style={{ whiteSpace: "nowrap" }}>{groupIban(p.iban)}</b>
+                  ، ولا يُعتد بأي تحويل إلى حساب آخر.{http(p.ibanCert) && " وشهادة الآيبان الصادرة من البنك مرفقة بهذا العقد."}
+                </li>
+              )}
+            </ol>
           </section>
         )}
 

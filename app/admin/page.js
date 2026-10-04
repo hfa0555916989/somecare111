@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { upload } from "@vercel/blob/client";
-import { BRAND_THEME, BRAND_ASSETS, FONTS, LATIN_FONTS, isFont, fontsHref, SITE_URL, SIZE_FIELDS, RATIOS, RATIO_FIELDS, DEFAULT_SIZES, sizeVars, docTotals, validIban, siteUrl } from "@/lib/defaults";
+import { BRAND_THEME, BRAND_ASSETS, FONTS, LATIN_FONTS, isFont, fontsHref, SITE_URL, SIZE_FIELDS, RATIOS, RATIO_FIELDS, DEFAULT_SIZES, sizeVars, docTotals, validIban, siteUrl, latinDigits, normalizeIban } from "@/lib/defaults";
 import { ICONS, SOCIALS, Icon } from "../Icons";
 import { BrandLogo, BrandText, FooterBrand } from "../SiteChrome";
 
@@ -612,7 +612,7 @@ function DocEditor({ doc, setDoc, k, items, onSave, onCancel, saving }) {
       </div>
       <Text label="رسوم متكررة / تجديد (كل سطر منفصل)" area rows={2} value={toLines(doc.recurring)} onChange={(v) => set("recurring", fromLines(v))} />
       <Text label="مدة التنفيذ" value={doc.duration} onChange={(v) => set("duration", v)} hint="مثال: من 21 إلى 30 يوم عمل من استلام المحتوى والدفعة الأولى" />
-      <Text label={doc.type === "contract" ? "بنود العقد (كل بند في سطر)" : "الشروط والملاحظات (كل شرط في سطر)"} area rows={8} value={toLines(doc.terms)} onChange={(v) => set("terms", fromLines(v))} />
+      <Text label={doc.type === "contract" ? "بنود العقد (كل بند في سطر)" : "الشروط والملاحظات (كل شرط في سطر)"} area rows={8} value={toLines(doc.terms)} onChange={(v) => set("terms", fromLines(v))} hint={doc.type === "contract" ? "بند «حساب السداد المعتمد» بالآيبان يُضاف تلقائياً في آخر بنود العقد. ولو تبيه داخل بند معيّن اكتب {الآيبان} و{البنك} و{المستفيد} في نص البند." : "تقدر تكتب {الآيبان} و{البنك} و{المستفيد} داخل أي شرط فتُستبدل ببيانات حسابك."} />
       <button type="button" className="mini" style={{ justifySelf: "start" }} onClick={() => confirm("استبدال البنود الحالية بالبنود الافتراضية من الإعدادات؟") && set("terms", [...((doc.type === "contract" ? k.contractTerms : k.quoteTerms) || [])])}>
         استعادة البنود الافتراضية
       </button>
@@ -656,7 +656,7 @@ function DocEditor({ doc, setDoc, k, items, onSave, onCancel, saving }) {
   );
 }
 
-function Docs({ k, setK, about, site }) {
+function Docs({ k, saved = {}, setK, about, site }) {
   const [items, setItems] = useState(null);
   const [info, setInfo] = useState({ db: true, ai: false });
   const [editing, setEditing] = useState(null);
@@ -761,6 +761,20 @@ function Docs({ k, setK, about, site }) {
   return (
     <>
       {!info.db && <div className="note">قاعدة البيانات غير مربوطة، لذلك لا يمكن حفظ الوثائق.</div>}
+      {(() => {
+        // حالة الآيبان كما هو محفوظ فعلاً في الموقع (وليس ما في الخانة قبل الحفظ)
+        const s = normalizeIban(saved.iban);
+        if (!s) return <div className="note">الآيبان غير محفوظ، لذلك لا يظهر في العروض والعقود. اكتبه في مربع «بيانات تظهر في كل عرض سعر وعقد» أسفل الصفحة ثم اضغط «حفظ التغييرات».</div>;
+        if (normalizeIban(k.iban) !== s || (k.ibanCert || "") !== (saved.ibanCert || "")) return <div className="note">عدّلت بيانات الحساب البنكي ولم تحفظها بعد. اضغط «حفظ التغييرات» أعلى الصفحة لتظهر في الوثائق.</div>;
+        if (!validIban(s)) return <div className="note">الآيبان المحفوظ غير صحيح، راجعه في المربع أسفل الصفحة.</div>;
+        return (
+          <div className="note info">
+            <span className="ok">✓ الآيبان محفوظ ويظهر في كل العروض والعقود: </span>
+            <span dir="ltr">{s.replace(/(.{4})/g, "$1 ").trim()}</span>
+            {!saved.ibanCert && <span className="err"> · شهادة الآيبان لم تُرفع بعد.</span>}
+          </div>
+        );
+      })()}
       {msg && <div className="note info">{msg}</div>}
 
       {editing ? (
@@ -843,7 +857,7 @@ function Docs({ k, setK, about, site }) {
               label="رقم الآيبان"
               ltr
               value={k.iban}
-              onChange={(v) => setK("iban", v.toUpperCase().replace(/[^A-Z0-9 ]/g, ""))}
+              onChange={(v) => setK("iban", latinDigits(v).toUpperCase().replace(/[^A-Z0-9 ]/g, ""))}
               hint={k.iban ? (ibanOk ? "✓ آيبان سعودي صحيح" : "✗ الآيبان غير صحيح، تأكد من الأرقام (SA + 22 رقماً)") : "مثال: SA00 0000 0000 0000 0000 0000"}
             />
             <Img label="شهادة الآيبان من البنك (PDF، تُرفق تلقائياً مع كل عرض وعقد)" file accept="application/pdf,image/*" value={k.ibanCert} onChange={sk("ibanCert")} />
@@ -871,7 +885,7 @@ function Docs({ k, setK, about, site }) {
               </label>
             </div>
             <Text label="الشروط الافتراضية لعروض الأسعار (كل شرط في سطر)" area rows={6} value={toLines(k.quoteTerms)} onChange={(v) => setK("quoteTerms", fromLines(v))} />
-            <Text label="البنود الافتراضية للعقود (كل بند في سطر)" area rows={10} value={toLines(k.contractTerms)} onChange={(v) => setK("contractTerms", fromLines(v))} />
+            <Text label="البنود الافتراضية للعقود (كل بند في سطر)" area rows={10} value={toLines(k.contractTerms)} onChange={(v) => setK("contractTerms", fromLines(v))} hint="بند حساب السداد بالآيبان يُضاف تلقائياً لكل عقد، فلا تحتاج تكتبه هنا." />
             <span className="adm-hint">البنود الافتراضية نموذج عام؛ راجعها بما يناسب طبيعة عملك قبل استخدامها.</span>
           </div>
         </>
@@ -1364,6 +1378,13 @@ export default function Admin() {
         {tab === "docs" && (
           <Docs
             k={d.contracts || {}}
+            saved={(() => {
+              try {
+                return JSON.parse(savedJson || "{}").contracts || {};
+              } catch {
+                return {};
+              }
+            })()}
             setK={(key, v) => setData((x) => ({ ...x, contracts: { ...x.contracts, [key]: v } }))}
             about={d.about || {}}
             site={siteUrl(d)}
