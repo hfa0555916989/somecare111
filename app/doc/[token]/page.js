@@ -46,7 +46,14 @@ export default async function DocPage({ params }) {
   const isContract = doc.type === "contract";
   const cl = doc.client || {};
   const logo = c.brand.footerLogoLight || c.brand.logoLight || c.brand.logo;
-  const waText = encodeURIComponent(`السلام عليكم، بخصوص ${TYPES[doc.type]} رقم ${doc.number}\n${url}`);
+  // المرفقات الرسمية الثابتة تُرفق مع كل وثيقة، ثم مرفقات هذه الوثيقة
+  const attachments = [
+    http(p.ibanCert) && { title: "شهادة الآيبان من البنك", url: p.ibanCert },
+    http(p.domainProof) && { title: `كتاب إثبات تسجيل النطاق ${p.domain}`, url: p.domainProof },
+    http(p.certImage) && { title: p.certTitle || "وثيقة العمل الحر", url: p.certImage },
+    ...(doc.attachments || []),
+  ].filter(Boolean);
+  const waText =encodeURIComponent(`السلام عليكم، بخصوص ${TYPES[doc.type]} رقم ${doc.number}\n${url}`);
 
   return (
     <div className="docv">
@@ -171,6 +178,11 @@ export default async function DocPage({ params }) {
                 </div>
               )}
             </dl>
+            {http(p.ibanCert) && (
+              <p style={{ marginTop: 8 }}>
+                <a href={p.ibanCert} target="_blank" rel="noopener">شهادة الآيبان الصادرة من البنك باسم {p.accountName || p.name} ↗</a>
+              </p>
+            )}
             <p className="warn">
               لحمايتك: حوّل فقط على هذا الحساب، واسم المستفيد مطابق لاسم صاحب وثيقة العمل الحر وصاحب النطاق {p.domain}. أي حساب آخر يُرسل لك لا يُعتد به.
             </p>
@@ -205,11 +217,11 @@ export default async function DocPage({ params }) {
           </section>
         )}
 
-        {doc.attachments?.length > 0 && (
+        {attachments.length > 0 && (
           <section>
             <h3 className="paper-h">المرفقات</h3>
             <ul className="links-list">
-              {doc.attachments.map((a, i) => (
+              {attachments.map((a, i) => (
                 <li key={i}><a href={a.url} target="_blank" rel="noopener">{a.title || "مرفق"} ↗</a></li>
               ))}
             </ul>
@@ -242,6 +254,12 @@ export default async function DocPage({ params }) {
                 {" "}{http(p.domainProof) && <a href={p.domainProof} target="_blank" rel="noopener">كتاب إثبات تسجيل النطاق ↗</a>}
                 {" "}{/^https?:\/\//i.test(p.whoisUrl || "") && <a href={p.whoisUrl} target="_blank" rel="noopener">بحث WHOIS في المركز السعودي لمعلومات الشبكة ↗</a>}
               </li>
+              {p.iban && (
+                <li>
+                  <b>الحساب البنكي:</b> الآيبان المذكور باسم {p.accountName || p.name}، مطابق لاسم صاحب وثيقة العمل الحر.
+                  {" "}{http(p.ibanCert) && <a href={p.ibanCert} target="_blank" rel="noopener">شهادة الآيبان من البنك ↗</a>}
+                </li>
+              )}
               <li>
                 <b>بصمة الوثيقة (SHA-256):</b> أي تعديل على البنود أو الأسعار أو الحساب البنكي يغيّر هذه البصمة.
                 <div className="mono" dir="ltr">{hash}</div>

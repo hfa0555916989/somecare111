@@ -270,6 +270,15 @@ p{margin:0}
 .adm-presets button.on{border-color:#d4a84b;color:#d4a84b}
 .adm-presets img{height:30px;width:auto;max-width:90px;border-radius:6px;padding:2px}
 
+/* ================= قسم العقود الموثّقة في الرئيسية ================= */
+.trust-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;margin-top:32px}
+.trust-card{display:flex;gap:16px;align-items:flex-start;background:var(--surface);border:1px solid color-mix(in srgb,var(--price) 30%,transparent);border-radius:18px;padding:22px}
+.trust-card h3{font-size:1.1rem;margin-bottom:4px}
+.trust-card p{color:var(--muted);font-size:.96rem;line-height:1.75}
+.trust-cta{margin-top:30px;display:flex;flex-wrap:wrap;gap:14px 24px;align-items:center;justify-content:center;text-align:center}
+.trust-cta p{font-weight:600}
+@media(max-width:400px){.trust-grid{grid-template-columns:1fr}}
+
 /* ================= عروض الأسعار والعقود /doc ================= */
 /* ورقة رسمية فاتحة دائماً (مستقلة عن الوضع الليلي) حتى تُطبع وتُحفظ PDF بشكل نظيف */
 .docv{--ink:#0b1628;--gold:#b8892f;--line:#e4e0d6;--soft:#f6f4ef;--mut:#5b6577;min-height:100vh;background:#e9e6df;color:var(--ink);padding:16px 12px 60px;font-size:15.5px;line-height:1.8;color-scheme:light}
