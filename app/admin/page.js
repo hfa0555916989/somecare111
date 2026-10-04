@@ -764,14 +764,16 @@ function Docs({ k, saved = {}, setK, about, site }) {
       {(() => {
         // حالة الآيبان كما هو محفوظ فعلاً في الموقع (وليس ما في الخانة قبل الحفظ)
         const s = normalizeIban(saved.iban);
-        if (!s) return <div className="note">الآيبان غير محفوظ، لذلك لا يظهر في العروض والعقود. اكتبه في مربع «بيانات تظهر في كل عرض سعر وعقد» أسفل الصفحة ثم اضغط «حفظ التغييرات».</div>;
+        const cert = /^(https?:\/\/|\/)/i.test(saved.ibanCert || "") ? saved.ibanCert : "";
         if (normalizeIban(k.iban) !== s || (k.ibanCert || "") !== (saved.ibanCert || "")) return <div className="note">عدّلت بيانات الحساب البنكي ولم تحفظها بعد. اضغط «حفظ التغييرات» أعلى الصفحة لتظهر في الوثائق.</div>;
-        if (!validIban(s)) return <div className="note">الآيبان المحفوظ غير صحيح، راجعه في المربع أسفل الصفحة.</div>;
+        if (!s && !cert) return <div className="note">لا تظهر بيانات الحساب البنكي في العروض والعقود بعد. في مربع «بيانات تظهر في كل عرض سعر وعقد» أسفل الصفحة الصق رابط شهادة الآيبان (أو اكتب رقم الآيبان)، ثم اضغط «حفظ التغييرات».</div>;
+        if (s && !validIban(s)) return <div className="note">الآيبان المحفوظ غير صحيح، راجعه في المربع أسفل الصفحة.</div>;
         return (
           <div className="note info">
-            <span className="ok">✓ الآيبان محفوظ ويظهر في كل العروض والعقود: </span>
-            <span dir="ltr">{s.replace(/(.{4})/g, "$1 ").trim()}</span>
-            {!saved.ibanCert && <span className="err"> · شهادة الآيبان لم تُرفع بعد.</span>}
+            <span className="ok">✓ بيانات الحساب تظهر في كل العروض والعقود: </span>
+            {s && <span dir="ltr">{s.replace(/(.{4})/g, "$1 ").trim()}</span>}
+            {s && cert && " · "}
+            {cert && <a href={cert} target="_blank" rel="noopener" style={{ color: "#d4a84b" }}>شهادة الآيبان ↗</a>}
           </div>
         );
       })()}
@@ -860,7 +862,18 @@ function Docs({ k, saved = {}, setK, about, site }) {
               onChange={(v) => setK("iban", latinDigits(v).toUpperCase().replace(/[^A-Z0-9 ]/g, ""))}
               hint={k.iban ? (ibanOk ? "✓ آيبان سعودي صحيح" : "✗ الآيبان غير صحيح، تأكد من الأرقام (SA + 22 رقماً)") : "مثال: SA00 0000 0000 0000 0000 0000"}
             />
-            <Img label="شهادة الآيبان من البنك (PDF، تُرفق تلقائياً مع كل عرض وعقد)" file accept="application/pdf,image/*" value={k.ibanCert} onChange={sk("ibanCert")} />
+            <Img
+              label="رابط شهادة الآيبان (الصق الرابط في الخانة، أو ارفع الملف). يكفي وحده بدون رقم الآيبان، ويُرفق تلقائياً مع كل عرض وعقد"
+              file
+              accept="application/pdf,image/*"
+              value={k.ibanCert}
+              // رابط بدون https:// (مثل drive.google.com/...) يُكمَّل تلقائياً
+              onChange={(v) => setK("ibanCert", /^[\w-]+(\.[\w-]+)+\//.test(v.trim()) ? "https://" + v.trim() : v.trim())}
+            />
+            {k.ibanCert && !/^(https?:\/\/|\/)/i.test(k.ibanCert) && <span className="err">الرابط غير صحيح، يجب أن يبدأ بـ https://</span>}
+            {/drive\.google\.com|docs\.google\.com/.test(k.ibanCert || "") && (
+              <span className="adm-hint">رابط Google Drive: تأكد أن مشاركة الملف «أي شخص لديه الرابط» حتى يفتحه العميل.</span>
+            )}
             {k.accountName && k.providerName && k.accountName.trim() !== k.providerName.trim() && (
               <span className="err">تنبيه: اسم المستفيد يختلف عن اسم مقدّم الخدمة، والتطابق بينهما من أهم ما يطمئن العميل.</span>
             )}
