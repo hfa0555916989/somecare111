@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { upload } from "@vercel/blob/client";
-import { BRAND_THEME, BRAND_ASSETS, FONTS, LATIN_FONTS, isFont, fontsHref, SITE_URL, SIZE_FIELDS, RATIOS, RATIO_FIELDS, DEFAULT_SIZES, sizeVars } from "@/lib/defaults";
+import { BRAND_THEME, BRAND_ASSETS, FONTS, LATIN_FONTS, isFont, fontsHref, SITE_URL, SIZE_FIELDS, RATIOS, RATIO_FIELDS, DEFAULT_SIZES, sizeVars, docTotals, validIban, siteUrl } from "@/lib/defaults";
 import { ICONS, SOCIALS, Icon } from "../Icons";
 import { BrandLogo, BrandText, FooterBrand } from "../SiteChrome";
 
@@ -78,7 +78,7 @@ function FontPick({ label, value, onChange, inherit }) {
   );
 }
 
-function Img({ label, value, onChange, accept = "image/*", isVideo, presets }) {
+function Img({ label, value, onChange, accept = "image/*", isVideo, file, presets }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   async function pick(e) {
@@ -97,7 +97,7 @@ function Img({ label, value, onChange, accept = "image/*", isVideo, presets }) {
   }
   return (
     <div className="adm-img">
-      {!isVideo && value ? <img src={value} alt="" /> : null}
+      {!isVideo && !file && value ? <img src={value} alt="" /> : null}
       <div className="grow">
         <span style={{ fontSize: ".92rem", color: "#b6c0de" }}>{label}</span>
         <input type="text" dir="ltr" value={value ?? ""} placeholder="رابط أو ارفع ملف" onChange={(e) => onChange(e.target.value)} />
@@ -303,6 +303,7 @@ const TABS = [
   ["brand", "الهوية والشعار"],
   ["sizes", "الأحجام والخطوط"],
   ["inquiries", "الاستفسارات"],
+  ["docs", "العقود وعروض الأسعار"],
   ["hero", "الواجهة"],
   ["packages", "الباقات والأسعار"],
   ["addons", "الإضافات"],
@@ -450,6 +451,410 @@ function Inquiries({ form, setForm, onCount }) {
             </div>
           </div>
         ))
+      )}
+    </>
+  );
+}
+
+/* ---------- العقود وعروض الأسعار ---------- */
+const DOC_TYPES = { quote: "عرض سعر", contract: "عقد" };
+const DOC_STATUS = { draft: "مسودة", sent: "مُرسل", accepted: "تمت الموافقة", cancelled: "ملغي" };
+// تاريخ اليوم بتوقيت جهاز المستخدم (وليس UTC)
+const today = () => new Date().toLocaleDateString("en-CA");
+const money = (n) => Number(n || 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
+const toLines = (v) => (v || []).join("\n");
+const fromLines = (v) => v.split("\n").map((x) => x.trim()).filter(Boolean);
+
+// يقرأ الملف كـ base64 بدون بادئة data:
+const readB64 = (f) =>
+  new Promise((ok, no) => {
+    const r = new FileReader();
+    r.onload = () => ok(String(r.result).split(",")[1] || "");
+    r.onerror = no;
+    r.readAsDataURL(f);
+  });
+
+function blankDoc(type, k) {
+  return {
+    type,
+    number: "",
+    date: today(),
+    validDays: type === "quote" ? Number(k.validDays) || 15 : 0,
+    title: "",
+    subtitle: "",
+    intro: "",
+    client: { name: "", company: "", idNumber: "", phone: "", email: "", city: "" },
+    sections: [],
+    discount: 0,
+    vatRate: Number(k.vatRate) || 0,
+    recurring: [],
+    duration: "",
+    terms: [...((type === "contract" ? k.contractTerms : k.quoteTerms) || [])],
+    annex: [],
+    attachments: [],
+    ref: "",
+    status: "draft",
+  };
+}
+
+function DocEditor({ doc, setDoc, k, onSave, onCancel, saving }) {
+  const set = (key, v) => setDoc({ ...doc, [key]: v });
+  const setClient = (key, v) => setDoc({ ...doc, client: { ...doc.client, [key]: v } });
+  const t = docTotals(doc);
+  return (
+    <div className="adm-card" style={{ borderColor: "#d4a84b88" }}>
+      <div className="adm-card-h">
+        <b>{doc.id ? `تعديل ${doc.number}` : `${DOC_TYPES[doc.type]} جديد`}</b>
+        <button type="button" className="mini" onClick={onCancel}>إغلاق بدون حفظ</button>
+      </div>
+      <div className="row">
+        <label>
+          النوع
+          <select value={doc.type} onChange={(e) => set("type", e.target.value)}>
+            <option value="quote">عرض سعر</option>
+            <option value="contract">عقد تقديم خدمات</option>
+          </select>
+        </label>
+        <Text label="رقم الوثيقة (اتركه فارغاً للترقيم التلقائي)" ltr value={doc.number} onChange={(v) => set("number", v)} />
+      </div>
+      <div className="row">
+        <label>
+          التاريخ
+          <input type="date" value={doc.date} onChange={(e) => set("date", e.target.value)} />
+        </label>
+        {doc.type === "quote" ? (
+          <label>
+            صلاحية العرض بالأيام (0 = بدون صلاحية)
+            <input type="number" min="0" max="365" value={doc.validDays} onChange={(e) => set("validDays", Number(e.target.value))} />
+          </label>
+        ) : (
+          <Text label="مبني على عرض رقم (اختياري)" ltr value={doc.ref} onChange={(v) => set("ref", v)} />
+        )}
+      </div>
+      <Text label="العنوان (مثل: موقع سبا متكامل)" value={doc.title} onChange={(v) => set("title", v)} />
+      <Text label="سطر تحت العنوان (مثل: مع الدفع الإلكتروني)" value={doc.subtitle} onChange={(v) => set("subtitle", v)} />
+      <Text label="وصف مختصر" area rows={2} value={doc.intro} onChange={(v) => set("intro", v)} />
+
+      <div className="adm-card">
+        <b>العميل</b>
+        <div className="row">
+          <Text label="اسم العميل / الممثل" value={doc.client.name} onChange={(v) => setClient("name", v)} />
+          <Text label="المنشأة (اختياري)" value={doc.client.company} onChange={(v) => setClient("company", v)} />
+        </div>
+        <div className="row">
+          <Text label="رقم الهوية / السجل التجاري (للعقود)" ltr value={doc.client.idNumber} onChange={(v) => setClient("idNumber", v)} />
+          <Text label="الجوال (لإرسال الرابط واتساب)" ltr value={doc.client.phone} onChange={(v) => setClient("phone", v)} />
+        </div>
+        <div className="row">
+          <Text label="البريد" ltr value={doc.client.email} onChange={(v) => setClient("email", v)} />
+          <Text label="المدينة" value={doc.client.city} onChange={(v) => setClient("city", v)} />
+        </div>
+      </div>
+
+      <b>البنود والأسعار</b>
+      <List
+        items={doc.sections}
+        onChange={(v) => set("sections", v)}
+        addLabel="إضافة بند"
+        title={(s, i) => `${i + 1}. ${s.title || "بند"} · ${money(s.price * (s.qty || 1))} ريال`}
+        newItem={() => ({ title: "", desc: "", qty: 1, price: 0, note: "", features: [], tags: [] })}
+        render={(s, setS) => (
+          <>
+            <Text label="اسم البند" value={s.title} onChange={(v) => setS("title", v)} />
+            <Text label="وصف مختصر" value={s.desc} onChange={(v) => setS("desc", v)} />
+            <div className="row">
+              <label>
+                السعر (ريال)
+                <input type="number" min="0" value={s.price} onChange={(e) => setS("price", Number(e.target.value))} />
+              </label>
+              <label>
+                الكمية
+                <input type="number" min="1" value={s.qty || 1} onChange={(e) => setS("qty", Math.max(1, Number(e.target.value)))} />
+              </label>
+            </div>
+            <Text label="ملاحظة قصيرة (مثل: اشتراك سنوي يُدفع مع الموقع)" value={s.note} onChange={(v) => setS("note", v)} />
+            <Text label="المزايا (كل ميزة في سطر)" area rows={5} value={toLines(s.features)} onChange={(v) => setS("features", fromLines(v))} />
+            <Text label="شارات صغيرة (كل شارة في سطر، مثل مدى / Visa)" area rows={2} value={toLines(s.tags)} onChange={(v) => setS("tags", fromLines(v))} />
+          </>
+        )}
+      />
+      <div className="row">
+        <label>
+          خصم (ريال)
+          <input type="number" min="0" value={doc.discount} onChange={(e) => set("discount", Number(e.target.value))} />
+        </label>
+        <label>
+          ضريبة القيمة المضافة % (0 إذا غير مسجّل)
+          <input type="number" min="0" max="100" value={doc.vatRate} onChange={(e) => set("vatRate", Number(e.target.value))} />
+        </label>
+      </div>
+      <div className="note info">
+        المجموع {money(t.subtotal)}{t.discount > 0 && ` − خصم ${money(t.discount)}`}{t.vat > 0 && ` + ضريبة ${money(t.vat)}`} = <b style={{ color: "#d4a84b" }}>الإجمالي {money(t.total)} ريال</b>
+      </div>
+      <Text label="رسوم متكررة / تجديد (كل سطر منفصل)" area rows={2} value={toLines(doc.recurring)} onChange={(v) => set("recurring", fromLines(v))} />
+      <Text label="مدة التنفيذ" value={doc.duration} onChange={(v) => set("duration", v)} hint="مثال: من 21 إلى 30 يوم عمل من استلام المحتوى والدفعة الأولى" />
+      <Text label={doc.type === "contract" ? "بنود العقد (كل بند في سطر)" : "الشروط والملاحظات (كل شرط في سطر)"} area rows={8} value={toLines(doc.terms)} onChange={(v) => set("terms", fromLines(v))} />
+      <button type="button" className="mini" style={{ justifySelf: "start" }} onClick={() => confirm("استبدال البنود الحالية بالبنود الافتراضية من الإعدادات؟") && set("terms", [...((doc.type === "contract" ? k.contractTerms : k.quoteTerms) || [])])}>
+        استعادة البنود الافتراضية
+      </button>
+
+      <b>الملحق الفني (الخصائص والمواصفات)</b>
+      <List
+        items={doc.annex}
+        onChange={(v) => set("annex", v)}
+        addLabel="إضافة قسم للملحق"
+        title={(a, i) => `${i + 1}. ${a.title || "قسم"}`}
+        newItem={() => ({ title: "", intro: "", points: [] })}
+        render={(a, setA) => (
+          <>
+            <Text label="عنوان القسم" value={a.title} onChange={(v) => setA("title", v)} />
+            <Text label="وصف القسم" area rows={2} value={a.intro} onChange={(v) => setA("intro", v)} />
+            <Text label="النقاط (كل نقطة في سطر، واكتب «العنوان: الوصف» ليظهر العنوان بخط عريض)" area rows={6} value={toLines(a.points)} onChange={(v) => setA("points", fromLines(v))} />
+          </>
+        )}
+      />
+
+      <b>المرفقات (PDF أو صور)</b>
+      <List
+        items={doc.attachments}
+        onChange={(v) => set("attachments", v)}
+        addLabel="إضافة مرفق"
+        title={(a) => a.title || "مرفق"}
+        newItem={() => ({ title: "", url: "" })}
+        render={(a, setA) => (
+          <>
+            <Text label="اسم المرفق" value={a.title} onChange={(v) => setA("title", v)} />
+            <Img label="الملف" file accept="application/pdf,image/*" value={a.url} onChange={(v) => setA("url", v)} />
+          </>
+        )}
+      />
+
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <button type="button" className="primary" onClick={onSave} disabled={saving}>{saving ? "جارٍ الحفظ..." : "حفظ الوثيقة"}</button>
+        <button type="button" className="mini" onClick={onCancel}>إلغاء</button>
+      </div>
+    </div>
+  );
+}
+
+function Docs({ k, setK, about, site }) {
+  const [items, setItems] = useState(null);
+  const [info, setInfo] = useState({ db: true, ai: false });
+  const [editing, setEditing] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [q, setQ] = useState("");
+  const importRef = useRef(null);
+
+  async function load() {
+    const r = await fetch("/api/docs");
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) return setMsg(j.error || "تعذر التحميل");
+    setItems(j.items);
+    setInfo({ db: j.db, ai: j.ai });
+  }
+  useEffect(() => {
+    load();
+  }, []);
+
+  async function save() {
+    if (!editing.sections.length && !confirm("لا توجد بنود أسعار. حفظ الوثيقة مع ذلك؟")) return;
+    setSaving(true);
+    setMsg("");
+    const r = await fetch("/api/docs", { method: editing.id ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(editing) });
+    const j = await r.json().catch(() => ({}));
+    setSaving(false);
+    if (!r.ok) return setMsg(j.error || "تعذر الحفظ");
+    setEditing(null);
+    setMsg(`تم حفظ ${j.item.number} ✓`);
+    load();
+  }
+
+  async function setStatus(d, status) {
+    const r = await fetch("/api/docs", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: d.id, status, statusOnly: true }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) setMsg(j.error || "تعذر التحديث");
+    load();
+  }
+
+  async function remove(d) {
+    if (!confirm(`حذف ${d.number} نهائياً؟ سيتوقف رابطه عن العمل.`)) return;
+    await fetch(`/api/docs?id=${encodeURIComponent(d.id)}`, { method: "DELETE" });
+    load();
+  }
+
+  async function importPdf(e) {
+    const files = [...(e.target.files || [])];
+    e.target.value = "";
+    if (!files.length) return;
+    setImporting(true);
+    setMsg("");
+    try {
+      const payload = await Promise.all(files.slice(0, 4).map(async (f) => ({ name: f.name, data: await readB64(f) })));
+      const r = await fetch("/api/docs/import", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ files: payload }) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || "تعذر الاستيراد");
+      const base = blankDoc(j.doc.type, k);
+      setEditing({
+        ...base,
+        ...j.doc,
+        number: j.doc.number || "",
+        terms: j.doc.terms?.length ? j.doc.terms : base.terms,
+        validDays: j.doc.validDays || base.validDays,
+        status: "draft",
+      });
+      setMsg("تمت قراءة الملف. راجع كل الحقول والأسعار قبل الحفظ.");
+    } catch (x) {
+      setMsg(x.message);
+    }
+    setImporting(false);
+  }
+
+  const copyOf = (d, type) => {
+    const { id, token, createdAt, updatedAt, acceptance, provider, ...rest } = d;
+    const base = blankDoc(type, k);
+    return {
+      ...rest,
+      type,
+      number: "",
+      date: today(),
+      status: "draft",
+      validDays: type === "quote" ? d.validDays || base.validDays : 0,
+      ...(type !== d.type ? { ref: d.number, terms: base.terms } : {}),
+    };
+  };
+
+  const link = (d) => `${site}/doc/${d.token}`;
+  const wa = (d) => {
+    let p = String(d.client?.phone || "").replace(/\D/g, "");
+    if (p.startsWith("05")) p = "966" + p.slice(1);
+    const text = `السلام عليكم ${d.client?.name || ""}\nمرفق ${DOC_TYPES[d.type]} رقم ${d.number}${d.title ? ` (${d.title})` : ""}:\n${link(d)}\nيمكنك مراجعته والموافقة عليه من نفس الرابط، وفيه روابط التحقق من وثيقة العمل الحر وملكية النطاق.`;
+    return `https://wa.me/${p}?text=${encodeURIComponent(text)}`;
+  };
+  const ibanOk = !k.iban || validIban(k.iban);
+  const sk = (key) => (v) => setK(key, v);
+  const list = (items || []).filter((d) => {
+    const s = q.trim();
+    return !s || [d.number, d.title, d.client?.name, d.client?.company, d.client?.phone].some((v) => String(v || "").includes(s));
+  });
+
+  return (
+    <>
+      {!info.db && <div className="note">قاعدة البيانات غير مربوطة، لذلك لا يمكن حفظ الوثائق.</div>}
+      {msg && <div className="note info">{msg}</div>}
+
+      {editing ? (
+        <DocEditor doc={editing} setDoc={setEditing} k={k} onSave={save} onCancel={() => setEditing(null)} saving={saving} />
+      ) : (
+        <>
+          <div className="adm-docs-h">
+            <button type="button" className="gold" onClick={() => setEditing(blankDoc("quote", k))}>+ عرض سعر جديد</button>
+            <button type="button" className="gold" onClick={() => setEditing(blankDoc("contract", k))}>+ عقد جديد</button>
+            <button type="button" className="gold" disabled={!info.ai || importing} onClick={() => importRef.current?.click()} title={info.ai ? "" : "يتطلب ANTHROPIC_API_KEY في Vercel"}>
+              {importing ? "جارٍ قراءة الملف... (حتى دقيقة)" : "استيراد من PDF بالذكاء الاصطناعي"}
+            </button>
+            <input ref={importRef} type="file" accept="application/pdf" multiple hidden onChange={importPdf} />
+          </div>
+          <span className="adm-hint">
+            {info.ai
+              ? "ارفع ملف عرض السعر، ويمكنك اختيار ملف الخصائص معه (حتى 4 ملفات و3MB) فتُعبّأ البنود والأسعار والشروط والملحق تلقائياً لتراجعها."
+              : "لتفعيل الاستيراد من PDF أضف المتغير ANTHROPIC_API_KEY في Vercel ثم أعد النشر."}
+          </span>
+
+          <Text label="بحث (رقم، عنوان، عميل، جوال)" value={q} onChange={setQ} />
+          {items === null ? (
+            <p>جارٍ التحميل...</p>
+          ) : list.length === 0 ? (
+            <p className="adm-hint">لا توجد وثائق بعد.</p>
+          ) : (
+            list.map((d) => (
+              <div key={d.id} className="adm-card adm-inq">
+                <div className="adm-inq-h">
+                  <b>{d.number}</b>
+                  <span className="adm-pill">{DOC_TYPES[d.type]}</span>
+                  <span className={"adm-pill " + d.status}>{DOC_STATUS[d.status] || d.status}</span>
+                  <time>{d.date}</time>
+                </div>
+                <div>
+                  <strong>{d.title || "بدون عنوان"}</strong>
+                  {(d.client?.company || d.client?.name) && <span className="adm-hint"> · {d.client.company || d.client.name}</span>}
+                  <span style={{ color: "#d4a84b", marginInlineStart: 10 }}>{money(docTotals(d).total)} ريال</span>
+                </div>
+                {d.acceptance && (
+                  <span className="ok">
+                    وافق {d.acceptance.name} في {new Date(d.acceptance.at).toLocaleString("ar-SA-u-nu-latn-ca-gregory", { dateStyle: "medium", timeStyle: "short" })}
+                  </span>
+                )}
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  <a className="mini" href={link(d)} target="_blank" rel="noopener" style={{ color: "#d4a84b" }}>فتح ↗</a>
+                  <button type="button" className="mini" onClick={() => navigator.clipboard.writeText(link(d)).then(() => setMsg("تم نسخ الرابط ✓"))}>نسخ الرابط</button>
+                  {d.client?.phone && (
+                    <a className="mini" href={wa(d)} target="_blank" rel="noopener" style={{ color: "#7dffb0" }} onClick={() => d.status === "draft" && setStatus(d, "sent")}>
+                      إرسال للعميل واتساب
+                    </a>
+                  )}
+                  {d.status !== "accepted" && d.status !== "cancelled" && (
+                    <button type="button" className="mini" onClick={() => setEditing(structuredClone(d))}>تعديل</button>
+                  )}
+                  <button type="button" className="mini" onClick={() => setEditing(copyOf(d, d.type))}>نسخة جديدة</button>
+                  {d.type === "quote" && <button type="button" className="mini" onClick={() => setEditing(copyOf(d, "contract"))}>تحويل لعقد</button>}
+                  {d.status === "draft" && <button type="button" className="mini" onClick={() => setStatus(d, "sent")}>تعليم كمُرسل</button>}
+                  {d.status !== "cancelled" && (
+                    <button type="button" className="mini danger" onClick={() => confirm(`إلغاء ${d.number}؟ سيظهر للعميل أنه ملغي.`) && setStatus(d, "cancelled")}>إلغاء</button>
+                  )}
+                  {d.status !== "accepted" && <button type="button" className="mini danger" onClick={() => remove(d)}>حذف</button>}
+                </div>
+              </div>
+            ))
+          )}
+
+          <div className="adm-card">
+            <b>بيانات تظهر في كل عرض سعر وعقد (تُحفظ بزر «حفظ التغييرات» أعلى الصفحة)</b>
+            <div className="note info">
+              بيانات وثيقة العمل الحر (الرقم والصلاحية والصورة ورابط التحقق) تُؤخذ من تبويب «من أنا والترخيص». بعد موافقة العميل تُثبَّت هذه البيانات داخل وثيقته ولا تتغير بتعديلها هنا.
+              {!about.certNumber && <span className="err"> رقم وثيقة العمل الحر فارغ.</span>}
+            </div>
+            <Text label="اسم مقدّم الخدمة (كما في وثيقة العمل الحر)" value={k.providerName} onChange={sk("providerName")} />
+            <div className="row">
+              <Text label="البنك" value={k.bankName} onChange={sk("bankName")} />
+              <Text label="اسم المستفيد في الحساب" value={k.accountName} onChange={sk("accountName")} />
+            </div>
+            <Text
+              label="رقم الآيبان"
+              ltr
+              value={k.iban}
+              onChange={(v) => setK("iban", v.toUpperCase().replace(/[^A-Z0-9 ]/g, ""))}
+              hint={k.iban ? (ibanOk ? "✓ آيبان سعودي صحيح" : "✗ الآيبان غير صحيح، تأكد من الأرقام (SA + 22 رقماً)") : "مثال: SA00 0000 0000 0000 0000 0000"}
+            />
+            {k.accountName && k.providerName && k.accountName.trim() !== k.providerName.trim() && (
+              <span className="err">تنبيه: اسم المستفيد يختلف عن اسم مقدّم الخدمة، والتطابق بينهما من أهم ما يطمئن العميل.</span>
+            )}
+            <div className="adm-card">
+              <b>إثبات ملكية النطاق</b>
+              <Text label="جهة التسجيل" value={k.domainRegistrar} onChange={sk("domainRegistrar")} />
+              <div className="row">
+                <Text label="تاريخ التسجيل" ltr value={k.domainRegistered} onChange={sk("domainRegistered")} />
+                <Text label="تاريخ الانتهاء" ltr value={k.domainExpiry} onChange={sk("domainExpiry")} />
+              </div>
+              <Img label="كتاب إثبات تسجيل النطاق (PDF)" file accept="application/pdf" value={k.domainProof} onChange={sk("domainProof")} />
+              <Text label="رابط بحث WHOIS" ltr value={k.whoisUrl} onChange={sk("whoisUrl")} />
+            </div>
+            <div className="row">
+              <label>
+                صلاحية عرض السعر الافتراضية (أيام)
+                <input type="number" min="0" value={k.validDays} onChange={(e) => setK("validDays", Number(e.target.value))} />
+              </label>
+              <label>
+                ضريبة القيمة المضافة الافتراضية %
+                <input type="number" min="0" max="100" value={k.vatRate} onChange={(e) => setK("vatRate", Number(e.target.value))} />
+              </label>
+            </div>
+            <Text label="الشروط الافتراضية لعروض الأسعار (كل شرط في سطر)" area rows={6} value={toLines(k.quoteTerms)} onChange={(v) => setK("quoteTerms", fromLines(v))} />
+            <Text label="البنود الافتراضية للعقود (كل بند في سطر)" area rows={10} value={toLines(k.contractTerms)} onChange={(v) => setK("contractTerms", fromLines(v))} />
+            <span className="adm-hint">البنود الافتراضية نموذج عام؛ راجعها بما يناسب طبيعة عملك قبل استخدامها.</span>
+          </div>
+        </>
       )}
     </>
   );
@@ -909,6 +1314,15 @@ export default function Admin() {
               />
             </div>
           </>
+        )}
+
+        {tab === "docs" && (
+          <Docs
+            k={d.contracts || {}}
+            setK={(key, v) => setData((x) => ({ ...x, contracts: { ...x.contracts, [key]: v } }))}
+            about={d.about || {}}
+            site={siteUrl(d)}
+          />
         )}
 
         {tab === "inquiries" && <Inquiries form={d.form} setForm={(k, v) => u(["form", k])(v)} onCount={setNewCount} />}
