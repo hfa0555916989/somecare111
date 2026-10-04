@@ -130,6 +130,36 @@ export default async function Home() {
           </div>
         </section>
 
+        {c.trust?.show !== false && c.trust?.title && (
+          <section id="trust" className="sec sec-alt">
+            <div className="wrap">
+              <h2><Hl text={c.trust.title} /></h2>
+              {c.trust.subtitle && <p className="sub">{c.trust.subtitle}</p>}
+              <div className="trust-grid">
+                {(c.trust.points || []).map((p, i) => (
+                  <div key={i} className="trust-card">
+                    {p.icon && <span className="ic-ring" aria-hidden="true"><Icon name={p.icon} size={24} /></span>}
+                    <div>
+                      <h3>{p.title}</h3>
+                      {p.desc && <p>{p.desc}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {(c.trust.note || c.trust.button) && (
+                <div className="trust-cta">
+                  {c.trust.note && <p>{c.trust.note}</p>}
+                  {c.trust.button && (
+                    <a className="btn" href={waLink(c.trust.button)} target="_blank" rel="noopener">
+                      <WaIcon /> {c.trust.button}
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
         {c.about?.show !== false && c.about?.name && <About a={c.about} />}
 
         {c.gallery.length > 0 && (

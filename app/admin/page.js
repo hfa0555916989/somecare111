@@ -497,10 +497,14 @@ function blankDoc(type, k) {
   };
 }
 
-function DocEditor({ doc, setDoc, k, onSave, onCancel, saving }) {
+function DocEditor({ doc, setDoc, k, items, onSave, onCancel, saving }) {
   const set = (key, v) => setDoc({ ...doc, [key]: v });
   const setClient = (key, v) => setDoc({ ...doc, client: { ...doc.client, [key]: v } });
   const t = docTotals(doc);
+  // وثيقة أخرى بنفس الرقم (مثلاً عند إعادة استيراد نفس العرض مع ملف الخصائص)
+  const num = String(doc.number || "").trim().toUpperCase();
+  const dup = num && (items || []).find((x) => x.id !== doc.id && String(x.number || "").trim().toUpperCase() === num);
+  const canReplace = dup && dup.status !== "accepted" && dup.status !== "cancelled";
   return (
     <div className="adm-card" style={{ borderColor: "#d4a84b88" }}>
       <div className="adm-card-h">
@@ -517,6 +521,21 @@ function DocEditor({ doc, setDoc, k, onSave, onCancel, saving }) {
         </label>
         <Text label="رقم الوثيقة (اتركه فارغاً للترقيم التلقائي)" ltr value={doc.number} onChange={(v) => set("number", v)} />
       </div>
+      {dup && (
+        <div className="note">
+          الرقم {dup.number} مستخدم في وثيقة محفوظة ({DOC_STATUS[dup.status]}).
+          {canReplace
+            ? " إذا هذا نفس العرض بعد التحديث، حدّث الوثيقة الموجودة فيبقى نفس الرابط اللي أرسلته للعميل. أو غيّر الرقم لإنشاء وثيقة مستقلة."
+            : " غيّر الرقم لإنشاء وثيقة جديدة، لأن الوثيقة الموجودة مقفلة."}
+          {canReplace && (
+            <div style={{ marginTop: 8 }}>
+              <button type="button" className="mini" onClick={() => setDoc({ ...doc, id: dup.id, token: dup.token, status: dup.status })}>
+                تحديث الوثيقة الموجودة {dup.number} بهذه البيانات (نفس الرابط)
+              </button>
+            </div>
+          )}
+        </div>
+      )}
       <div className="row">
         <label>
           التاريخ
@@ -745,7 +764,7 @@ function Docs({ k, setK, about, site }) {
       {msg && <div className="note info">{msg}</div>}
 
       {editing ? (
-        <DocEditor doc={editing} setDoc={setEditing} k={k} onSave={save} onCancel={() => setEditing(null)} saving={saving} />
+        <DocEditor doc={editing} setDoc={setEditing} k={k} items={items} onSave={save} onCancel={() => setEditing(null)} saving={saving} />
       ) : (
         <>
           <div className="adm-docs-h">
@@ -827,6 +846,7 @@ function Docs({ k, setK, about, site }) {
               onChange={(v) => setK("iban", v.toUpperCase().replace(/[^A-Z0-9 ]/g, ""))}
               hint={k.iban ? (ibanOk ? "✓ آيبان سعودي صحيح" : "✗ الآيبان غير صحيح، تأكد من الأرقام (SA + 22 رقماً)") : "مثال: SA00 0000 0000 0000 0000 0000"}
             />
+            <Img label="شهادة الآيبان من البنك (PDF، تُرفق تلقائياً مع كل عرض وعقد)" file accept="application/pdf,image/*" value={k.ibanCert} onChange={sk("ibanCert")} />
             {k.accountName && k.providerName && k.accountName.trim() !== k.providerName.trim() && (
               <span className="err">تنبيه: اسم المستفيد يختلف عن اسم مقدّم الخدمة، والتطابق بينهما من أهم ما يطمئن العميل.</span>
             )}
@@ -1312,6 +1332,31 @@ export default function Admin() {
                 onChange={u(["about", "badgePdf"])}
                 hint="الملف الحالي: /images/freelance-badge.pdf. اتركه فارغاً لإخفاء الزر."
               />
+            </div>
+            <div className="adm-card">
+              <b>قسم «عقود موثّقة وعروض أسعار رسمية» في الصفحة الرئيسية</b>
+              <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <input type="checkbox" checked={d.trust?.show !== false} onChange={(e) => u(["trust", "show"])(e.target.checked)} />
+                إظهار القسم (يظهر بعد «ماذا ستحصل عليه» وقبل «من أنا»)
+              </label>
+              <Text label="العنوان (الكلمة بين { } تظهر بالذهبي)" value={d.trust?.title} onChange={u(["trust", "title"])} />
+              <Text label="النص تحت العنوان" area rows={2} value={d.trust?.subtitle} onChange={u(["trust", "subtitle"])} />
+              <List
+                items={d.trust?.points || []}
+                onChange={u(["trust", "points"])}
+                addLabel="إضافة نقطة"
+                title={(p) => p.title || "نقطة"}
+                newItem={() => ({ icon: "shield", title: "", desc: "" })}
+                render={(p, set) => (
+                  <>
+                    <IconPick value={p.icon} onChange={(v) => set("icon", v)} />
+                    <Text label="العنوان" value={p.title} onChange={(v) => set("title", v)} />
+                    <Text label="الوصف" area rows={2} value={p.desc} onChange={(v) => set("desc", v)} />
+                  </>
+                )}
+              />
+              <Text label="جملة قبل الزر" value={d.trust?.note} onChange={u(["trust", "note"])} />
+              <Text label="نص الزر (يفتح واتساب، اتركه فارغاً لإخفائه)" value={d.trust?.button} onChange={u(["trust", "button"])} />
             </div>
           </>
         )}
