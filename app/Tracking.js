@@ -1,6 +1,7 @@
 "use client";
 import Script from "next/script";
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 // يسمح فقط بالحروف والأرقام والشرطات لمنع حقن أكواد
 const clean = (v) => String(v || "").trim().replace(/[^A-Za-z0-9_\-]/g, "");
@@ -33,6 +34,9 @@ export default function Tracking({ t = {} }) {
     document.addEventListener("click", onClick);
     return () => document.removeEventListener("click", onClick);
   }, [ga4, ads, label, xEvent]);
+
+  // روابط العقود وعروض الأسعار خاصة بالعميل، فلا نرسلها لأدوات التتبع والإعلانات
+  if (usePathname()?.startsWith("/doc/")) return null;
 
   return (
     <>

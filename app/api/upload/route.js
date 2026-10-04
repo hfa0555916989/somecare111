@@ -17,7 +17,7 @@ export async function POST(request) {
       onBeforeGenerateToken: async () => {
         if (!isAuthed()) throw new Error("غير مصرّح");
         return {
-          allowedContentTypes: ["image/*", "video/*"],
+          allowedContentTypes: ["image/*", "video/*", "application/pdf"],
           maximumSizeInBytes: 200 * 1024 * 1024,
           addRandomSuffix: true,
         };
