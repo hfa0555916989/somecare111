@@ -49,12 +49,14 @@ export default async function DocPage({ params }) {
   // {الآيبان} {البنك} {المستفيد} داخل أي بند تُستبدل ببيانات الحساب الفعلية
   const fill = (s) =>
     String(s)
-      .replace(/\{(الآيبان|الايبان|iban)\}/gi, groupIban(p.iban) || "—")
+      .replace(/\{(الآيبان|الايبان|iban)\}/gi, groupIban(p.iban) || (http(p.ibanCert) ? "الموضح في شهادة الآيبان المرفقة" : "—"))
       .replace(/\{(البنك|bank)\}/gi, p.bankName || "—")
       .replace(/\{(المستفيد|beneficiary)\}/gi, p.accountName || p.name);
   const terms = (doc.terms || []).map(fill);
+  // الحساب البنكي يظهر برقم الآيبان، أو برابط شهادة الآيبان وحده
+  const hasBank = !!p.iban || http(p.ibanCert);
   // في العقود يُضاف بند حساب السداد تلقائياً، إلا إذا كُتب الآيبان في أحد البنود
-  const payClause = isContract && !!p.iban && !(doc.terms || []).some((t) => /\{(الآيبان|الايبان|iban)\}/i.test(t));
+  const payClause = isContract && hasBank && !(doc.terms || []).some((t) => /\{(الآيبان|الايبان|iban)\}/i.test(t));
   // المرفقات الرسمية الثابتة تُرفق مع كل وثيقة، ثم مرفقات هذه الوثيقة
   const attachments = [
     http(p.ibanCert) && { title: "شهادة الآيبان من البنك", url: p.ibanCert },
@@ -174,7 +176,7 @@ export default async function DocPage({ params }) {
           </section>
         )}
 
-        {(p.iban || p.bankName) && (
+        {(hasBank || p.bankName) && (
           <section className="bank">
             <h3 className="paper-h">طريقة الدفع: تحويل بنكي</h3>
             <dl>
@@ -206,9 +208,18 @@ export default async function DocPage({ params }) {
               {payClause && (
                 <li>
                   <b>حساب السداد المعتمد:</b> يتم السداد بالتحويل البنكي حصراً إلى حساب الطرف الأول
-                  {p.bankName && <> لدى {p.bankName}</>} باسم المستفيد {p.accountName || p.name}، رقم الآيبان{" "}
-                  <b dir="ltr" style={{ whiteSpace: "nowrap" }}>{groupIban(p.iban)}</b>
-                  ، ولا يُعتد بأي تحويل إلى حساب آخر.{http(p.ibanCert) && " وشهادة الآيبان الصادرة من البنك مرفقة بهذا العقد."}
+                  {p.bankName && <> لدى {p.bankName}</>} باسم المستفيد {p.accountName || p.name}
+                  {p.iban ? (
+                    <>
+                      ، رقم الآيبان <b dir="ltr" style={{ whiteSpace: "nowrap" }}>{groupIban(p.iban)}</b>
+                    </>
+                  ) : (
+                    <>
+                      ، الموضح في{" "}
+                      <a href={p.ibanCert} target="_blank" rel="noopener">شهادة الآيبان الصادرة من البنك ↗</a>
+                    </>
+                  )}
+                  ، ولا يُعتد بأي تحويل إلى حساب آخر.{p.iban && http(p.ibanCert) && " وشهادة الآيبان الصادرة من البنك مرفقة بهذا العقد."}
                 </li>
               )}
             </ol>
@@ -273,9 +284,9 @@ export default async function DocPage({ params }) {
                 {" "}{http(p.domainProof) && <a href={p.domainProof} target="_blank" rel="noopener">كتاب إثبات تسجيل النطاق ↗</a>}
                 {" "}{/^https?:\/\//i.test(p.whoisUrl || "") && <a href={p.whoisUrl} target="_blank" rel="noopener">بحث WHOIS في المركز السعودي لمعلومات الشبكة ↗</a>}
               </li>
-              {p.iban && (
+              {hasBank && (
                 <li>
-                  <b>الحساب البنكي:</b> الآيبان المذكور باسم {p.accountName || p.name}، مطابق لاسم صاحب وثيقة العمل الحر.
+                  <b>الحساب البنكي:</b> {p.iban ? "الآيبان المذكور" : "حساب السداد"} باسم {p.accountName || p.name}، مطابق لاسم صاحب وثيقة العمل الحر.
                   {" "}{http(p.ibanCert) && <a href={p.ibanCert} target="_blank" rel="noopener">شهادة الآيبان من البنك ↗</a>}
                 </li>
               )}
