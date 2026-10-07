@@ -5,6 +5,10 @@ import {
   summarize, periodRange, inRange, receivables, riyadhToday, toAmount,
 } from "@/lib/finance";
 import { AIcon } from "./AdminIcons";
+import { uploadPrivate, patchFile, fileUrl } from "./upload";
+
+// تصنيف الفاتورة في الأرشيف حسب نوع العملية
+const fileCat = (e) => (e.kind === "expense" ? (e.cat === "ads" ? "ads" : "invoice") : e.kind === "income" ? "income" : "bank");
 
 const money = (n) => Number(n || 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
 const sar = (n) => `${money(n)} ر.س`;
@@ -105,8 +109,23 @@ function MonthChart({ months }) {
 }
 
 /* ---------- نموذج إضافة / تعديل عملية ---------- */
-function EntryForm({ entry, docs, onSave, onDelete, onClose, busy }) {
+function EntryForm({ entry, docs, onSave, onDelete, onClose, busy, canAttach }) {
   const [e, setE] = useState(entry);
+  const [up, setUp] = useState("");
+  const attachRef = useRef(null);
+  async function attach(ev) {
+    const f = ev.target.files?.[0];
+    ev.target.value = "";
+    if (!f) return;
+    setUp("جارٍ رفع الفاتورة...");
+    try {
+      const item = await uploadPrivate(f, { cat: fileCat(e), date: e.date, title: e.note || f.name.replace(/\.[^.]+$/, ""), amount: toAmount(e.amount), client: e.client, docRef: e.docRef });
+      setE((x) => ({ ...x, fileId: item.id }));
+      setUp("");
+    } catch (x) {
+      setUp(x.message);
+    }
+  }
   const set = (k, v) => setE((x) => ({ ...x, [k]: v }));
   const setKind = (kind) => setE((x) => ({ ...blank(kind), amount: x.amount, date: x.date, note: x.note, id: x.id, _p: x._p }));
   const showChannel = e.kind === "income" || (e.kind === "expense" && e.cat === "ads");
@@ -173,6 +192,20 @@ function EntryForm({ entry, docs, onSave, onDelete, onClose, busy }) {
           وصف (اختياري)
           <input type="text" value={e.note} onChange={(ev) => set("note", ev.target.value)} placeholder={e.kind === "expense" ? "مثال: اشتراك Vercel Pro" : ""} />
         </label>
+        <div className="acc-row">
+          {e.fileId ? (
+            <>
+              <a className="mini" href={fileUrl(e.fileId)} target="_blank" rel="noopener">📎 عرض الفاتورة</a>
+              <button type="button" className="mini danger" onClick={() => set("fileId", "")}>فك الإرفاق</button>
+            </>
+          ) : (
+            <button type="button" className="mini acc-file" disabled={!canAttach} onClick={() => attachRef.current?.click()} title={canAttach ? "" : "اربط المخزن الخاص أولاً (الدليل)"}>
+              <AIcon name="camera" size={18} /> إرفاق فاتورة / إيصال
+            </button>
+          )}
+          <input ref={attachRef} type="file" hidden accept="image/*,application/pdf" onChange={attach} />
+          {up && <span className="adm-hint">{up}</span>}
+        </div>
         <div className="acc-sheet-f">
           <button type="submit" className="primary" disabled={busy || !(toAmount(e.amount) > 0)}>{busy ? "جارٍ الحفظ..." : "حفظ"}</button>
           {e.id && onDelete && (
@@ -305,7 +338,14 @@ export default function Accounting() {
   async function saveProposed() {
     setBusy(true);
     try {
-      await api("POST", { entries: proposed.entries });
+      // الفاتورة التي قرأها الذكاء الاصطناعي تُحفظ في الأرشيف وتُربط بالعمليات
+      let file = null;
+      if (aiFile && data.privateBlob) {
+        const first = proposed.entries[0] || {};
+        file = await uploadPrivate(aiFile, { cat: fileCat(first), date: first.date, title: first.note || aiFile.name.replace(/\.[^.]+$/, ""), amount: proposed.entries.reduce((a, x) => a + (Number(x.amount) || 0), 0), client: first.client, docRef: first.docRef }).catch(() => null);
+      }
+      const j = await api("POST", { entries: proposed.entries.map((x) => ({ ...x, fileId: file?.id || x.fileId })) });
+      if (file) await patchFile(file.id, { entryIds: j.items.map((x) => x.id) }).catch(() => {});
       flash(`تم حفظ ${proposed.entries.length} عملية ✓`);
       setProposed(null);
       setAiText("");
@@ -474,7 +514,7 @@ export default function Accounting() {
                 <button key={e.id} type="button" className={"acc-item k-" + e.kind} onClick={() => setForm({ ...e })}>
                   <span className="acc-item-ic"><AIcon name={e.kind === "expense" && e.cat === "ads" ? "ads" : KIND_ICON[e.kind]} size={20} /></span>
                   <span className="acc-item-b">
-                    <b>{catName(e)}{e.channel ? ` · ${CHANNELS[e.channel]}` : ""}</b>
+                    <b>{e.fileId ? "📎 " : ""}{catName(e)}{e.channel ? ` · ${CHANNELS[e.channel]}` : ""}</b>
                     <small>{[e.client, e.note, e.docRef].filter(Boolean).join(" · ") || KINDS[e.kind]}</small>
                   </span>
                   <span className="acc-item-a">
@@ -676,7 +716,7 @@ export default function Accounting() {
         </>
       )}
 
-      {form && <EntryForm key={form.id || form._p || form.kind} entry={form} docs={docs} busy={busy} onSave={saveEntry} onDelete={removeEntry} onClose={() => setForm(null)} />}
+      {form && <EntryForm key={form.id || form._p || form.kind} entry={form} docs={docs} busy={busy} canAttach={!!data.privateBlob} onSave={saveEntry} onDelete={removeEntry} onClose={() => setForm(null)} />}
     </div>
   );
 }

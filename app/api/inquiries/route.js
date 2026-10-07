@@ -3,6 +3,7 @@ import { isAuthed } from "@/lib/auth";
 import { dbConnected } from "@/lib/content";
 import { listInquiries, updateInquiry, deleteInquiry } from "@/lib/inquiries";
 import { turnstileEnabled } from "@/lib/turnstile";
+import { mailEnabled } from "@/lib/mail";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +11,7 @@ const deny = () => NextResponse.json({ error: "unauthorized" }, { status: 401 })
 
 export async function GET() {
   if (!isAuthed()) return deny();
-  return NextResponse.json({ items: await listInquiries(), db: dbConnected(), turnstile: turnstileEnabled() });
+  return NextResponse.json({ items: await listInquiries(), db: dbConnected(), turnstile: turnstileEnabled(), mail: mailEnabled() });
 }
 
 export async function PATCH(req) {

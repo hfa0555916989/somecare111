@@ -4,6 +4,7 @@ import { dbConnected } from "@/lib/content";
 import { listDocs, totals } from "@/lib/docs";
 import { listEntries, createEntries, updateEntry, deleteEntry, getSettings, saveSettings } from "@/lib/accounting";
 import { cleanEntry } from "@/lib/finance";
+import { storageStatus } from "@/lib/storage";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +22,7 @@ export async function GET() {
   const linkable = docs
     .filter((d) => d.status === "accepted" || d.status === "sent")
     .map((d) => ({ number: d.number, title: d.title, client: d.client?.company || d.client?.name || "", status: d.status, total: totals(d).total }));
-  return NextResponse.json({ items, settings, docs: linkable, db: dbConnected(), ai: !!process.env.ANTHROPIC_API_KEY });
+  return NextResponse.json({ items, settings, docs: linkable, db: dbConnected(), ai: !!process.env.ANTHROPIC_API_KEY, ...storageStatus() });
 }
 
 // إضافة عملية واحدة أو عدة عمليات ({ entries: [...] })
