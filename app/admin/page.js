@@ -4,6 +4,8 @@ import { upload } from "@vercel/blob/client";
 import { BRAND_THEME, BRAND_ASSETS, FONTS, LATIN_FONTS, isFont, fontsHref, SITE_URL, SIZE_FIELDS, RATIOS, RATIO_FIELDS, DEFAULT_SIZES, sizeVars, docTotals, validIban, siteUrl, latinDigits, normalizeIban } from "@/lib/defaults";
 import { ICONS, SOCIALS, Icon } from "../Icons";
 import { BrandLogo, BrandText, FooterBrand } from "../SiteChrome";
+import { AIcon } from "./AdminIcons";
+import Accounting from "./Accounting";
 
 // مسودة التعديلات على هذا الجهاز (تُحفظ تلقائياً حتى لا تضيع قبل الضغط على «حفظ التغييرات»)
 const DRAFT_KEY = "admin-draft";
@@ -299,26 +301,50 @@ function Sizes({ d, set, reset, setTheme }) {
   );
 }
 
-const TABS = [
-  ["brand", "الهوية والشعار"],
-  ["sizes", "الأحجام والخطوط"],
-  ["inquiries", "الاستفسارات"],
-  ["docs", "العقود وعروض الأسعار"],
-  ["hero", "الواجهة"],
-  ["packages", "الباقات والأسعار"],
-  ["addons", "الإضافات"],
-  ["features", "المميزات"],
-  ["about", "من أنا والترخيص"],
-  ["gallery", "الصور والعروض"],
-  ["video", "الفيديو"],
-  ["contact", "التواصل"],
-  ["social", "وسائل التواصل"],
-  ["titles", "العناوين"],
-  ["theme", "الألوان"],
-  ["seo", "SEO"],
-  ["pages", "الصفحات والفوتر"],
-  ["tracking", "التتبع والإعلانات"],
+// أقسام اللوحة: تظهر مربعات في الصفحة الرئيسية للوحة، وشريط تبويب في الشاشات الكبيرة
+const GROUPS = [
+  [
+    "العمل والمال",
+    [
+      ["accounting", "المحاسبة", "wallet"],
+      ["inquiries", "الاستفسارات", "inbox"],
+      ["docs", "العقود وعروض الأسعار", "file"],
+    ],
+  ],
+  [
+    "محتوى الموقع",
+    [
+      ["hero", "الواجهة", "layout"],
+      ["packages", "الباقات والأسعار", "box"],
+      ["addons", "الإضافات", "plusSq"],
+      ["features", "المميزات", "star"],
+      ["about", "من أنا والترخيص", "user"],
+      ["gallery", "الصور والعروض", "image"],
+      ["video", "الفيديو", "video"],
+      ["titles", "العناوين", "heading"],
+      ["pages", "الصفحات والفوتر", "pages"],
+    ],
+  ],
+  [
+    "الهوية والمظهر",
+    [
+      ["brand", "الهوية والشعار", "badge"],
+      ["sizes", "الأحجام والخطوط", "type"],
+      ["theme", "الألوان", "drop"],
+    ],
+  ],
+  [
+    "التواصل والتسويق",
+    [
+      ["contact", "التواصل", "phone"],
+      ["social", "وسائل التواصل", "share"],
+      ["seo", "SEO", "search"],
+      ["tracking", "التتبع والإعلانات", "chart"],
+    ],
+  ],
 ];
+const TABS = [["home", "الرئيسية", "home"], ...GROUPS.flatMap(([, items]) => items)];
+const TAB_INFO = Object.fromEntries(TABS.map(([k, l, ic]) => [k, { label: l, icon: ic }]));
 
 const COLOR_FIELDS = [
   ["bg", "لون الخلفية"],
@@ -912,7 +938,9 @@ export default function Admin() {
   const [state, setState] = useState("loading"); // loading | login | ready
   const [data, setData] = useState(null);
   const [db, setDb] = useState(true);
-  const [tab, setTab] = useState("brand");
+  const [tab, setTabState] = useState("home");
+  // عدد الأقسام المفتوحة في سجل المتصفح (لزر الرجوع في الجوال)
+  const navDepth = useRef(0);
   const [pw, setPw] = useState("");
   const [msg, setMsg] = useState("");
   const [saving, setSaving] = useState(false);
@@ -949,6 +977,42 @@ export default function Admin() {
   useEffect(() => {
     load();
   }, []);
+
+  // القسم المفتوح يُحفظ في الرابط (#accounting) حتى يعمل زر الرجوع في الجوال ويبقى القسم بعد التحديث
+  useEffect(() => {
+    const fromHash = () => {
+      const h = decodeURIComponent(location.hash.slice(1));
+      setTabState(TAB_INFO[h] ? h : "home");
+    };
+    const onPop = () => {
+      navDepth.current = location.hash ? Math.max(1, navDepth.current - 1) : 0;
+      fromHash();
+    };
+    // فتح رابط فيه قسم مباشرة: تصير الرئيسية خلفه في السجل حتى يرجع لها زر الرجوع
+    if (location.hash) {
+      const h = location.hash;
+      history.replaceState(null, "", location.pathname + location.search);
+      history.pushState(null, "", h);
+      navDepth.current = 1;
+    }
+    fromHash();
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  function setTab(k) {
+    if (k === tab) return;
+    history.pushState(null, "", k === "home" ? location.pathname + location.search : "#" + k);
+    navDepth.current++;
+    setTabState(k);
+    window.scrollTo(0, 0);
+  }
+  function goHome() {
+    if (navDepth.current > 0) return history.go(-navDepth.current);
+    history.replaceState(null, "", location.pathname + location.search);
+    setTabState("home");
+    window.scrollTo(0, 0);
+  }
 
   const dirty = !!data && !!savedJson && JSON.stringify(data) !== savedJson;
 
@@ -1068,17 +1132,29 @@ export default function Admin() {
     <div className="adm">
       <div className="adm-top">
         <strong>لوحة التحكم</strong>
-        <a href="/" target="_blank" className="mini" style={{ color: "#d4a84b" }}>عرض الموقع</a>
-        <button className="mini" onClick={logout}>خروج</button>
+        <a href="/" target="_blank" className="mini adm-desk" style={{ color: "#d4a84b" }}>عرض الموقع</a>
+        <button className="mini adm-desk" onClick={logout}>خروج</button>
         <button className="primary" onClick={save} disabled={saving}>{saving ? "جارٍ الحفظ..." : "حفظ التغييرات"}</button>
         {msg === "ok" && !dirty && <span className="ok">تم الحفظ{storage === "file" ? " في الملف المحلي .data/content.json" : ""} ✓</span>}
         {msg && msg !== "ok" && <span className="err">{msg}</span>}
         {dirty && !saving && <span className="adm-hint">تعديلات لم تُنشر بعد (محفوظة مؤقتاً على هذا الجهاز)</span>}
-        <span className="adm-top-tools">
+        <span className="adm-top-tools adm-desk">
           <button className="mini" onClick={exportBackup} title="تنزيل كل المحتوى كملف على جهازك">تنزيل نسخة احتياطية</button>
           <button className="mini" onClick={() => importRef.current?.click()} title="استرجاع المحتوى من ملف نسخة احتياطية">استيراد نسخة</button>
-          <input ref={importRef} type="file" accept="application/json,.json" hidden onChange={importBackup} />
         </span>
+        <input ref={importRef} type="file" accept="application/json,.json" hidden onChange={importBackup} />
+        {tab !== "home" && (
+          <div className="adm-crumb">
+            <button type="button" onClick={goHome}>
+              <AIcon name="back" size={18} />
+              الأقسام
+            </button>
+            <b>
+              <AIcon name={TAB_INFO[tab].icon} size={20} />
+              {TAB_INFO[tab].label}
+            </b>
+          </div>
+        )}
       </div>
       <div className="adm-tabs">
         {TABS.map(([k, l]) => (
@@ -1117,6 +1193,48 @@ export default function Admin() {
             صور الموقع محفوظة في المشروع على GitHub وتعمل طبيعي. زر «اختيار ملف» للرفع من اللوحة غير مفعّل لأن Vercel Blob غير مربوط؛ لتفعيله أنشئ Blob بنوع <b>Public</b> (وليس Private) واربطه بالمشروع ثم أعد النشر. ويمكنك دائماً كتابة مسار صورة موجودة مثل /images/about-photo.jpg.
           </div>
         )}
+
+        {tab === "home" && (
+          <div className="adm-home">
+            {GROUPS.map(([g, items]) => (
+              <section key={g}>
+                <h2>{g}</h2>
+                <div className="adm-tiles">
+                  {items.map(([k, l, ic]) => (
+                    <button key={k} type="button" className={"adm-tile" + (k === "accounting" ? " hl" : "")} onClick={() => setTab(k)}>
+                      <AIcon name={ic} size={28} />
+                      <span>{l}</span>
+                      {k === "inquiries" && newCount > 0 && <span className="count">{newCount}</span>}
+                    </button>
+                  ))}
+                </div>
+              </section>
+            ))}
+            <section className="adm-mob">
+              <h2>أدوات</h2>
+              <div className="adm-tiles">
+                <a className="adm-tile" href="/" target="_blank">
+                  <AIcon name="external" size={28} />
+                  <span>عرض الموقع</span>
+                </a>
+                <button type="button" className="adm-tile" onClick={exportBackup}>
+                  <AIcon name="download" size={28} />
+                  <span>تنزيل نسخة احتياطية</span>
+                </button>
+                <button type="button" className="adm-tile" onClick={() => importRef.current?.click()}>
+                  <AIcon name="upload" size={28} />
+                  <span>استيراد نسخة</span>
+                </button>
+                <button type="button" className="adm-tile" onClick={logout}>
+                  <AIcon name="logout" size={28} />
+                  <span>خروج</span>
+                </button>
+              </div>
+            </section>
+          </div>
+        )}
+
+        {tab === "accounting" && <Accounting />}
 
         {tab === "brand" && (
           <>
