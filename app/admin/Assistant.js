@@ -50,6 +50,7 @@ export default function Assistant({ onNavigate }) {
   const [voices, setVoices] = useState([]);
   const [voiceOn, setVoiceOn] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [openHint, setOpenHint] = useState("");
   const v = useVoice();
   const convRef = useRef(false);
   const chatRef = useRef(chat);
@@ -82,7 +83,9 @@ export default function Assistant({ onNavigate }) {
       if (!r.ok) throw new Error(j.error || "تعذر الاتصال بالمساعد");
       const next = { messages: j.messages, pending: j.pending || null };
       setChat(next);
-      for (const a of j.actions || []) if (a.type === "open" && a.section !== "assistant") onNavigate?.(a.section, true);
+      // فتح القسم المناسب للتقرير؛ أثناء المحادثة الصوتية يظهر زر بدل الانتقال حتى لا تنقطع
+      for (const a of j.actions || [])
+        if (a.type === "open" && a.section !== "assistant") convRef.current ? setOpenHint(a.section) : onNavigate?.(a.section, true);
       if (j.notice) setErr(j.notice);
       return next;
     } catch (x) {
@@ -271,6 +274,9 @@ export default function Assistant({ onNavigate }) {
               <span className="adm-hint">أو اكتب ما تريد تعديله</span>
             </div>
           </div>
+        )}
+        {openHint && !conv && (
+          <button type="button" className="gold" style={{ justifySelf: "center" }} onClick={() => { const k = openHint; setOpenHint(""); onNavigate?.(k); }}>عرض القسم الذي ذكره المساعد ←</button>
         )}
         {busy && <div className="as-msg note">المساعد يفكر...</div>}
         <div ref={endRef} />

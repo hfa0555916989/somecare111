@@ -62,8 +62,9 @@ export function useVoice() {
     rec.start(250);
     r.current.rec = rec;
     await new Promise((finish) => {
+      r.current.finish = finish;
       const tick = () => {
-        if (rec.state !== "recording") return finish();
+        if (rec.state !== "recording" || !r.current.analyser) return finish();
         const v = rms();
         setLevel(Math.min(1, v * 8));
         const now = Date.now();
@@ -136,11 +137,12 @@ export function useVoice() {
   function stop() {
     r.current.cancelled = true;
     cancelAnimationFrame(r.current.raf);
+    r.current.finish?.();
     if (r.current.rec?.state === "recording") r.current.rec.stop();
     interrupt();
     r.current.stream?.getTracks().forEach((t) => t.stop());
     r.current.ctx?.close().catch(() => {});
-    r.current = {};
+    r.current = { cancelled: true };
     setState("idle");
     setLevel(0);
   }
