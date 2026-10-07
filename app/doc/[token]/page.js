@@ -86,7 +86,7 @@ export default async function DocPage({ params }) {
           <div className="paper-meta">
             <h1>{TYPES[doc.type]}</h1>
             <dl>
-              <div><dt>رقم {isContract ? "العقد" : "العرض"}</dt><dd dir="ltr">{doc.number}</dd></div>
+              <div><dt>رقم {isContract ? "العقد" : doc.type === "proposal" ? "المقترح" : "العرض"}</dt><dd dir="ltr">{doc.number}</dd></div>
               <div><dt>التاريخ</dt><dd dir="ltr">{fmtDate(doc.date)}</dd></div>
               {exp && <div><dt>صلاحية العرض</dt><dd>{doc.validDays} يوماً (حتى <span dir="ltr">{fmtDate(exp)}</span>)</dd></div>}
               {doc.ref && <div><dt>مبني على</dt><dd dir="ltr">{doc.ref}</dd></div>}
@@ -176,7 +176,7 @@ export default async function DocPage({ params }) {
           </section>
         )}
 
-        {(hasBank || p.bankName) && (
+        {(hasBank || p.bankName) && doc.type !== "proposal" && (
           <section className="bank">
             <h3 className="paper-h">طريقة الدفع: تحويل بنكي</h3>
             <dl>
@@ -312,7 +312,7 @@ export default async function DocPage({ params }) {
           ) : expired ? (
             <div className="stamp bad"><b>انتهت صلاحية هذا العرض</b><p>تواصل معنا لإصدار عرض محدّث.</p></div>
           ) : (
-            <AcceptForm token={doc.token} kind={isContract ? "العقد" : "العرض"} total={money(t.total)} />
+            <AcceptForm token={doc.token} kind={isContract ? "العقد" : doc.type === "proposal" ? "المقترح" : "العرض"} total={money(t.total)} />
           )}
         </section>
 

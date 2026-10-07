@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getContent } from "@/lib/content";
 import { getDocByToken, acceptDoc, liveProvider, isExpired } from "@/lib/docs";
 import { createInquiry, rateLimit, clientIp } from "@/lib/inquiries";
+import { archiveAcceptedDoc } from "@/lib/doc-archive";
+import { notify } from "@/lib/mail";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +35,17 @@ export async function POST(req) {
     console.error("Accept failed", e);
     return NextResponse.json({ error: "تعذر تسجيل الموافقة حالياً، حاول بعد قليل أو تواصل معنا واتساب" }, { status: 503 });
   }
+
+  // أرشفة إجبارية في المخزن الخاص (نسخة البيانات والبصمة وصفحة الوثيقة)
+  try {
+    await archiveAcceptedDoc(item, liveProvider(c).site);
+  } catch (e) {
+    console.error("Archive on accept failed", e);
+  }
+  await notify(c, `✅ موافقة على ${doc.type === "contract" ? "العقد" : "العرض"} ${doc.number}`, [
+    ["العميل", name],
+    ["الوثيقة", doc.title || doc.number],
+  ]).catch(() => {});
 
   // تنبيه في «الاستفسارات» بلوحة التحكم
   try {

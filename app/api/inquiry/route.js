@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getContent } from "@/lib/content";
 import { createInquiry, rateLimit, clientIp } from "@/lib/inquiries";
 import { verifyTurnstile } from "@/lib/turnstile";
+import { notify } from "@/lib/mail";
 
 export const dynamic = "force-dynamic";
 
@@ -44,6 +45,15 @@ export async function POST(req) {
     console.error("Inquiry save failed", e);
     return NextResponse.json({ error: "تعذر الإرسال حالياً، تواصل معنا عبر واتساب" }, { status: 503 });
   }
+
+  // إشعار بالبريد (إذا فُعّل من «الاستفسارات» وأضيف RESEND_API_KEY)
+  await notify(c, `استفسار جديد ${item.id} من ${data.name}`, [
+    ["الاسم", data.name],
+    ["الجوال", data.phone],
+    ["البريد", data.email],
+    ["الخدمة", data.service],
+    ["الرسالة", data.message],
+  ], { replyTo: data.email });
 
   const msg = String(f.success || "تم استلام استفسارك برقم {number}").replace("{number}", item.id);
   return NextResponse.json({ ok: true, id: item.id, message: msg });

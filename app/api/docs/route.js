@@ -58,6 +58,8 @@ export async function DELETE(req) {
     await deleteDoc(id);
     return NextResponse.json({ ok: true });
   } catch (e) {
+    if (e.message === "LOCKED")
+      return NextResponse.json({ error: "وافق العميل على هذه الوثيقة، لذلك هي محفوظة إجبارياً في الأرشيف ولا تُحذف. يمكنك إلغاؤها فقط." }, { status: 409 });
     return fail(e);
   }
 }

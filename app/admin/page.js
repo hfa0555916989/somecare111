@@ -4,6 +4,13 @@ import { upload } from "@vercel/blob/client";
 import { BRAND_THEME, BRAND_ASSETS, FONTS, LATIN_FONTS, isFont, fontsHref, SITE_URL, SIZE_FIELDS, RATIOS, RATIO_FIELDS, DEFAULT_SIZES, sizeVars, docTotals, validIban, siteUrl, latinDigits, normalizeIban } from "@/lib/defaults";
 import { ICONS, SOCIALS, Icon } from "../Icons";
 import { BrandLogo, BrandText, FooterBrand } from "../SiteChrome";
+import { AIcon } from "./AdminIcons";
+import Accounting from "./Accounting";
+import Archive from "./Archive";
+import Projects from "./Projects";
+import Assistant from "./Assistant";
+import Ideas from "./Ideas";
+import Guide from "./Guide";
 
 // مسودة التعديلات على هذا الجهاز (تُحفظ تلقائياً حتى لا تضيع قبل الضغط على «حفظ التغييرات»)
 const DRAFT_KEY = "admin-draft";
@@ -299,26 +306,55 @@ function Sizes({ d, set, reset, setTheme }) {
   );
 }
 
-const TABS = [
-  ["brand", "الهوية والشعار"],
-  ["sizes", "الأحجام والخطوط"],
-  ["inquiries", "الاستفسارات"],
-  ["docs", "العقود وعروض الأسعار"],
-  ["hero", "الواجهة"],
-  ["packages", "الباقات والأسعار"],
-  ["addons", "الإضافات"],
-  ["features", "المميزات"],
-  ["about", "من أنا والترخيص"],
-  ["gallery", "الصور والعروض"],
-  ["video", "الفيديو"],
-  ["contact", "التواصل"],
-  ["social", "وسائل التواصل"],
-  ["titles", "العناوين"],
-  ["theme", "الألوان"],
-  ["seo", "SEO"],
-  ["pages", "الصفحات والفوتر"],
-  ["tracking", "التتبع والإعلانات"],
+// أقسام اللوحة: تظهر مربعات في الصفحة الرئيسية للوحة، وشريط تبويب في الشاشات الكبيرة
+const GROUPS = [
+  [
+    "العمل والمال",
+    [
+      ["accounting", "المحاسبة", "wallet"],
+      ["assistant", "المساعد الذكي", "chat"],
+      ["inquiries", "الاستفسارات", "inbox"],
+      ["ideas", "أفكار العملاء", "bulb"],
+      ["docs", "العقود وعروض الأسعار", "file"],
+      ["projects", "المشاريع والمفاتيح", "key"],
+      ["archive", "الأرشيف والملفات", "archive"],
+      ["guide", "الدليل والتزاماتي", "book"],
+    ],
+  ],
+  [
+    "محتوى الموقع",
+    [
+      ["hero", "الواجهة", "layout"],
+      ["packages", "الباقات والأسعار", "box"],
+      ["addons", "الإضافات", "plusSq"],
+      ["features", "المميزات", "star"],
+      ["about", "من أنا والترخيص", "user"],
+      ["gallery", "الصور والعروض", "image"],
+      ["video", "الفيديو", "video"],
+      ["titles", "العناوين", "heading"],
+      ["pages", "الصفحات والفوتر", "pages"],
+    ],
+  ],
+  [
+    "الهوية والمظهر",
+    [
+      ["brand", "الهوية والشعار", "badge"],
+      ["sizes", "الأحجام والخطوط", "type"],
+      ["theme", "الألوان", "drop"],
+    ],
+  ],
+  [
+    "التواصل والتسويق",
+    [
+      ["contact", "التواصل", "phone"],
+      ["social", "وسائل التواصل", "share"],
+      ["seo", "SEO", "search"],
+      ["tracking", "التتبع والإعلانات", "chart"],
+    ],
+  ],
 ];
+const TABS = [["home", "الرئيسية", "home"], ...GROUPS.flatMap(([, items]) => items)];
+const TAB_INFO = Object.fromEntries(TABS.map(([k, l, ic]) => [k, { label: l, icon: ic }]));
 
 const COLOR_FIELDS = [
   ["bg", "لون الخلفية"],
@@ -345,7 +381,7 @@ function Inquiries({ form, setForm, onCount }) {
     const j = await r.json().catch(() => ({}));
     if (!r.ok) return setErr(j.error || "تعذر التحميل");
     setItems(j.items);
-    setInfo({ db: j.db, turnstile: j.turnstile });
+    setInfo({ db: j.db, turnstile: j.turnstile, mail: j.mail });
     onCount(j.items.filter((i) => i.status === "new").length);
   }
   useEffect(() => {
@@ -384,6 +420,13 @@ function Inquiries({ form, setForm, onCount }) {
         </label>
         <Text label="عنوان النموذج" value={form.title} onChange={(v) => setForm("title", v)} />
         <Text label="رسالة النجاح ({number} = رقم الاستفسار)" value={form.success} onChange={(v) => setForm("success", v)} />
+        <Text
+          label="إيميل الإشعارات (يصلك عليه كل استفسار جديد وكل موافقة على عرض أو عقد)"
+          ltr
+          value={form.notifyEmail}
+          onChange={(v) => setForm("notifyEmail", v)}
+          hint={info.mail ? "الإرسال مفعّل ✓ (احفظ التغييرات بعد كتابة الإيميل). لأكثر من إيميل افصل بينها بفاصلة." : "اكتب الإيميل هنا، ثم أضف RESEND_API_KEY في Vercel ليبدأ الإرسال (التفاصيل في «الدليل الإرشادي»)."}
+        />
         <span className="adm-hint">
           التحقق من الروبوتات (Cloudflare Turnstile):{" "}
           {info.turnstile ? <span className="ok">مفعّل ✓</span> : <span className="err">غير مفعّل، أضف TURNSTILE_SITE_KEY و TURNSTILE_SECRET_KEY في Vercel</span>}
@@ -457,7 +500,7 @@ function Inquiries({ form, setForm, onCount }) {
 }
 
 /* ---------- العقود وعروض الأسعار ---------- */
-const DOC_TYPES = { quote: "عرض سعر", contract: "عقد" };
+const DOC_TYPES = { quote: "عرض سعر", contract: "عقد", proposal: "مقترح" };
 const DOC_STATUS = { draft: "مسودة", sent: "مُرسل", accepted: "تمت الموافقة", cancelled: "ملغي" };
 // تاريخ اليوم بتوقيت جهاز المستخدم (وليس UTC)
 const today = () => new Date().toLocaleDateString("en-CA");
@@ -497,6 +540,51 @@ function blankDoc(type, k) {
   };
 }
 
+// مساعد التسعير: يقارن البنود بالباقات والإضافات والعروض السابقة ويقترح سعراً لا يبتعد عنها كثيراً
+function PriceAdvisor({ doc, setDoc }) {
+  const [busy, setBusy] = useState(false);
+  const [res, setRes] = useState(null);
+  const [err, setErr] = useState("");
+  const VERDICT = { fair: ["ok", "الأسعار مناسبة"], low: ["err", "الأسعار أقل من المعتاد"], high: ["err", "الأسعار أعلى من المعتاد"], mixed: ["", "بعض البنود تحتاج مراجعة"] };
+  async function ask() {
+    setBusy(true);
+    setErr("");
+    const r = await fetch("/api/docs/price", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ doc }) });
+    const j = await r.json().catch(() => ({}));
+    setBusy(false);
+    if (!r.ok) return setErr(j.error || "تعذر الاقتراح");
+    setRes(j.advice);
+  }
+  const apply = (list) => setDoc({ ...doc, sections: doc.sections.map((s, i) => { const x = list.find((y) => y.index === i); return x ? { ...s, price: Math.round(x.suggested) } : s; }) });
+  return (
+    <div className="adm-card">
+      <div className="adm-card-h">
+        <b>مساعد التسعير</b>
+        <button type="button" className="gold" disabled={busy || !doc.sections.length} onClick={ask}>{busy ? "جارٍ المقارنة..." : "اقترح السعر"}</button>
+      </div>
+      <span className="adm-hint">يقارن بنودك بباقات موقعك وإضافاته وعروضك السابقة، حتى لا يكون السعر أقل بكثير أو أعلى بكثير منها.</span>
+      {err && <span className="err">{err}</span>}
+      {res && (
+        <>
+          <span className={VERDICT[res.verdict]?.[0]}>{VERDICT[res.verdict]?.[1]}: {res.summary}</span>
+          {res.sections.map((x) => (
+            <div key={x.index} className="acc-recv">
+              <span>
+                <b>{doc.sections[x.index]?.title || `بند ${x.index + 1}`}</b>: الحالي {money(doc.sections[x.index]?.price)} ← المقترح <b>{money(x.suggested)}</b>
+                <small>النطاق المناسب {money(x.min)} – {money(x.max)} · {x.why}</small>
+              </span>
+              <button type="button" className="mini" onClick={() => apply([x])}>طبّق</button>
+            </div>
+          ))}
+          <span>الإجمالي المقترح <b>{money(res.total.suggested)}</b> ريال (المناسب {money(res.total.min)} – {money(res.total.max)})</span>
+          {res.notes?.length > 0 && <ul>{res.notes.map((n, i) => <li key={i}>{n}</li>)}</ul>}
+          <button type="button" className="gold" onClick={() => apply(res.sections)}>طبّق كل الأسعار المقترحة</button>
+        </>
+      )}
+    </div>
+  );
+}
+
 function DocEditor({ doc, setDoc, k, items, onSave, onCancel, saving }) {
   const set = (key, v) => setDoc({ ...doc, [key]: v });
   const setClient = (key, v) => setDoc({ ...doc, client: { ...doc.client, [key]: v } });
@@ -517,6 +605,7 @@ function DocEditor({ doc, setDoc, k, items, onSave, onCancel, saving }) {
           <select value={doc.type} onChange={(e) => set("type", e.target.value)}>
             <option value="quote">عرض سعر</option>
             <option value="contract">عقد تقديم خدمات</option>
+            <option value="proposal">مقترح مشروع / وثيقة متطلبات (بدون أسعار)</option>
           </select>
         </label>
         <Text label="رقم الوثيقة (اتركه فارغاً للترقيم التلقائي)" ltr value={doc.number} onChange={(v) => set("number", v)} />
@@ -610,6 +699,7 @@ function DocEditor({ doc, setDoc, k, items, onSave, onCancel, saving }) {
       <div className="note info">
         المجموع {money(t.subtotal)}{t.discount > 0 && ` − خصم ${money(t.discount)}`}{t.vat > 0 && ` + ضريبة ${money(t.vat)}`} = <b style={{ color: "#d4a84b" }}>الإجمالي {money(t.total)} ريال</b>
       </div>
+      {doc.type !== "proposal" && <PriceAdvisor doc={doc} setDoc={setDoc} />}
       <Text label="رسوم متكررة / تجديد (كل سطر منفصل)" area rows={2} value={toLines(doc.recurring)} onChange={(v) => set("recurring", fromLines(v))} />
       <Text label="مدة التنفيذ" value={doc.duration} onChange={(v) => set("duration", v)} hint="مثال: من 21 إلى 30 يوم عمل من استلام المحتوى والدفعة الأولى" />
       <Text label={doc.type === "contract" ? "بنود العقد (كل بند في سطر)" : "الشروط والملاحظات (كل شرط في سطر)"} area rows={8} value={toLines(doc.terms)} onChange={(v) => set("terms", fromLines(v))} hint={doc.type === "contract" ? "بند «حساب السداد المعتمد» بالآيبان يُضاف تلقائياً في آخر بنود العقد. ولو تبيه داخل بند معيّن اكتب {الآيبان} و{البنك} و{المستفيد} في نص البند." : "تقدر تكتب {الآيبان} و{البنك} و{المستفيد} داخل أي شرط فتُستبدل ببيانات حسابك."} />
@@ -678,7 +768,7 @@ function Docs({ k, saved = {}, setK, about, site }) {
   }, []);
 
   async function save() {
-    if (!editing.sections.length && !confirm("لا توجد بنود أسعار. حفظ الوثيقة مع ذلك؟")) return;
+    if (editing.type !== "proposal" && !editing.sections.length && !confirm("لا توجد بنود أسعار. حفظ الوثيقة مع ذلك؟")) return;
     setSaving(true);
     setMsg("");
     const r = await fetch("/api/docs", { method: editing.id ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(editing) });
@@ -912,7 +1002,9 @@ export default function Admin() {
   const [state, setState] = useState("loading"); // loading | login | ready
   const [data, setData] = useState(null);
   const [db, setDb] = useState(true);
-  const [tab, setTab] = useState("brand");
+  const [tab, setTabState] = useState("home");
+  // عدد الأقسام المفتوحة في سجل المتصفح (لزر الرجوع في الجوال)
+  const navDepth = useRef(0);
   const [pw, setPw] = useState("");
   const [msg, setMsg] = useState("");
   const [saving, setSaving] = useState(false);
@@ -949,6 +1041,42 @@ export default function Admin() {
   useEffect(() => {
     load();
   }, []);
+
+  // القسم المفتوح يُحفظ في الرابط (#accounting) حتى يعمل زر الرجوع في الجوال ويبقى القسم بعد التحديث
+  useEffect(() => {
+    const fromHash = () => {
+      const h = decodeURIComponent(location.hash.slice(1));
+      setTabState(TAB_INFO[h] ? h : "home");
+    };
+    const onPop = () => {
+      navDepth.current = location.hash ? Math.max(1, navDepth.current - 1) : 0;
+      fromHash();
+    };
+    // فتح رابط فيه قسم مباشرة: تصير الرئيسية خلفه في السجل حتى يرجع لها زر الرجوع
+    if (location.hash) {
+      const h = location.hash;
+      history.replaceState(null, "", location.pathname + location.search);
+      history.pushState(null, "", h);
+      navDepth.current = 1;
+    }
+    fromHash();
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  function setTab(k) {
+    if (k === tab) return;
+    history.pushState(null, "", k === "home" ? location.pathname + location.search : "#" + k);
+    navDepth.current++;
+    setTabState(k);
+    window.scrollTo(0, 0);
+  }
+  function goHome() {
+    if (navDepth.current > 0) return history.go(-navDepth.current);
+    history.replaceState(null, "", location.pathname + location.search);
+    setTabState("home");
+    window.scrollTo(0, 0);
+  }
 
   const dirty = !!data && !!savedJson && JSON.stringify(data) !== savedJson;
 
@@ -1041,6 +1169,17 @@ export default function Admin() {
   const resetSizes = (keys) =>
     setData((d) => ({ ...d, sizes: { ...DEFAULT_SIZES, ...d.sizes, ...Object.fromEntries(keys.map((k) => [k, DEFAULT_SIZES[k]])) } }));
 
+  // استرجاع صورة قديمة من «الأرشيف ← سجل الصور» إلى خانتها
+  function restoreImage(path, url) {
+    try {
+      const next = setIn(data, path, url);
+      setData(next);
+      alert("تم الاسترجاع. اضغط «حفظ التغييرات» لنشرها في الموقع.");
+    } catch {
+      alert("هذه الخانة لم تعد موجودة (ربما حُذفت). انسخ الرابط من زر «فتح» وضعه في الخانة التي تريدها.");
+    }
+  }
+
   function applyBrand() {
     if (!confirm("تطبيق هوية «المطوّر حسن» (الشعار والأيقونة والألوان والخطوط)؟ لن تُحفظ حتى تضغط «حفظ التغييرات».")) return;
     setData((d) => ({ ...d, theme: { ...BRAND_THEME }, brand: { ...d.brand, ...BRAND_ASSETS } }));
@@ -1068,17 +1207,29 @@ export default function Admin() {
     <div className="adm">
       <div className="adm-top">
         <strong>لوحة التحكم</strong>
-        <a href="/" target="_blank" className="mini" style={{ color: "#d4a84b" }}>عرض الموقع</a>
-        <button className="mini" onClick={logout}>خروج</button>
+        <a href="/" target="_blank" className="mini adm-desk" style={{ color: "#d4a84b" }}>عرض الموقع</a>
+        <button className="mini adm-desk" onClick={logout}>خروج</button>
         <button className="primary" onClick={save} disabled={saving}>{saving ? "جارٍ الحفظ..." : "حفظ التغييرات"}</button>
         {msg === "ok" && !dirty && <span className="ok">تم الحفظ{storage === "file" ? " في الملف المحلي .data/content.json" : ""} ✓</span>}
         {msg && msg !== "ok" && <span className="err">{msg}</span>}
         {dirty && !saving && <span className="adm-hint">تعديلات لم تُنشر بعد (محفوظة مؤقتاً على هذا الجهاز)</span>}
-        <span className="adm-top-tools">
+        <span className="adm-top-tools adm-desk">
           <button className="mini" onClick={exportBackup} title="تنزيل كل المحتوى كملف على جهازك">تنزيل نسخة احتياطية</button>
           <button className="mini" onClick={() => importRef.current?.click()} title="استرجاع المحتوى من ملف نسخة احتياطية">استيراد نسخة</button>
-          <input ref={importRef} type="file" accept="application/json,.json" hidden onChange={importBackup} />
         </span>
+        <input ref={importRef} type="file" accept="application/json,.json" hidden onChange={importBackup} />
+        {tab !== "home" && (
+          <div className="adm-crumb">
+            <button type="button" onClick={goHome}>
+              <AIcon name="back" size={18} />
+              الأقسام
+            </button>
+            <b>
+              <AIcon name={TAB_INFO[tab].icon} size={20} />
+              {TAB_INFO[tab].label}
+            </b>
+          </div>
+        )}
       </div>
       <div className="adm-tabs">
         {TABS.map(([k, l]) => (
@@ -1114,9 +1265,56 @@ export default function Admin() {
 
         {!blob && (
           <div className="note info">
-            صور الموقع محفوظة في المشروع على GitHub وتعمل طبيعي. زر «اختيار ملف» للرفع من اللوحة غير مفعّل لأن Vercel Blob غير مربوط؛ لتفعيله أنشئ Blob بنوع <b>Public</b> (وليس Private) واربطه بالمشروع ثم أعد النشر. ويمكنك دائماً كتابة مسار صورة موجودة مثل /images/about-photo.jpg.
+            صور الموقع محفوظة في المشروع على GitHub وتعمل طبيعي. زر «اختيار ملف» للرفع من اللوحة غير مفعّل لأن Vercel Blob غير مربوط؛ لتفعيله أنشئ Blob بنوع <b>Public</b> واربطه بالمشروع ثم أعد النشر (العقود والفواتير لها مخزن ثانٍ بنوع Private، التفاصيل في «الدليل»). ويمكنك دائماً كتابة مسار صورة موجودة مثل /images/about-photo.jpg.
           </div>
         )}
+
+        {tab === "home" && (
+          <div className="adm-home">
+            {GROUPS.map(([g, items]) => (
+              <section key={g}>
+                <h2>{g}</h2>
+                <div className="adm-tiles">
+                  {items.map(([k, l, ic]) => (
+                    <button key={k} type="button" className={"adm-tile" + (k === "accounting" || k === "assistant" ? " hl" : "")} onClick={() => setTab(k)}>
+                      <AIcon name={ic} size={28} />
+                      <span>{l}</span>
+                      {k === "inquiries" && newCount > 0 && <span className="count">{newCount}</span>}
+                    </button>
+                  ))}
+                </div>
+              </section>
+            ))}
+            <section className="adm-mob">
+              <h2>أدوات</h2>
+              <div className="adm-tiles">
+                <a className="adm-tile" href="/" target="_blank">
+                  <AIcon name="external" size={28} />
+                  <span>عرض الموقع</span>
+                </a>
+                <button type="button" className="adm-tile" onClick={exportBackup}>
+                  <AIcon name="download" size={28} />
+                  <span>تنزيل نسخة احتياطية</span>
+                </button>
+                <button type="button" className="adm-tile" onClick={() => importRef.current?.click()}>
+                  <AIcon name="upload" size={28} />
+                  <span>استيراد نسخة</span>
+                </button>
+                <button type="button" className="adm-tile" onClick={logout}>
+                  <AIcon name="logout" size={28} />
+                  <span>خروج</span>
+                </button>
+              </div>
+            </section>
+          </div>
+        )}
+
+        {tab === "accounting" && <Accounting />}
+        {tab === "assistant" && <Assistant onNavigate={(k) => setTab(k)} />}
+        {tab === "ideas" && <Ideas onNavigate={(k) => setTab(k)} />}
+        {tab === "projects" && <Projects />}
+        {tab === "archive" && <Archive onRestore={restoreImage} />}
+        {tab === "guide" && <Guide procedures={d.guide?.procedures || []} setProcedures={(v) => setData((x) => ({ ...x, guide: { ...x.guide, procedures: v } }))} />}
 
         {tab === "brand" && (
           <>
