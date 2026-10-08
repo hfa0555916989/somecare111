@@ -1,28 +1,23 @@
 import { NextResponse } from "next/server";
-import { handleUpload } from "@vercel/blob/client";
 import { isAuthed } from "@/lib/auth";
+import { presignedUploadRoute, publicEnabled } from "@/lib/storage";
 
 // هل تخزين الصور (Vercel Blob) مربوط؟
 export async function GET() {
   if (!isAuthed()) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  return NextResponse.json({ blob: !!process.env.BLOB_READ_WRITE_TOKEN });
+  return NextResponse.json({ blob: publicEnabled() });
 }
 
+// رفع صور وفيديو الموقع من المتصفح إلى المخزن العام (روابط موقّعة، تعمل مع المخازن الحديثة والقديمة)
 export async function POST(request) {
-  const body = await request.json();
   try {
-    const json = await handleUpload({
-      body,
-      request,
-      onBeforeGenerateToken: async () => {
+    const json = await presignedUploadRoute(request, {
+      access: "public",
+      allowed: ["image/*", "video/*", "application/pdf"],
+      maxBytes: 200 * 1024 * 1024,
+      authorize: async () => {
         if (!isAuthed()) throw new Error("غير مصرّح");
-        return {
-          allowedContentTypes: ["image/*", "video/*", "application/pdf"],
-          maximumSizeInBytes: 200 * 1024 * 1024,
-          addRandomSuffix: true,
-        };
       },
-      onUploadCompleted: async () => {},
     });
     return NextResponse.json(json);
   } catch (e) {

@@ -30,7 +30,7 @@ function Has($name) { return $existing -match "(?m)^\s*$name\s" }
 
 function AddVar($name, $value, [switch]$Config) {
   foreach ($t in $Targets) {
-    if ($Config) { vercel env add $name $t --value $value --no-sensitive --yes --force *> $null }
+    if ($Config) { vercel env add $name $t --value $value --yes --force *> $null }
     else { vercel env add $name $t --value $value --sensitive --yes --force *> $null }
     if ($LASTEXITCODE -ne 0) { Say "  تعذر إضافة $name إلى $t" Red; return $false }
   }
@@ -75,7 +75,7 @@ AskKey "ANTHROPIC_API_KEY" "console.anthropic.com ← API Keys (إن لم يكن
 
 # 6) المخزن الخاص: من لوحة Vercel فقط (يحتاج بادئة مخصصة)
 $existing = (vercel env ls production 2>$null | Out-String)
-if (Has "PRIVATE_BLOB_READ_WRITE_TOKEN") { Say "  موجود: المخزن الخاص" }
+if ((Has "PRIVATE_BLOB_STORE_ID") -or (Has "PRIVATE_BLOB_READ_WRITE_TOKEN")) { Say "  موجود: المخزن الخاص" }
 else {
   Say "`n  باقي خطوة واحدة في المتصفح (المخزن الخاص للعقود والفواتير):" Yellow
   Say "  Storage ← Create Database ← Blob ← Private ← Create" Yellow
@@ -83,8 +83,8 @@ else {
   Start-Process "https://vercel.com/$Scope/$Project/stores"
   Read-Host "  اضغط Enter بعد الربط" | Out-Null
   $existing = (vercel env ls production 2>$null | Out-String)
-  if (Has "PRIVATE_BLOB_READ_WRITE_TOKEN") { Say "  ✓ المخزن الخاص مربوط" Green; $changed = $true }
-  else { Say "  لم أجد PRIVATE_BLOB_READ_WRITE_TOKEN بعد. تأكد من البادئة PRIVATE_BLOB." Red }
+  if ((Has "PRIVATE_BLOB_STORE_ID") -or (Has "PRIVATE_BLOB_READ_WRITE_TOKEN")) { Say "  ✓ المخزن الخاص مربوط" Green; $changed = $true }
+  else { Say "  لم أجد PRIVATE_BLOB_STORE_ID بعد. تأكد من البادئة PRIVATE_BLOB." Red }
 }
 
 # 7) إعادة النشر حتى تعمل المتغيرات
