@@ -16,6 +16,7 @@ export async function POST(req) {
 
   const doc = await getDocByToken(b.token);
   if (!doc) return NextResponse.json({ error: "الوثيقة غير موجودة" }, { status: 404 });
+  if (doc.type === "invoice") return NextResponse.json({ error: "الفاتورة لا تحتاج موافقة، يكفي السداد" }, { status: 400 });
   if (doc.status === "accepted") return NextResponse.json({ error: "تمت الموافقة على هذه الوثيقة مسبقاً" }, { status: 409 });
   if (doc.status === "cancelled") return NextResponse.json({ error: "هذه الوثيقة ملغاة" }, { status: 409 });
   if (isExpired(doc)) return NextResponse.json({ error: "انتهت صلاحية العرض، تواصل معنا لتحديثه" }, { status: 409 });

@@ -19,9 +19,17 @@ export async function GET() {
   if (!isAuthed()) return deny();
   const [items, settings, docs] = await Promise.all([listEntries(), getSettings(), listDocs()]);
   // العروض والعقود (لربط الإيراد بها وحساب المستحقات)
+  // الفواتير غير المدفوعة تُحسب مستحقات، إلا إذا كانت مبنية على عقد موافق عليه (لأن العقد محسوب أصلاً)
+  const acceptedNums = new Set(docs.filter((d) => d.status === "accepted").map((d) => String(d.number).toUpperCase()));
   const linkable = docs
     .filter((d) => d.status === "accepted" || d.status === "sent")
-    .map((d) => ({ number: d.number, title: d.title, client: d.client?.company || d.client?.name || "", status: d.status, total: totals(d).total }));
+    .map((d) => ({
+      number: d.number,
+      title: d.title,
+      client: d.client?.company || d.client?.name || "",
+      status: d.type === "invoice" ? (d.payment?.paid || acceptedNums.has(String(d.ref).toUpperCase()) ? "invoice-covered" : "invoice") : d.status,
+      total: totals(d).total,
+    }));
   return NextResponse.json({ items, settings, docs: linkable, db: dbConnected(), ai: !!process.env.ANTHROPIC_API_KEY, ...storageStatus() });
 }
 

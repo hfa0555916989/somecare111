@@ -263,7 +263,7 @@ export default function Accounting() {
 
   const today = riyadhToday();
   const s = useMemo(() => data && summarize(data.items, periodRange(period, today), data.settings, today), [data, period, today]);
-  const recv = useMemo(() => (data ? receivables(data.docs.filter((d) => d.status === "accepted"), data.items).filter((d) => d.due > 0) : []), [data]);
+  const recv = useMemo(() => (data ? receivables(data.docs.filter((d) => d.status === "accepted" || d.status === "invoice"), data.items).filter((d) => d.due > 0) : []), [data]);
 
   function flash(t) {
     setMsg(t);
@@ -438,7 +438,7 @@ export default function Accounting() {
             <Kpi label="صافي الربح" value={money(s.net)} sub={`هامش الربح ${pctText(s.margin)}`} tone={s.net < 0 ? "bad" : s.net > 0 ? "good" : ""} />
             <Kpi label="مصروف الإعلانات" value={money(s.ads)} sub={`${pctText(s.adShare)} من المصروفات`} />
             <Kpi label="عائد الإعلانات" value={s.roas == null ? "—" : `${s.roas.toFixed(1)}x`} sub={s.ads ? `${money(s.adIncome)} دخل من عملاء الإعلانات` : "سجّل مصروف إعلان أولاً"} tone={s.roas == null ? "" : s.roas >= 1 ? "good" : "bad"} />
-            <Kpi label="مستحقات على العملاء" value={money(recv.reduce((a, d) => a + d.due, 0))} sub={`${recv.length} عقد / عرض موافق عليه`} />
+            <Kpi label="مستحقات على العملاء" value={money(recv.reduce((a, d) => a + d.due, 0))} sub={`${recv.length} عقد أو فاتورة غير مسددة`} />
           </div>
 
           <div className="adm-card acc-pots">
@@ -593,7 +593,7 @@ export default function Accounting() {
           </div>
 
           <div className="adm-card">
-            <b>المستحقات من العقود وعروض الأسعار الموافق عليها</b>
+            <b>المستحقات من العقود الموافق عليها والفواتير غير المدفوعة</b>
             {recv.length ? (
               recv.map((d) => (
                 <div key={d.number} className="acc-recv">

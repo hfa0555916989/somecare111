@@ -45,7 +45,9 @@ export default async function DocPage({ params }) {
   const intact = !accepted || doc.acceptance?.hash === hash;
   const isContract = doc.type === "contract";
   const isProposal = doc.type === "proposal";
-  const word = isContract ? "العقد" : isProposal ? "المقترح" : "العرض";
+  const isInvoice = doc.type === "invoice";
+  const paid = isInvoice && !!doc.payment?.paid;
+  const word = isContract ? "العقد" : isProposal ? "المقترح" : isInvoice ? "الفاتورة" : "العرض";
   const cl = doc.client || {};
   const logo = c.brand.footerLogoLight || c.brand.logoLight || c.brand.logo;
   // {الآيبان} {البنك} {المستفيد} داخل أي بند تُستبدل ببيانات الحساب الفعلية
@@ -71,8 +73,10 @@ export default async function DocPage({ params }) {
   return (
     <div className="docv">
       <div className="docv-bar no-print">
-        <span className={"docv-status " + (expired ? "expired" : doc.status)}>
-          {accepted ? "تمت الموافقة" : doc.status === "cancelled" ? "ملغاة" : expired ? "منتهي الصلاحية" : "بانتظار موافقتك"}
+        <span className={"docv-status " + (paid ? "accepted" : expired ? "expired" : doc.status)}>
+          {isInvoice
+            ? doc.status === "cancelled" ? "ملغاة" : paid ? "مدفوعة" : "بانتظار السداد"
+            : accepted ? "تمت الموافقة" : doc.status === "cancelled" ? "ملغاة" : expired ? "منتهي الصلاحية" : "بانتظار موافقتك"}
         </span>
         <PrintButton />
         {p.whatsapp && (
@@ -88,10 +92,14 @@ export default async function DocPage({ params }) {
           <div className="paper-meta">
             <h1>{TYPES[doc.type]}</h1>
             <dl>
-              <div><dt>رقم {isContract ? "العقد" : doc.type === "proposal" ? "المقترح" : "العرض"}</dt><dd dir="ltr">{doc.number}</dd></div>
+              <div><dt>رقم {isContract ? "العقد" : isProposal ? "المقترح" : isInvoice ? "الفاتورة" : "العرض"}</dt><dd dir="ltr">{doc.number}</dd></div>
               <div><dt>التاريخ</dt><dd dir="ltr">{fmtDate(doc.date)}</dd></div>
               {exp && <div><dt>صلاحية العرض</dt><dd>{doc.validDays} يوماً (حتى <span dir="ltr">{fmtDate(exp)}</span>)</dd></div>}
-              {doc.ref && <div><dt>مبني على</dt><dd dir="ltr">{doc.ref}</dd></div>}
+              {isInvoice && doc.dueDate && <div><dt>تاريخ الاستحقاق</dt><dd dir="ltr">{fmtDate(doc.dueDate)}</dd></div>}
+              {(doc.period?.start || doc.period?.end) && (
+                <div><dt>مدة العقد</dt><dd>من <span dir="ltr">{fmtDate(doc.period.start)}</span>{doc.period.end && <> إلى <span dir="ltr">{fmtDate(doc.period.end)}</span></>}</dd></div>
+              )}
+              {doc.ref && <div><dt>{isInvoice ? "مبنية على" : "مبني على"}</dt><dd dir="ltr">{doc.ref}</dd></div>}
             </dl>
           </div>
         </header>
@@ -106,14 +114,14 @@ export default async function DocPage({ params }) {
 
         <section className="parties">
           <div>
-            <h3>{isContract ? "الطرف الأول (مقدّم الخدمة)" : isProposal ? "مقدّم المقترح" : "مقدّم العرض"}</h3>
+            <h3>{isContract ? "الطرف الأول (مقدّم الخدمة)" : isProposal ? "مقدّم المقترح" : isInvoice ? "صادرة من" : "مقدّم العرض"}</h3>
             <p><b>{p.name}</b></p>
             <p>ممارس عمل حر مرخّص{p.certNumber && <> · وثيقة رقم <span dir="ltr">{p.certNumber}</span></>}</p>
             <p>الموقع الرسمي: <a href={p.site} dir="ltr">{p.domain}</a></p>
             {p.phone && <p>الجوال: <span dir="ltr">{p.phone}</span></p>}
           </div>
           <div>
-            <h3>{isContract ? "الطرف الثاني (العميل)" : "مقدّم إلى"}</h3>
+            <h3>{isContract ? "الطرف الثاني (العميل)" : isInvoice ? "صادرة إلى" : "مقدّم إلى"}</h3>
             {cl.name || cl.company ? (
               <>
                 {cl.company && <p><b>{cl.company}</b></p>}
@@ -131,7 +139,7 @@ export default async function DocPage({ params }) {
 
         {doc.sections?.length > 0 && (
           <section>
-            <h3 className="paper-h">{isContract ? "نطاق العمل" : "تفاصيل العرض"}</h3>
+            <h3 className="paper-h">{isContract ? "نطاق العمل" : isInvoice ? "تفاصيل الفاتورة" : "تفاصيل العرض"}</h3>
             <div className="items">
               {doc.sections.map((s, i) => (
                 <div className="item" key={i}>
@@ -204,7 +212,7 @@ export default async function DocPage({ params }) {
 
         {(terms.length > 0 || payClause) && (
           <section>
-            <h3 className="paper-h">{isContract ? "بنود العقد" : "الشروط والملاحظات"}</h3>
+            <h3 className="paper-h">{isContract ? "بنود العقد" : isInvoice ? "ملاحظات" : "الشروط والملاحظات"}</h3>
             <ol className="terms">
               {terms.map((x, i) => <li key={i}>{x}</li>)}
               {payClause && (
@@ -301,7 +309,21 @@ export default async function DocPage({ params }) {
         </section>
 
         <section className="accept">
-          {accepted ? (
+          {isInvoice ? (
+            doc.status === "cancelled" ? (
+              <div className="stamp bad"><b>هذه الفاتورة ملغاة</b></div>
+            ) : paid ? (
+              <div className="stamp">
+                <b>✓ مدفوعة</b>
+                <p>تم استلام مبلغ <b>{money(t.total)}</b> ريال{doc.payment.at && <> بتاريخ <span dir="ltr">{fmtDate(doc.payment.at)}</span></>}. شكراً لك.</p>
+              </div>
+            ) : (
+              <div className="stamp">
+                <b>المبلغ المستحق: {money(t.total)} ريال</b>
+                <p>يُرجى السداد بالتحويل البنكي إلى الحساب الموضح أعلاه{doc.dueDate && <> قبل <span dir="ltr">{fmtDate(doc.dueDate)}</span></>}، ثم إرسال إيصال التحويل عبر واتساب.</p>
+              </div>
+            )
+          ) : accepted ? (
             <div className={"stamp" + (intact ? "" : " bad")}>
               <b>{intact ? "✓ تمت الموافقة إلكترونياً" : "⚠ تغيّر محتوى الوثيقة بعد الموافقة"}</b>
               <p>
