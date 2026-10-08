@@ -44,6 +44,8 @@ export default async function DocPage({ params }) {
   const hash = fingerprint(doc, p);
   const intact = !accepted || doc.acceptance?.hash === hash;
   const isContract = doc.type === "contract";
+  const isProposal = doc.type === "proposal";
+  const word = isContract ? "العقد" : isProposal ? "المقترح" : "العرض";
   const cl = doc.client || {};
   const logo = c.brand.footerLogoLight || c.brand.logoLight || c.brand.logo;
   // {الآيبان} {البنك} {المستفيد} داخل أي بند تُستبدل ببيانات الحساب الفعلية
@@ -104,7 +106,7 @@ export default async function DocPage({ params }) {
 
         <section className="parties">
           <div>
-            <h3>{isContract ? "الطرف الأول (مقدّم الخدمة)" : "مقدّم العرض"}</h3>
+            <h3>{isContract ? "الطرف الأول (مقدّم الخدمة)" : isProposal ? "مقدّم المقترح" : "مقدّم العرض"}</h3>
             <p><b>{p.name}</b></p>
             <p>ممارس عمل حر مرخّص{p.certNumber && <> · وثيقة رقم <span dir="ltr">{p.certNumber}</span></>}</p>
             <p>الموقع الرسمي: <a href={p.site} dir="ltr">{p.domain}</a></p>
@@ -229,7 +231,7 @@ export default async function DocPage({ params }) {
         {doc.annex?.length > 0 && (
           <section className="annex">
             <h3 className="paper-h">الملحق الفني: الخصائص والمواصفات</h3>
-            <p className="muted small">هذا الملحق جزء لا يتجزأ من {isContract ? "العقد" : "العرض"}.</p>
+            <p className="muted small">هذا الملحق جزء لا يتجزأ من {word}.</p>
             {doc.annex.map((a, i) => (
               <div key={i} className="annex-sec">
                 <h4><span className="item-n">{i + 1}</span> {a.title}</h4>
@@ -303,7 +305,7 @@ export default async function DocPage({ params }) {
             <div className={"stamp" + (intact ? "" : " bad")}>
               <b>{intact ? "✓ تمت الموافقة إلكترونياً" : "⚠ تغيّر محتوى الوثيقة بعد الموافقة"}</b>
               <p>
-                وافق <b>{doc.acceptance.name}</b> على هذا {isContract ? "العقد" : "العرض"} بتاريخ {fmtTime(doc.acceptance.at)} (بتوقيت الرياض).
+                وافق <b>{doc.acceptance.name}</b> على هذا {word} بتاريخ {fmtTime(doc.acceptance.at)} (بتوقيت الرياض).
               </p>
               <p className="mono" dir="ltr">{doc.acceptance.hash}</p>
             </div>
@@ -312,7 +314,7 @@ export default async function DocPage({ params }) {
           ) : expired ? (
             <div className="stamp bad"><b>انتهت صلاحية هذا العرض</b><p>تواصل معنا لإصدار عرض محدّث.</p></div>
           ) : (
-            <AcceptForm token={doc.token} kind={isContract ? "العقد" : doc.type === "proposal" ? "المقترح" : "العرض"} total={money(t.total)} />
+            <AcceptForm token={doc.token} kind={word} total={money(t.total)} />
           )}
         </section>
 

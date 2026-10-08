@@ -83,9 +83,9 @@ export default function Assistant({ onNavigate }) {
       if (!r.ok) throw new Error(j.error || "تعذر الاتصال بالمساعد");
       const next = { messages: j.messages, pending: j.pending || null };
       setChat(next);
-      // فتح القسم المناسب للتقرير؛ أثناء المحادثة الصوتية يظهر زر بدل الانتقال حتى لا تنقطع
+      // فتح القسم المناسب للتقرير؛ أثناء المحادثة الصوتية أو انتظار تأكيدك يظهر زر بدل الانتقال حتى لا يضيع
       for (const a of j.actions || [])
-        if (a.type === "open" && a.section !== "assistant") convRef.current ? setOpenHint(a.section) : onNavigate?.(a.section, true);
+        if (a.type === "open" && a.section !== "assistant") convRef.current || j.pending?.length ? setOpenHint(a.section) : onNavigate?.(a.section, true);
       if (j.notice) setErr(j.notice);
       return next;
     } catch (x) {
