@@ -18,7 +18,9 @@ export const maxDuration = 300;
 // أقسام لوحة التحكم التي يستطيع المساعد فتحها
 const SECTIONS = ["home", "accounting", "inquiries", "docs", "ideas", "projects", "archive", "assistant", "guide", "hero", "packages", "addons", "features", "about", "gallery", "video", "titles", "pages", "brand", "sizes", "theme", "contact", "social", "seo", "tracking"];
 
-const tool = (name, description, properties) => ({ name, description, strict: true, input_schema: obj(properties) });
+// بدون strict: مجموع مخططات الأدوات بصيغة strict يتجاوز الحد الذي يقبله Claude (compiled grammar too large)،
+// ولذلك كل مدخلات الأدوات تُنظّف وتُتحقق منها في الخادم قبل التنفيذ (cleanEntry / cleanDoc ...)
+const tool = (name, description, properties) => ({ name, description, input_schema: obj(properties) });
 
 const TOOLS = [
   tool("get_finance_summary", "Bookkeeping summary: balances (budget pot, profits pot, cash), funding by source, this month / last month / 3 months / year / all-time figures, ad platforms ROAS, monthly table, receivables, latest entries.", {}),
@@ -167,6 +169,7 @@ async function exec(name, i, actions) {
       return { settings: s };
     }
     case "reinvest_profit": {
+      if (!(Number(i.amount) > 0)) return { error: "amount must be a positive number" };
       const [e] = await createEntries([cleanEntry({ kind: "funding", cat: "reinvest", amount: i.amount, date: riyadhToday(), note: i.note || "إعادة تمويل الميزانية من الأرباح" })]);
       actions.push({ type: "refresh", section: "accounting" });
       return { saved: entryLine(e) };
