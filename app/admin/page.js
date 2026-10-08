@@ -501,7 +501,27 @@ function Inquiries({ form, setForm, onCount }) {
 }
 
 /* ---------- العقود وعروض الأسعار ---------- */
-const DOC_TYPES = { quote: "عرض سعر", contract: "عقد", proposal: "مقترح" };
+const DOC_TYPES = { quote: "عرض سعر", contract: "عقد", proposal: "مقترح", invoice: "فاتورة" };
+// تاريخ بعد عدد أيام أو أشهر من تاريخ معيّن (YYYY-MM-DD)
+const addDays = (d, n) => {
+  const t = new Date(d + "T12:00:00");
+  t.setDate(t.getDate() + n);
+  return t.toLocaleDateString("en-CA");
+};
+const addMonths = (d, n) => {
+  const t = new Date(d + "T12:00:00");
+  t.setMonth(t.getMonth() + n);
+  t.setDate(t.getDate() - 1);
+  return t.toLocaleDateString("en-CA");
+};
+const INVOICE_TERMS = ["يُرجى سداد المبلغ بالتحويل البنكي قبل تاريخ الاستحقاق.", "هذه الفاتورة غير خاضعة لضريبة القيمة المضافة (مقدّم الخدمة غير مسجّل في الضريبة)."];
+const SUPPORT_FEATURES = [
+  "إصلاح الأعطال والأخطاء البرمجية",
+  "تحديثات الأمان والحماية والنسخ الاحتياطي",
+  "متابعة عمل الاستضافة والنطاق وشهادة الأمان",
+  "تعديلات بسيطة على المحتوى والصور",
+  "الرد على الاستفسارات خلال يوم عمل",
+];
 const DOC_STATUS = { draft: "مسودة", sent: "مُرسل", accepted: "تمت الموافقة", cancelled: "ملغي" };
 // تاريخ اليوم بتوقيت جهاز المستخدم (وليس UTC)
 const today = () => new Date().toLocaleDateString("en-CA");
@@ -530,15 +550,56 @@ function blankDoc(type, k) {
     client: { name: "", company: "", idNumber: "", phone: "", email: "", city: "" },
     sections: [],
     discount: 0,
-    vatRate: Number(k.vatRate) || 0,
+    vatRate: type === "invoice" ? 0 : Number(k.vatRate) || 0,
     recurring: [],
     duration: "",
-    terms: [...((type === "contract" ? k.contractTerms : k.quoteTerms) || [])],
+    terms: type === "invoice" ? [...INVOICE_TERMS] : [...((type === "contract" ? k.contractTerms : k.quoteTerms) || [])],
     annex: [],
     attachments: [],
     ref: "",
+    period: { start: "", end: "" },
+    dueDate: type === "invoice" ? addDays(today(), 7) : "",
     status: "draft",
   };
+}
+
+// إضافة بند «دعم فني لمدة X شهراً» بتواريخه، وتحديث مدة العقد وبنوده (ثابت، لا يعتمد على الذكاء الاصطناعي)
+function withSupport(doc, { start, months, price }) {
+  const m = Math.max(1, Number(months) || 12);
+  const end = addMonths(start, m);
+  const label = m === 12 ? "سنة كاملة" : `${m} شهراً`;
+  const section = {
+    title: `دعم فني وصيانة لمدة ${label}`,
+    desc: `من ${start} إلى ${end}`,
+    qty: 1,
+    price: Number(price) || 0,
+    note: "يبدأ من تاريخ بداية الدعم المذكور",
+    features: [...SUPPORT_FEATURES],
+    tags: [],
+  };
+  const term = `يلتزم الطرف الأول بتقديم الدعم الفني والصيانة لمدة ${label} تبدأ من ${start} وتنتهي في ${end}، ويشمل ذلك ما ورد في بند الدعم الفني، ولا يشمل تطوير خصائص جديدة إلا باتفاق منفصل.`;
+  return {
+    ...doc,
+    sections: [...(doc.sections || []).filter((s) => !/^دعم فني وصيانة لمدة/.test(s.title)), section],
+    period: { start: doc.period?.start || start, end: end > (doc.period?.end || "") ? end : doc.period.end },
+    terms: [...(doc.terms || []).filter((t) => !/^يلتزم الطرف الأول بتقديم الدعم الفني/.test(t)), term],
+  };
+}
+
+function SupportAdder({ doc, setDoc }) {
+  const [o, setO] = useState({ start: doc.period?.start || today(), months: 12, price: "" });
+  return (
+    <div className="adm-card">
+      <b>دعم فني لمدة محددة</b>
+      <span className="adm-hint">يضيف بنداً بتاريخ البداية والنهاية ومزايا الدعم، وبند التزام في العقد، ويحدّث مدة العقد.</span>
+      <div className="row3">
+        <label>من تاريخ<input type="date" value={o.start} onChange={(e) => setO({ ...o, start: e.target.value })} /></label>
+        <label>المدة (شهر)<input type="number" min="1" max="60" value={o.months} onChange={(e) => setO({ ...o, months: e.target.value })} /></label>
+        <label>السعر<input type="number" min="0" value={o.price} onChange={(e) => setO({ ...o, price: e.target.value })} /></label>
+      </div>
+      <button type="button" className="gold" disabled={!o.start} onClick={() => setDoc(withSupport(doc, o))}>إضافة بند الدعم الفني</button>
+    </div>
+  );
 }
 
 // مساعد التسعير: يقارن البنود بالباقات والإضافات والعروض السابقة ويقترح سعراً لا يبتعد عنها كثيراً
@@ -597,7 +658,7 @@ function DocEditor({ doc, setDoc, k, items, onSave, onCancel, saving }) {
   return (
     <div className="adm-card" style={{ borderColor: "#d4a84b88" }}>
       <div className="adm-card-h">
-        <b>{doc.id ? `تعديل ${doc.number}` : `${DOC_TYPES[doc.type]} جديد`}</b>
+        <b>{doc.id ? `تعديل ${doc.number}` : `${DOC_TYPES[doc.type]} ${doc.type === "invoice" ? "جديدة" : "جديد"}`}</b>
         <button type="button" className="mini" onClick={onCancel}>إغلاق بدون حفظ</button>
       </div>
       <div className="row">
@@ -607,6 +668,7 @@ function DocEditor({ doc, setDoc, k, items, onSave, onCancel, saving }) {
             <option value="quote">عرض سعر</option>
             <option value="contract">عقد تقديم خدمات</option>
             <option value="proposal">مقترح مشروع / وثيقة متطلبات (بدون أسعار)</option>
+            <option value="invoice">فاتورة</option>
           </select>
         </label>
         <Text label="رقم الوثيقة (اتركه فارغاً للترقيم التلقائي)" ltr value={doc.number} onChange={(v) => set("number", v)} />
@@ -636,10 +698,31 @@ function DocEditor({ doc, setDoc, k, items, onSave, onCancel, saving }) {
             صلاحية العرض بالأيام (0 = بدون صلاحية)
             <input type="number" min="0" max="365" value={doc.validDays} onChange={(e) => set("validDays", Number(e.target.value))} />
           </label>
+        ) : doc.type === "invoice" ? (
+          <label>
+            تاريخ الاستحقاق
+            <input type="date" value={doc.dueDate || ""} onChange={(e) => set("dueDate", e.target.value)} />
+          </label>
         ) : (
           <Text label="مبني على عرض رقم (اختياري)" ltr value={doc.ref} onChange={(v) => set("ref", v)} />
         )}
       </div>
+      {doc.type === "invoice" && (
+        <Text label="مبنية على عقد / عرض رقم (يُخصم المبلغ من المتبقي على العميل عند الدفع)" ltr value={doc.ref} onChange={(v) => set("ref", v)} />
+      )}
+      {doc.type === "contract" && (
+        <div className="row">
+          <label>
+            مدة العقد: من
+            <input type="date" value={doc.period?.start || ""} onChange={(e) => set("period", { ...doc.period, start: e.target.value })} />
+          </label>
+          <label>
+            إلى
+            <input type="date" value={doc.period?.end || ""} onChange={(e) => set("period", { ...doc.period, end: e.target.value })} />
+          </label>
+        </div>
+      )}
+      {(doc.type === "contract" || doc.type === "quote") && <SupportAdder doc={doc} setDoc={setDoc} />}
       <Text label="العنوان (مثل: موقع سبا متكامل)" value={doc.title} onChange={(v) => set("title", v)} />
       <Text label="سطر تحت العنوان (مثل: مع الدفع الإلكتروني)" value={doc.subtitle} onChange={(v) => set("subtitle", v)} />
       <Text label="وصف مختصر" area rows={2} value={doc.intro} onChange={(v) => set("intro", v)} />
@@ -700,7 +783,7 @@ function DocEditor({ doc, setDoc, k, items, onSave, onCancel, saving }) {
       <div className="note info">
         المجموع {money(t.subtotal)}{t.discount > 0 && ` − خصم ${money(t.discount)}`}{t.vat > 0 && ` + ضريبة ${money(t.vat)}`} = <b style={{ color: "#d4a84b" }}>الإجمالي {money(t.total)} ريال</b>
       </div>
-      {doc.type !== "proposal" && <PriceAdvisor doc={doc} setDoc={setDoc} />}
+      {doc.type !== "proposal" && doc.type !== "invoice" && <PriceAdvisor doc={doc} setDoc={setDoc} />}
       <Text label="رسوم متكررة / تجديد (كل سطر منفصل)" area rows={2} value={toLines(doc.recurring)} onChange={(v) => set("recurring", fromLines(v))} />
       <Text label="مدة التنفيذ" value={doc.duration} onChange={(v) => set("duration", v)} hint="مثال: من 21 إلى 30 يوم عمل من استلام المحتوى والدفعة الأولى" />
       <Text label={doc.type === "contract" ? "بنود العقد (كل بند في سطر)" : "الشروط والملاحظات (كل شرط في سطر)"} area rows={8} value={toLines(doc.terms)} onChange={(v) => set("terms", fromLines(v))} hint={doc.type === "contract" ? "بند «حساب السداد المعتمد» بالآيبان يُضاف تلقائياً في آخر بنود العقد. ولو تبيه داخل بند معيّن اكتب {الآيبان} و{البنك} و{المستفيد} في نص البند." : "تقدر تكتب {الآيبان} و{البنك} و{المستفيد} داخل أي شرط فتُستبدل ببيانات حسابك."} />
@@ -753,6 +836,8 @@ function Docs({ k, saved = {}, setK, about, site }) {
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
+  // خيارات الاستيراد من PDF: نوع الوثيقة المطلوب + إضافة دعم فني بتواريخ
+  const [imp, setImp] = useState({ as: "", support: false, start: today(), months: 12, price: "" });
   const [msg, setMsg] = useState("");
   const [q, setQ] = useState("");
   const importRef = useRef(null);
@@ -802,19 +887,21 @@ function Docs({ k, saved = {}, setK, about, site }) {
     setMsg("");
     try {
       const payload = await Promise.all(files.slice(0, 4).map(async (f) => ({ name: f.name, data: await readB64(f) })));
-      const r = await fetch("/api/docs/import", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ files: payload }) });
+      const r = await fetch("/api/docs/import", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ files: payload, as: imp.as }) });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j.error || "تعذر الاستيراد");
       const base = blankDoc(j.doc.type, k);
-      setEditing({
+      let doc = {
         ...base,
         ...j.doc,
         number: j.doc.number || "",
         terms: j.doc.terms?.length ? j.doc.terms : base.terms,
         validDays: j.doc.validDays || base.validDays,
         status: "draft",
-      });
-      setMsg("تمت قراءة الملف. راجع كل الحقول والأسعار قبل الحفظ.");
+      };
+      if (imp.support && imp.start) doc = withSupport(doc, imp);
+      setEditing(doc);
+      setMsg(`تمت قراءة الملف${imp.support ? " وأُضيف بند الدعم الفني بتواريخه" : ""}. راجع كل الحقول والأسعار قبل الحفظ.`);
     } catch (x) {
       setMsg(x.message);
     }
@@ -832,14 +919,27 @@ function Docs({ k, saved = {}, setK, about, site }) {
       status: "draft",
       validDays: type === "quote" ? d.validDays || base.validDays : 0,
       ...(type !== d.type ? { ref: d.number, terms: base.terms } : {}),
+      ...(type === "invoice" ? { dueDate: base.dueDate, vatRate: 0, annex: [] } : {}),
     };
   };
+
+  // تم سداد الفاتورة: تُسجّل إيراداً في المحاسبة
+  async function markPaid(d) {
+    if (!confirm(`تأكيد استلام ${money(docTotals(d).total)} ريال للفاتورة ${d.number}؟ ستُسجّل إيراداً في المحاسبة بتاريخ اليوم.`)) return;
+    const r = await fetch("/api/docs", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: d.id, markPaid: true, date: today() }) });
+    const j = await r.json().catch(() => ({}));
+    setMsg(r.ok ? `تم تسجيل دفع ${d.number} في المحاسبة ✓` : j.error || "تعذر التسجيل");
+    load();
+  }
 
   const link = (d) => `${site}/doc/${d.token}`;
   const wa = (d) => {
     let p = String(d.client?.phone || "").replace(/\D/g, "");
     if (p.startsWith("05")) p = "966" + p.slice(1);
-    const text = `السلام عليكم ${d.client?.name || ""}\nمرفق ${DOC_TYPES[d.type]} رقم ${d.number}${d.title ? ` (${d.title})` : ""}:\n${link(d)}\nيمكنك مراجعته والموافقة عليه من نفس الرابط، وفيه روابط التحقق من وثيقة العمل الحر وملكية النطاق.`;
+    const text =
+      d.type === "invoice"
+        ? `السلام عليكم ${d.client?.name || ""}\nمرفق الفاتورة رقم ${d.number}${d.title ? ` (${d.title})` : ""} بمبلغ ${money(docTotals(d).total)} ريال${d.dueDate ? ` تستحق في ${d.dueDate}` : ""}:\n${link(d)}\nفيها بيانات الحساب البنكي للسداد وروابط التحقق.`
+        : `السلام عليكم ${d.client?.name || ""}\nمرفق ${DOC_TYPES[d.type]} رقم ${d.number}${d.title ? ` (${d.title})` : ""}:\n${link(d)}\nيمكنك مراجعته والموافقة عليه من نفس الرابط، وفيه روابط التحقق من وثيقة العمل الحر وملكية النطاق.`;
     return `https://wa.me/${p}?text=${encodeURIComponent(text)}`;
   };
   const ibanOk = !k.iban || validIban(k.iban);
@@ -877,8 +977,29 @@ function Docs({ k, saved = {}, setK, about, site }) {
           <div className="adm-docs-h">
             <button type="button" className="gold" onClick={() => setEditing(blankDoc("quote", k))}>+ عرض سعر جديد</button>
             <button type="button" className="gold" onClick={() => setEditing(blankDoc("contract", k))}>+ عقد جديد</button>
-            <button type="button" className="gold" disabled={!info.ai || importing} onClick={() => importRef.current?.click()} title={info.ai ? "" : "يتطلب ANTHROPIC_API_KEY في Vercel"}>
-              {importing ? "جارٍ قراءة الملف... (حتى دقيقة)" : "استيراد من PDF بالذكاء الاصطناعي"}
+            <button type="button" className="gold" onClick={() => setEditing(blankDoc("invoice", k))}>+ فاتورة جديدة</button>
+          </div>
+          <div className="adm-card">
+            <b>استيراد من PDF بالذكاء الاصطناعي</b>
+            <span className="acc-lbl">حوّل الملف إلى:</span>
+            <div className="acc-chips small">
+              {[["", "تلقائي حسب الملف"], ["contract", "عقد"], ["quote", "عرض سعر"], ["proposal", "مقترح بدون أسعار"]].map(([v, l]) => (
+                <button key={v} type="button" className={imp.as === v ? "on" : ""} onClick={() => setImp({ ...imp, as: v })}>{l}</button>
+              ))}
+            </div>
+            <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input type="checkbox" checked={imp.support} onChange={(e) => setImp({ ...imp, support: e.target.checked })} />
+              إضافة دعم فني لمدة محددة
+            </label>
+            {imp.support && (
+              <div className="row3">
+                <label>من تاريخ<input type="date" value={imp.start} onChange={(e) => setImp({ ...imp, start: e.target.value })} /></label>
+                <label>المدة (شهر)<input type="number" min="1" max="60" value={imp.months} onChange={(e) => setImp({ ...imp, months: e.target.value })} /></label>
+                <label>السعر<input type="number" min="0" value={imp.price} onChange={(e) => setImp({ ...imp, price: e.target.value })} /></label>
+              </div>
+            )}
+            <button type="button" className="primary" style={{ justifySelf: "start" }} disabled={!info.ai || importing} onClick={() => importRef.current?.click()} title={info.ai ? "" : "يتطلب ANTHROPIC_API_KEY في Vercel"}>
+              {importing ? "جارٍ قراءة الملف... (حتى دقيقة)" : "اختيار ملف PDF"}
             </button>
             <input ref={importRef} type="file" accept="application/pdf" multiple hidden onChange={importPdf} />
           </div>
@@ -900,6 +1021,9 @@ function Docs({ k, saved = {}, setK, about, site }) {
                   <b>{d.number}</b>
                   <span className="adm-pill">{DOC_TYPES[d.type]}</span>
                   <span className={"adm-pill " + d.status}>{DOC_STATUS[d.status] || d.status}</span>
+                  {d.type === "invoice" && d.status !== "cancelled" && (
+                    <span className={"adm-pill " + (d.payment?.paid ? "accepted" : "new")}>{d.payment?.paid ? `مدفوعة ${d.payment.at || ""}` : `غير مدفوعة${d.dueDate ? ` · تستحق ${d.dueDate}` : ""}`}</span>
+                  )}
                   <time>{d.date}</time>
                 </div>
                 <div>
@@ -920,16 +1044,22 @@ function Docs({ k, saved = {}, setK, about, site }) {
                       إرسال للعميل واتساب
                     </a>
                   )}
-                  {d.status !== "accepted" && d.status !== "cancelled" && (
+                  {d.status !== "accepted" && d.status !== "cancelled" && !d.payment?.paid && (
                     <button type="button" className="mini" onClick={() => setEditing(structuredClone(d))}>تعديل</button>
                   )}
                   <button type="button" className="mini" onClick={() => setEditing(copyOf(d, d.type))}>نسخة جديدة</button>
                   {d.type === "quote" && <button type="button" className="mini" onClick={() => setEditing(copyOf(d, "contract"))}>تحويل لعقد</button>}
+                  {(d.type === "contract" || d.type === "quote") && (d.status === "accepted" || d.status === "sent") && (
+                    <button type="button" className="mini" onClick={() => setEditing(copyOf(d, "invoice"))}>إصدار فاتورة</button>
+                  )}
+                  {d.type === "invoice" && !d.payment?.paid && d.status !== "cancelled" && (
+                    <button type="button" className="mini" style={{ color: "#7dffb0" }} onClick={() => markPaid(d)}>تم الدفع</button>
+                  )}
                   {d.status === "draft" && <button type="button" className="mini" onClick={() => setStatus(d, "sent")}>تعليم كمُرسل</button>}
                   {d.status !== "cancelled" && (
                     <button type="button" className="mini danger" onClick={() => confirm(`إلغاء ${d.number}؟ سيظهر للعميل أنه ملغي.`) && setStatus(d, "cancelled")}>إلغاء</button>
                   )}
-                  {d.status !== "accepted" && <button type="button" className="mini danger" onClick={() => remove(d)}>حذف</button>}
+                  {d.status !== "accepted" && !d.payment?.paid && <button type="button" className="mini danger" onClick={() => remove(d)}>حذف</button>}
                 </div>
               </div>
             ))

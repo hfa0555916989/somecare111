@@ -49,12 +49,21 @@ Rules:
 - annex: if a file describes features/specifications, turn each numbered section into one annex entry: title, intro sentence, and points (one string per feature, written as "العنوان: الوصف" when the feature has a heading). Include table rows as points too ("القسم: الاستخدام").
 - client: the customer's details if printed; leave empty otherwise. Never put the developer's own details in client.`;
 
+const AS = {
+  quote: "The owner wants a PRICE QUOTE (type quote) from these files.",
+  contract:
+    "The owner wants a SERVICE CONTRACT (type contract, عقد تقديم خدمات) between the developer (first party) and the client (second party), even if the file is only a scope of work or a quote. Turn the scope into contract sections (keep the printed prices; use 0 when none is printed), put detailed features in the annex, and write clear contract clauses in terms (scope, delivery and acceptance, payments, client obligations, intellectual property after full payment, confidentiality, warranty/bug fixes, termination). Do not invent prices or dates that are not in the files.",
+  proposal: "The owner wants a PROJECT PROPOSAL without prices (type proposal): sections must be empty; describe everything in intro and annex.",
+};
+
 export async function POST(req) {
   if (!isAuthed()) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   if (!process.env.ANTHROPIC_API_KEY)
     return NextResponse.json({ error: "أضف ANTHROPIC_API_KEY في Vercel لتفعيل الاستيراد من PDF." }, { status: 503 });
 
   const b = await req.json().catch(() => ({}));
+  // نوع الوثيقة الذي يريده المالك (مثل تحويل ملف نطاق عمل إلى عقد)
+  const as = AS[b.as] ? b.as : "";
   const files = (Array.isArray(b.files) ? b.files : []).filter((f) => typeof f?.data === "string" && f.data).slice(0, 4);
   if (!files.length) return NextResponse.json({ error: "اختر ملف PDF" }, { status: 400 });
   if (files.reduce((s, f) => s + f.data.length * 0.75, 0) > MAX_TOTAL)
@@ -66,7 +75,7 @@ export async function POST(req) {
       source: { type: "base64", media_type: "application/pdf", data: f.data.replace(/^data:[^,]*,/, "").replace(/\s/g, "") },
       title: String(f.name || "document.pdf").slice(0, 120),
     })),
-    { type: "text", text: "Fill the builder fields from these files." },
+    { type: "text", text: (AS[as] ? `${AS[as]}\n\n` : "") + "Fill the builder fields from these files." },
   ];
 
   const client = new Anthropic();
@@ -104,5 +113,5 @@ export async function POST(req) {
   } catch {
     return NextResponse.json({ error: "تعذر فهم محتوى الملف" }, { status: 422 });
   }
-  return NextResponse.json({ doc: cleanDoc(parsed) });
+  return NextResponse.json({ doc: cleanDoc(as ? { ...parsed, type: as } : parsed) });
 }
