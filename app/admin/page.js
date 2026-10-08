@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { upload } from "@vercel/blob/client";
+import { uploadPresigned } from "@vercel/blob/client";
+import { uniqueName } from "./upload";
 import { BRAND_THEME, BRAND_ASSETS, FONTS, LATIN_FONTS, isFont, fontsHref, SITE_URL, SIZE_FIELDS, RATIOS, RATIO_FIELDS, DEFAULT_SIZES, sizeVars, docTotals, validIban, siteUrl, latinDigits, normalizeIban } from "@/lib/defaults";
 import { ICONS, SOCIALS, Icon } from "../Icons";
 import { BrandLogo, BrandText, FooterBrand } from "../SiteChrome";
@@ -94,7 +95,7 @@ function Img({ label, value, onChange, accept = "image/*", isVideo, file, preset
     setBusy(true);
     setErr("");
     try {
-      const blob = await upload(f.name, f, { access: "public", handleUploadUrl: "/api/upload" });
+      const blob = await uploadPresigned(`uploads/${uniqueName(f.name)}`, f, { access: "public", handleUploadUrl: "/api/upload", contentType: f.type || undefined });
       onChange(blob.url);
     } catch (x) {
       setErr("فشل الرفع: تخزين الصور (Vercel Blob) غير مربوط بالمشروع، أو انتهت جلسة الدخول. يمكنك مؤقتاً لصق رابط صورة في الحقل.");

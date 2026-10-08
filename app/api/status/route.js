@@ -3,7 +3,7 @@ import { isAuthed } from "@/lib/auth";
 import { dbConnected, getContent } from "@/lib/content";
 import { listDocs, TYPES } from "@/lib/docs";
 import { listProjects, vaultKeySource, PROJECT_STATUS } from "@/lib/projects";
-import { storageStatus } from "@/lib/storage";
+import { storageHealth } from "@/lib/storage";
 import { turnstileEnabled } from "@/lib/turnstile";
 import { mailEnabled } from "@/lib/mail";
 import { voiceEnabled } from "@/lib/voice";
@@ -15,13 +15,14 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   if (!isAuthed()) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const [c, docs, projects] = await Promise.all([getContent(), listDocs().catch(() => []), listProjects().catch(() => [])]);
-  const s = storageStatus();
+  const s = await storageHealth();
   const services = {
     admin: !!process.env.ADMIN_PASSWORD,
     authSecret: !!process.env.AUTH_SECRET,
     db: dbConnected(),
-    publicBlob: s.publicBlob,
-    privateBlob: s.privateBlob,
+    publicBlob: s.publicBlob === "ok",
+    privateBlob: s.privateBlob === "ok",
+    blobErrors: [s.publicBlob === "error" && "العام", s.privateBlob === "error" && "الخاص"].filter(Boolean),
     ai: aiEnabled(),
     mail: mailEnabled(),
     mailTo: !!c.form?.notifyEmail,

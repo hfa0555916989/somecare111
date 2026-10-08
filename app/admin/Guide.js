@@ -11,7 +11,7 @@ const SERVICES = [
   ["authSecret", "مفتاح الجلسة", "يؤمّن جلسة الدخول.", "أضف AUTH_SECRET نصاً عشوائياً طويلاً."],
   ["db", "قاعدة البيانات", "يحفظ المحتوى والمحاسبة والعقود والمشاريع والأفكار.", "Storage ← Create ← Upstash Redis ← Connect to Project."],
   ["publicBlob", "التخزين العام (صور الموقع)", "رفع صور وفيديو الموقع من اللوحة.", "Storage ← Create ← Blob ← Public ← Connect (البادئة الافتراضية BLOB)."],
-  ["privateBlob", "التخزين الخاص (العقود والفواتير)", "أرشيف الملفات والفواتير والأرشفة الإجبارية للعقود الموقّعة. لا يُفتح أي ملف إلا بعد دخولك.", "Storage ← Create ← Blob ← Private، وعند Connect افتح Advanced Options واكتب البادئة PRIVATE_BLOB (ليصير المتغير PRIVATE_BLOB_READ_WRITE_TOKEN)."],
+  ["privateBlob", "التخزين الخاص (العقود والفواتير)", "أرشيف الملفات والفواتير والأرشفة الإجبارية للعقود الموقّعة. لا يُفتح أي ملف إلا بعد دخولك.", "Storage ← Create ← Blob ← Private، وعند Connect افتح Advanced Options واكتب البادئة PRIVATE_BLOB (تظهر متغيرات تبدأ بـ PRIVATE_BLOB_ مثل PRIVATE_BLOB_STORE_ID)."],
   ["vaultKey", "مفتاح تشفير المشاريع", "يشفّر مفاتيح مشاريع العملاء (.env).", "أضف VAULT_KEY نصاً عشوائياً طويلاً قبل حفظ أول مشروع، واحفظه عندك ولا تغيّره أبداً."],
   ["ai", "الذكاء الاصطناعي (Claude)", "المساعد، المحاسب الذكي، فرز الملفات، التسعير، تحويل الأفكار لوثائق، الاستيراد من PDF.", "أضف ANTHROPIC_API_KEY من console.anthropic.com."],
   ["voice", "المحادثة الصوتية (ElevenLabs)", "تكلّم المساعد صوتياً ويرد عليك بصوت.", "أنشئ حساباً في elevenlabs.io ← API Keys، وأضف ELEVENLABS_API_KEY (صلاحيات Speech to Text و Text to Speech و Voices)."],
@@ -154,6 +154,9 @@ export default function Guide({ procedures = [], setProcedures }) {
           <div className="adm-card">
             <b>حالة الخدمات</b>
             <span className="adm-hint">بعد إضافة أي متغير في Vercel: Deployments ← آخر نشر ← ⋯ ← Redeploy.</span>
+            {s?.services.blobErrors?.length > 0 && (
+              <div className="note">المخزن {s.services.blobErrors.join(" و")} مربوط لكن الاتصال به فشل. في Vercel: Settings ← Security ← تأكد أن OIDC Federation مفعّل، ثم Redeploy.</div>
+            )}
             {!s ? <p>جارٍ التحميل...</p> : SERVICES.map(([k, name, what, how]) => (
               <details key={k} className="svc" open={!s.services[k]}>
                 <summary>
