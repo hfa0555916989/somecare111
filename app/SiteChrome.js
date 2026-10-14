@@ -4,12 +4,13 @@ import ThemeToggle from "./ThemeToggle";
 const digits = (s) => String(s || "").replace(/\D/g, "");
 const live = (c, key) => (c.pages || []).filter((p) => p.published !== false && p[key] && p.slug);
 
+// data-nosnippet: يمنع جوجل من أخذ نص القائمة والفوتر في وصف نتيجة البحث، لأن روابط القائمة تلتصق ببعضها فيه
 export function SiteHeader({ c, icon }) {
   const extra = live(c, "showInHeader");
   const wa = `https://wa.me/${digits(c.contact.whatsapp)}?text=${encodeURIComponent(c.contact.message || "")}`;
   return (
     <>
-      <header className="nav">
+      <header className="nav" data-nosnippet>
         <div className="wrap nav-in">
           <a className="brand" href="/" aria-label={c.brand.name}>
             <BrandLogo b={c.brand} alt={c.brand.name} />
@@ -56,7 +57,7 @@ export function SiteFooter({ c }) {
   const links = live(c, "showInFooter");
   const city = c.footer.city;
   return (
-    <footer className="foot">
+    <footer className="foot" data-nosnippet>
       <div className="wrap">
         <FooterBrand c={c} />
         <SocialRow c={c} />
