@@ -23,8 +23,8 @@ export function SiteHeader({ c, icon, altPath = "/" }) {
             {c.sizes?.showBrandText !== false && <BrandText b={c.brand} />}
           </a>
           <nav className={"links" + (extra.length ? " links-wrap" : "")}>
+            {sec.show !== false && sec.title && <a href={`${home}/security`}>{sec.navLabel || t.nav.security}</a>}
             <a href={`${home}/#packages`}>{t.nav.packages}</a>
-            {sec.show !== false && sec.title && <a href={`${home}/#security`}>{sec.navLabel || t.nav.security}</a>}
             <a className="nav-minor" href={`${home}/#addons`}>{t.nav.addons}</a>
             {c.about?.show !== false && c.about?.name && <a href={`${home}/#about`}>{t.nav.about}</a>}
             <a className="nav-minor" href={`${home}/#gallery`}>{t.nav.gallery}</a>

@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { uploadPresigned } from "@vercel/blob/client";
 import { uniqueName } from "./upload";
-import { BRAND_THEME, BRAND_ASSETS, FONTS, LATIN_FONTS, isFont, fontsHref, SITE_URL, SIZE_FIELDS, RATIOS, RATIO_FIELDS, DEFAULT_SIZES, sizeVars, docTotals, validIban, siteUrl, latinDigits, normalizeIban } from "@/lib/defaults";
+import { defaultContent, BRAND_THEME, BRAND_ASSETS, FONTS, LATIN_FONTS, isFont, fontsHref, SITE_URL, SIZE_FIELDS, RATIOS, RATIO_FIELDS, DEFAULT_SIZES, sizeVars, docTotals, validIban, siteUrl, latinDigits, normalizeIban } from "@/lib/defaults";
 import { ICONS, SOCIALS, Icon } from "../Icons";
 import { BrandLogo, BrandText, FooterBrand } from "../SiteChrome";
 import { AIcon } from "./AdminIcons";
@@ -328,11 +328,12 @@ const EN_SECTIONS = [
       ["badge", "الشارة أعلى العنوان"],
       ["title", "العنوان ({ } للذهبي)", "area"],
       ["subtitle", "النص تحت العنوان", "area"],
-      ["partner", "بطاقة الشريك", "group", [["country", "الدولة والمدينة"], ["text", "نبذة الشراكة", "area"]]],
+      ["partner", "بطاقة الشريك", "group", [["headline", "جملة الشراكة ({ } للذهبي)"], ["country", "الدولة والمدينة"], ["text", "نبذة الشراكة", "area"]]],
       ["services", "الخدمات", "list", [["title", "العنوان"], ["desc", "الوصف", "area"], ["points", "النقاط (كل نقطة في سطر)", "lines"]]],
       ["solutionsTitle", "عنوان المنصات والحلول"],
       ["solutions", "المنصات والحلول", "list", [["desc", "الوصف"]]],
       ["frameworksTitle", "عنوان الأطر والأنظمة"],
+      ["credentialsTitle", "عنوان الشهادات"],
       ["sectorsTitle", "عنوان القطاعات"],
       ["sectors", "القطاعات (كل قطاع في سطر)", "lines"],
       ["stepsTitle", "عنوان خطوات العمل"],
@@ -342,6 +343,8 @@ const EN_SECTIONS = [
       ["priceNote", "جملة بجانب السعر"],
       ["button", "نص الزر"],
       ["gallery", "الصور", "list", [["caption", "التعليق"]]],
+      ["seoTitle", "عنوان صفحة /en/security في جوجل وعند المشاركة"],
+      ["seoDescription", "وصف صفحة /en/security", "area"],
     ],
   ],
   ["addons", "الإضافات", [["title", "العنوان"], ["desc", "الوصف"], ["price", "السعر", "price"]], "list"],
@@ -1395,7 +1398,7 @@ export default function Admin() {
     setState("login");
   }
   async function save() {
-    const RESERVED = ["admin", "api", "en", "_next", "images", "icon.png", "robots.txt", "sitemap.xml", "favicon.ico", "admin552255"];
+    const RESERVED = ["admin", "api", "en", "security", "_next", "images", "icon.png", "robots.txt", "sitemap.xml", "favicon.ico", "admin552255"];
     const seen = new Set();
     for (const p of data.pages || []) {
       if (!p.slug) return setMsg(`الصفحة "${p.title || ""}" ليس لها رابط. اكتب رابطاً إنجليزياً مثل refund.`);
@@ -1654,6 +1657,16 @@ export default function Admin() {
               <input type="checkbox" checked={d.security?.show !== false} onChange={(e) => u(["security", "show"])(e.target.checked)} />
               إظهار الباقة في الموقع
             </label>
+            <button
+              type="button"
+              className="mini"
+              onClick={() =>
+                confirm("إرجاع كل محتوى الباقة (بالعربي والإنجليزي) إلى المحتوى المأخوذ من الملف التعريفي للشريك؟ لن يُنشر حتى تضغط «حفظ التغييرات».") &&
+                setData((x) => ({ ...x, security: structuredClone(defaultContent.security), en: { ...x.en, security: structuredClone(defaultContent.en.security) } }))
+              }
+            >
+              إرجاع المحتوى الافتراضي للباقة (من الملف التعريفي)
+            </button>
             <div className="row">
               <Text label="اسم القسم في القائمة" value={d.security?.navLabel} onChange={u(["security", "navLabel"])} />
               <Text label="الشارة أعلى العنوان" value={d.security?.badge} onChange={u(["security", "badge"])} />
@@ -1667,7 +1680,9 @@ export default function Admin() {
                 <Text label="اسم الشركة الشريكة" ltr value={d.security?.partner?.name} onChange={u(["security", "partner", "name"])} />
                 <Text label="الدولة والمدينة" value={d.security?.partner?.country} onChange={u(["security", "partner", "country"])} />
               </div>
+              <Text label="جملة الشراكة (الكلمة بين { } تظهر بالذهبي)" value={d.security?.partner?.headline} onChange={u(["security", "partner", "headline"])} hint="مثال: الشريك الرسمي لشركة {Security Professionals Group} في المملكة العربية السعودية" />
               <Text label="موقع الشريك (يظهر زر لزيارته، اتركه فارغاً لإخفائه)" ltr value={d.security?.partner?.url} onChange={u(["security", "partner", "url"])} />
+              <Img label="الملف التعريفي للشريك (PDF، يظهر زر تحميل)" accept="application/pdf" file value={d.security?.partner?.profile} onChange={u(["security", "partner", "profile"])} />
               <Img label="شعار الشريك (PNG أو SVG بخلفية شفافة)" value={d.security?.partner?.logo} onChange={u(["security", "partner", "logo"])} />
               <Text label="نبذة الشراكة" area rows={3} value={d.security?.partner?.text} onChange={u(["security", "partner", "text"])} />
             </div>
@@ -1714,6 +1729,8 @@ export default function Admin() {
               <b>الأطر والقطاعات</b>
               <Text label="عنوان الأطر والأنظمة" value={d.security?.frameworksTitle} onChange={u(["security", "frameworksTitle"])} />
               <Text label="الأطر والأنظمة (كل واحد في سطر، مثل NCA ECC)" ltr area value={lines(d.security?.frameworks)} onChange={(v) => u(["security", "frameworks"])(splitLines(v))} />
+              <Text label="عنوان الشهادات" value={d.security?.credentialsTitle} onChange={u(["security", "credentialsTitle"])} />
+              <Text label="شهادات الفريق (كل شهادة في سطر، مثل CISSP)" ltr area value={lines(d.security?.credentials)} onChange={(v) => u(["security", "credentials"])(splitLines(v))} />
               <Text label="عنوان القطاعات" value={d.security?.sectorsTitle} onChange={u(["security", "sectorsTitle"])} />
               <Text label="القطاعات المستهدفة (كل قطاع في سطر)" area value={lines(d.security?.sectors)} onChange={(v) => u(["security", "sectors"])(splitLines(v))} />
             </div>
@@ -1758,6 +1775,16 @@ export default function Admin() {
               </div>
               <Text label="جملة بجانب السعر" value={d.security?.priceNote} onChange={u(["security", "priceNote"])} />
               <Text label="نص الزر (يفتح واتساب)" value={d.security?.button} onChange={u(["security", "button"])} />
+            </div>
+            <div className="adm-card">
+              <b>جوجل والمشاركة (صفحة <span dir="ltr">/security</span>)</b>
+              <span className="adm-hint">
+                للباقة صفحة مستقلة على <a href="/security" target="_blank" dir="ltr">hassandev.sa/security</a> (والإنجليزية <span dir="ltr">/en/security</span>).
+                شارك هذا الرابط في تويتر وواتساب، فتظهر معه الصورة والعنوان والوصف أدناه بدل بيانات الصفحة الرئيسية.
+              </span>
+              <Text label="عنوان الصفحة في جوجل وعند المشاركة" value={d.security?.seoTitle} onChange={u(["security", "seoTitle"])} hint="اتركه فارغاً لاستخدام عنوان الباقة." />
+              <Text label="الوصف في جوجل وعند المشاركة" area rows={3} value={d.security?.seoDescription} onChange={u(["security", "seoDescription"])} hint="يُفضّل بين 120 و160 حرفاً." />
+              <Img label="صورة المشاركة (يفضّل 1200×675 أو 1200×630)" value={d.security?.ogImage} onChange={u(["security", "ogImage"])} />
             </div>
           </>
         )}
