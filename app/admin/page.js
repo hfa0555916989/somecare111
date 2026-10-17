@@ -1678,7 +1678,7 @@ export default function Admin() {
                 onChange={u(["security", "services"])}
                 addLabel="إضافة خدمة"
                 title={(x) => x.title || "خدمة"}
-                newItem={() => ({ icon: "shield", title: "", desc: "", points: [], image: "" })}
+                newItem={() => ({ icon: "shield", title: "", desc: "", points: [], image: "", url: "" })}
                 render={(x, set) => (
                   <>
                     <IconPick value={x.icon} onChange={(v) => set("icon", v)} />
@@ -1686,6 +1686,7 @@ export default function Admin() {
                     <Text label="الوصف" area rows={2} value={x.desc} onChange={(v) => set("desc", v)} />
                     <Text label="النقاط (كل نقطة في سطر)" area value={lines(x.points)} onChange={(v) => set("points", splitLines(v))} />
                     <Img label="صورة الخدمة (اختياري)" value={x.image} onChange={(v) => set("image", v)} />
+                    <Text label="رابط التفاصيل (اختياري، يظهر «التفاصيل ↗»)" ltr value={x.url} onChange={(v) => set("url", v)} hint="مثل صفحة الخدمة في موقع الشريك. اتركه فارغاً لإخفاء الرابط، وزر «اطلب هذه الخدمة» يظهر دائماً ويفتح واتساب." />
                   </>
                 )}
               />
@@ -1698,12 +1699,13 @@ export default function Admin() {
                 onChange={u(["security", "solutions"])}
                 addLabel="إضافة منصة"
                 title={(x) => x.name || "منصة"}
-                newItem={() => ({ name: "", desc: "", image: "" })}
+                newItem={() => ({ name: "", desc: "", image: "", url: "" })}
                 render={(x, set) => (
                   <>
                     <Text label="اسم المنصة" ltr value={x.name} onChange={(v) => set("name", v)} />
                     <Text label="الوصف" value={x.desc} onChange={(v) => set("desc", v)} />
                     <Img label="صورة (اختياري)" value={x.image} onChange={(v) => set("image", v)} />
+                    <Text label="رابط التفاصيل (اختياري، يظهر «التفاصيل ↗»)" ltr value={x.url} onChange={(v) => set("url", v)} hint="مثل صفحة المنصة في موقع الشريك. اتركه فارغاً لإخفاء الرابط." />
                   </>
                 )}
               />
