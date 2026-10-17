@@ -1,34 +1,44 @@
 import { socialLinks } from "./Icons";
 import ThemeToggle from "./ThemeToggle";
+import { ui, prefix } from "@/lib/i18n";
 
 const digits = (s) => String(s || "").replace(/\D/g, "");
 const live = (c, key) => (c.pages || []).filter((p) => p.published !== false && p[key] && p.slug);
 
 // data-nosnippet: يمنع جوجل من أخذ نص القائمة والفوتر في وصف نتيجة البحث، لأن روابط القائمة تلتصق ببعضها فيه
-export function SiteHeader({ c, icon }) {
+// altPath: مسار الصفحة نفسها في اللغة الأخرى (بدون /en)، والافتراضي الصفحة الرئيسية
+export function SiteHeader({ c, icon, altPath = "/" }) {
   const extra = live(c, "showInHeader");
+  const t = ui(c.lang);
+  const home = prefix(c.lang) || "";
+  const other = c.lang === "en" ? altPath : "/en" + (altPath === "/" ? "" : altPath);
+  const sec = c.security || {};
   const wa = `https://wa.me/${digits(c.contact.whatsapp)}?text=${encodeURIComponent(c.contact.message || "")}`;
   return (
     <>
       <header className="nav" data-nosnippet>
         <div className="wrap nav-in">
-          <a className="brand" href="/" aria-label={c.brand.name}>
+          <a className="brand" href={home || "/"} aria-label={c.brand.name}>
             <BrandLogo b={c.brand} alt={c.brand.name} />
             {c.sizes?.showBrandText !== false && <BrandText b={c.brand} />}
           </a>
           <nav className={"links" + (extra.length ? " links-wrap" : "")}>
-            <a href="/#packages">الباقات</a>
-            <a href="/#addons">الإضافات</a>
-            {c.about?.show !== false && c.about?.name && <a href="/#about">من أنا</a>}
-            <a href="/#gallery">عروضنا</a>
-            <a href="/#contact">تواصل معنا</a>
+            <a href={`${home}/#packages`}>{t.nav.packages}</a>
+            {sec.show !== false && sec.title && <a href={`${home}/#security`}>{sec.navLabel || t.nav.security}</a>}
+            <a className="nav-minor" href={`${home}/#addons`}>{t.nav.addons}</a>
+            {c.about?.show !== false && c.about?.name && <a href={`${home}/#about`}>{t.nav.about}</a>}
+            <a className="nav-minor" href={`${home}/#gallery`}>{t.nav.gallery}</a>
+            <a href={`${home}/#contact`}>{t.nav.contact}</a>
             {extra.map((p) => (
-              <a key={p.slug} href={`/${p.slug}`}>{p.title}</a>
+              <a key={p.slug} href={`${home}/${p.slug}`}>{p.title}</a>
             ))}
           </nav>
-          <ThemeToggle mode={c.theme.mode} />
-          <a className="btn btn-sm" href={wa} target="_blank" rel="noopener" aria-label="واتساب">
-            {icon} <span className="nav-wa-txt">واتساب</span>
+          <a className="lang-btn" href={other} hrefLang={c.lang === "en" ? "ar" : "en"} title={t.switchTitle}>
+            {t.switchLabel}
+          </a>
+          <ThemeToggle mode={c.theme.mode} label={t.themeToggle} title={t.themeTitle} />
+          <a className="btn btn-sm" href={wa} target="_blank" rel="noopener" aria-label={t.whatsapp}>
+            {icon} <span className="nav-wa-txt">{t.whatsapp}</span>
           </a>
         </div>
       </header>
@@ -55,6 +65,7 @@ export function SocialRow({ c }) {
 
 export function SiteFooter({ c }) {
   const links = live(c, "showInFooter");
+  const home = prefix(c.lang);
   const city = c.footer.city;
   return (
     <footer className="foot" data-nosnippet>
@@ -66,7 +77,7 @@ export function SiteFooter({ c }) {
             {links.map((p, i) => (
               <span key={p.slug}>
                 {i > 0 && " | "}
-                <a href={`/${p.slug}`} style={{ textDecoration: "underline" }}>{p.title}</a>
+                <a href={`${home}/${p.slug}`} style={{ textDecoration: "underline" }}>{p.title}</a>
               </span>
             ))}
             {city ? (links.length ? " | " : "") + city : ""}
@@ -87,7 +98,7 @@ export function FooterBrand({ c, as: Tag = "a" }) {
     : { logo: b.logo, logoLight: b.logoLight };
   const showName = b.footerLogo ? !!b.footerShowName : c.sizes?.showBrandText !== false;
   return (
-    <Tag className="brand foot-brand" {...(Tag === "a" ? { href: "/", "aria-label": b.name } : {})}>
+    <Tag className="brand foot-brand" {...(Tag === "a" ? { href: prefix(c.lang) || "/", "aria-label": b.name } : {})}>
       <BrandLogo b={logos} alt={showName ? "" : b.name} />
       {showName && <span>{b.name}</span>}
     </Tag>

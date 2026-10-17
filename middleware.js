@@ -6,6 +6,13 @@ const ADMIN_PATH = "/admin552255";
 export function middleware(req) {
   const { pathname } = req.nextUrl;
 
+  // النسخة الإنجليزية: تخبر layout بلغة الصفحة حتى يضبط lang و dir
+  if (pathname === "/en" || pathname.startsWith("/en/")) {
+    const headers = new Headers(req.headers);
+    headers.set("x-site-lang", "en");
+    return NextResponse.next({ request: { headers } });
+  }
+
   // المسار الجديد يفتح لوحة التحكم، ومنع محركات البحث من فهرستها
   if (pathname === ADMIN_PATH || pathname === ADMIN_PATH + "/") {
     const url = req.nextUrl.clone();
@@ -26,5 +33,5 @@ export function middleware(req) {
 }
 
 export const config = {
-  matcher: ["/admin", "/admin/:path*", "/admin552255", "/admin552255/:path*"],
+  matcher: ["/admin", "/admin/:path*", "/admin552255", "/admin552255/:path*", "/en", "/en/:path*"],
 };

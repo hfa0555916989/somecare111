@@ -307,6 +307,125 @@ function Sizes({ d, set, reset, setTheme }) {
   );
 }
 
+// قائمة نصوص تُكتب كل عنصر في سطر (الأسطر الفارغة تُتجاهل عند العرض في الموقع)
+const lines = (a) => (Array.isArray(a) ? a : []).join("\n");
+const splitLines = (v) => v.split("\n");
+
+// حقول النسخة الإنجليزية: [المفتاح, العنوان, النوع, الحقول الداخلية]
+// النوع: نص سطر واحد (افتراضي) | area نص طويل | lines كل عنصر في سطر | group مجموعة | list قائمة تُطابَق بترتيب العربية
+const EN_PRICE_HINT = "اتركه فارغاً ليُحوَّل تلقائياً من العربي (ريال ← SAR)";
+const EN_SECTIONS = [
+  ["seo", "عنوان ووصف جوجل", [["title", "عنوان الصفحة في جوجل"], ["description", "وصف الصفحة في جوجل", "area"]]],
+  ["brand", "اسم الموقع", [["name", "الاسم بجانب الشعار"], ["tagline", "السطر تحت الاسم"]]],
+  ["hero", "الواجهة", [["badge", "الشارة أعلى العنوان"], ["title", "العنوان الرئيسي ({ } للذهبي)", "area"], ["subtitle", "النص التعريفي", "area"], ["primaryButton", "نص الزر الرئيسي"], ["secondaryButton", "نص الزر الثانوي"]]],
+  ["titles", "العناوين", [["packages", "عنوان الباقات"], ["packagesSub", "وصف الباقات"], ["addons", "عنوان الإضافات"], ["addonsSub", "وصف الإضافات"], ["features", "عنوان المميزات"], ["gallery", "عنوان العروض"], ["video", "عنوان الفيديو"], ["contact", "عنوان التواصل"]]],
+  ["packages", "الباقات", [["label", "العنوان الصغير فوق الاسم"], ["name", "اسم الباقة"], ["pricePrefix", "قبل السعر", "price"], ["unit", "بعد السعر", "price"], ["desc", "الوصف", "area"], ["features", "المزايا (كل ميزة في سطر)", "lines"]], "list"],
+  [
+    "security",
+    "الأمن السيبراني (الشراكة)",
+    [
+      ["navLabel", "اسم القسم في القائمة"],
+      ["badge", "الشارة أعلى العنوان"],
+      ["title", "العنوان ({ } للذهبي)", "area"],
+      ["subtitle", "النص تحت العنوان", "area"],
+      ["partner", "بطاقة الشريك", "group", [["country", "الدولة والمدينة"], ["text", "نبذة الشراكة", "area"]]],
+      ["services", "الخدمات", "list", [["title", "العنوان"], ["desc", "الوصف", "area"], ["points", "النقاط (كل نقطة في سطر)", "lines"]]],
+      ["solutionsTitle", "عنوان المنصات والحلول"],
+      ["solutions", "المنصات والحلول", "list", [["desc", "الوصف"]]],
+      ["frameworksTitle", "عنوان الأطر والأنظمة"],
+      ["sectorsTitle", "عنوان القطاعات"],
+      ["sectors", "القطاعات (كل قطاع في سطر)", "lines"],
+      ["stepsTitle", "عنوان خطوات العمل"],
+      ["steps", "خطوات العمل", "list", [["title", "العنوان"], ["desc", "الوصف", "area"]]],
+      ["priceLabel", "كلمة فوق السعر"],
+      ["price", "السعر"],
+      ["priceNote", "جملة بجانب السعر"],
+      ["button", "نص الزر"],
+      ["gallery", "الصور", "list", [["caption", "التعليق"]]],
+    ],
+  ],
+  ["addons", "الإضافات", [["title", "العنوان"], ["desc", "الوصف"], ["price", "السعر", "price"]], "list"],
+  ["features", "المميزات", [["title", "العنوان"], ["desc", "الوصف", "area"]], "list"],
+  ["trust", "قسم العقود الموثّقة", [["title", "العنوان"], ["subtitle", "النص تحت العنوان", "area"], ["points", "النقاط", "list", [["title", "العنوان"], ["desc", "الوصف", "area"]]], ["note", "جملة قبل الزر"], ["button", "نص الزر"]]],
+  ["about", "من أنا", [["title", "عنوان القسم"], ["name", "الاسم"], ["role", "المسمى"], ["bio", "النبذة (كل فقرة في سطر)", "area"], ["highlights", "النقاط المميزة (كل نقطة في سطر)", "lines"], ["certTitle", "عنوان الوثيقة"], ["certText", "وصف الوثيقة", "area"], ["certExpiry", "تاريخ الانتهاء"]]],
+  ["gallery", "الصور والعروض", [["caption", "التعليق"]], "list"],
+  ["contact", "التواصل", [["availability", "نص التواصل"], ["message", "رسالة واتساب الجاهزة", "area"]]],
+  ["form", "نموذج الاستفسار", [["title", "عنوان النموذج"], ["success", "رسالة النجاح ({number} = رقم الاستفسار)", "area"]]],
+  ["footer", "الفوتر", [["text", "نص حقوق النشر"], ["city", "المدينة"]]],
+];
+
+const itemName = (it) => (it && typeof it === "object" ? it.name || it.title || it.caption || "" : "");
+
+function EnFields({ fields, ar, en, onChange }) {
+  const tr = en && typeof en === "object" ? en : {};
+  const set = (k, v) => onChange({ ...tr, [k]: v });
+  return fields.map(([k, label, type, sub]) => {
+    const a = ar?.[k];
+    if (type === "list") return <EnList key={k} label={label} fields={sub} ar={a} en={tr[k]} onChange={(v) => set(k, v)} />;
+    if (type === "group")
+      return (
+        <div key={k} className="adm-card">
+          <b>{label}</b>
+          <EnFields fields={sub} ar={a} en={tr[k]} onChange={(v) => set(k, v)} />
+        </div>
+      );
+    const isLines = type === "lines";
+    const arText = isLines ? (Array.isArray(a) ? a.filter(Boolean).join(" · ") : "") : a;
+    return (
+      <Text
+        key={k}
+        label={label}
+        ltr
+        area={type === "area" || isLines}
+        rows={isLines ? 4 : 3}
+        value={isLines ? lines(tr[k]) : tr[k]}
+        onChange={(v) => set(k, isLines ? splitLines(v) : v)}
+        hint={type === "price" ? `${EN_PRICE_HINT}. بالعربي: ${arText || "—"}` : arText ? `بالعربي: ${arText}` : undefined}
+      />
+    );
+  });
+}
+
+function EnList({ label, fields, ar, en, onChange }) {
+  const items = Array.isArray(ar) ? ar : [];
+  const tr = Array.isArray(en) ? en : [];
+  const set = (i, v) => onChange(items.map((_, j) => (j === i ? v : tr[j] || {})));
+  return (
+    <div className="adm-card">
+      <b>{label}</b>
+      {!items.length && <span className="adm-hint">لا توجد عناصر في النسخة العربية بعد.</span>}
+      {items.map((it, i) => (
+        <div key={i} className="adm-card">
+          <b>{i + 1}. {itemName(it)}</b>
+          <EnFields fields={fields} ar={it} en={tr[i]} onChange={(v) => set(i, v)} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function English({ d, setEn }) {
+  return (
+    <>
+      <div className="note info">
+        النسخة الإنجليزية تفتح على <a href="/en" target="_blank" dir="ltr">/en</a>، وزر «English / عربي» أعلى الموقع ينقل الزائر بين النسختين.
+        اكتب هنا الترجمة فقط: الأسعار والصور والأيقونات وترتيب العناصر تُؤخذ من النسخة العربية، وأي خانة تتركها فارغة يظهر مكانها النص العربي.
+        إذا أضفت أو حذفت باقة أو عنصراً في العربي، راجع ترجمته هنا لأن الترجمة تُطابَق بالترتيب.
+      </div>
+      {EN_SECTIONS.map(([key, label, fields, kind]) => (
+        <details key={key} className="adm-card">
+          <summary><b>{label}</b></summary>
+          {kind === "list" ? (
+            <EnList label={label} fields={fields} ar={d[key]} en={d.en?.[key]} onChange={(v) => setEn(key, v)} />
+          ) : (
+            <EnFields fields={fields} ar={d[key]} en={d.en?.[key]} onChange={(v) => setEn(key, v)} />
+          )}
+        </details>
+      ))}
+    </>
+  );
+}
+
 // أقسام اللوحة: تظهر مربعات في الصفحة الرئيسية للوحة، وشريط تبويب في الشاشات الكبيرة
 const GROUPS = [
   [
@@ -327,6 +446,7 @@ const GROUPS = [
     [
       ["hero", "الواجهة", "layout"],
       ["packages", "الباقات والأسعار", "box"],
+      ["security", "الأمن السيبراني (الشراكة)", "shield"],
       ["addons", "الإضافات", "plusSq"],
       ["features", "المميزات", "star"],
       ["about", "من أنا والترخيص", "user"],
@@ -334,6 +454,7 @@ const GROUPS = [
       ["video", "الفيديو", "video"],
       ["titles", "العناوين", "heading"],
       ["pages", "الصفحات والفوتر", "pages"],
+      ["english", "النسخة الإنجليزية", "globe"],
     ],
   ],
   [
@@ -1274,7 +1395,7 @@ export default function Admin() {
     setState("login");
   }
   async function save() {
-    const RESERVED = ["admin", "api", "_next", "images", "icon.png", "robots.txt", "sitemap.xml", "favicon.ico", "admin552255"];
+    const RESERVED = ["admin", "api", "en", "_next", "images", "icon.png", "robots.txt", "sitemap.xml", "favicon.ico", "admin552255"];
     const seen = new Set();
     for (const p of data.pages || []) {
       if (!p.slug) return setMsg(`الصفحة "${p.title || ""}" ليس لها رابط. اكتب رابطاً إنجليزياً مثل refund.`);
@@ -1523,6 +1644,124 @@ export default function Admin() {
           />
         )}
 
+        {tab === "security" && (
+          <>
+            <div className="note info">
+              باقة الشركات الكبرى بالشراكة مع شركة الأمن السيبراني. تظهر في الصفحة الرئيسية بعد الباقات مباشرة، ولها رابط في القائمة.
+              لا تستخدم شعار الشريك أو صوره قبل موافقته المكتوبة. ارفع الصور من هنا (شعار الشريك، صورة الغلاف، صورة لكل خدمة أو منصة).
+            </div>
+            <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input type="checkbox" checked={d.security?.show !== false} onChange={(e) => u(["security", "show"])(e.target.checked)} />
+              إظهار الباقة في الموقع
+            </label>
+            <div className="row">
+              <Text label="اسم القسم في القائمة" value={d.security?.navLabel} onChange={u(["security", "navLabel"])} />
+              <Text label="الشارة أعلى العنوان" value={d.security?.badge} onChange={u(["security", "badge"])} />
+            </div>
+            <Text label="العنوان (الكلمة بين { } تظهر بالذهبي)" value={d.security?.title} onChange={u(["security", "title"])} />
+            <Text label="النص تحت العنوان" area rows={3} value={d.security?.subtitle} onChange={u(["security", "subtitle"])} />
+            <Img label="صورة غلاف للباقة (اختياري، عريضة)" value={d.security?.image} onChange={u(["security", "image"])} />
+            <div className="adm-card">
+              <b>بطاقة الشريك</b>
+              <div className="row">
+                <Text label="اسم الشركة الشريكة" ltr value={d.security?.partner?.name} onChange={u(["security", "partner", "name"])} />
+                <Text label="الدولة والمدينة" value={d.security?.partner?.country} onChange={u(["security", "partner", "country"])} />
+              </div>
+              <Text label="موقع الشريك (يظهر زر لزيارته، اتركه فارغاً لإخفائه)" ltr value={d.security?.partner?.url} onChange={u(["security", "partner", "url"])} />
+              <Img label="شعار الشريك (PNG أو SVG بخلفية شفافة)" value={d.security?.partner?.logo} onChange={u(["security", "partner", "logo"])} />
+              <Text label="نبذة الشراكة" area rows={3} value={d.security?.partner?.text} onChange={u(["security", "partner", "text"])} />
+            </div>
+            <div className="adm-card">
+              <b>الخدمات</b>
+              <List
+                items={d.security?.services || []}
+                onChange={u(["security", "services"])}
+                addLabel="إضافة خدمة"
+                title={(x) => x.title || "خدمة"}
+                newItem={() => ({ icon: "shield", title: "", desc: "", points: [], image: "" })}
+                render={(x, set) => (
+                  <>
+                    <IconPick value={x.icon} onChange={(v) => set("icon", v)} />
+                    <Text label="العنوان" value={x.title} onChange={(v) => set("title", v)} />
+                    <Text label="الوصف" area rows={2} value={x.desc} onChange={(v) => set("desc", v)} />
+                    <Text label="النقاط (كل نقطة في سطر)" area value={lines(x.points)} onChange={(v) => set("points", splitLines(v))} />
+                    <Img label="صورة الخدمة (اختياري)" value={x.image} onChange={(v) => set("image", v)} />
+                  </>
+                )}
+              />
+            </div>
+            <div className="adm-card">
+              <b>منصات وحلول الشريك</b>
+              <Text label="العنوان" value={d.security?.solutionsTitle} onChange={u(["security", "solutionsTitle"])} />
+              <List
+                items={d.security?.solutions || []}
+                onChange={u(["security", "solutions"])}
+                addLabel="إضافة منصة"
+                title={(x) => x.name || "منصة"}
+                newItem={() => ({ name: "", desc: "", image: "" })}
+                render={(x, set) => (
+                  <>
+                    <Text label="اسم المنصة" ltr value={x.name} onChange={(v) => set("name", v)} />
+                    <Text label="الوصف" value={x.desc} onChange={(v) => set("desc", v)} />
+                    <Img label="صورة (اختياري)" value={x.image} onChange={(v) => set("image", v)} />
+                  </>
+                )}
+              />
+            </div>
+            <div className="adm-card">
+              <b>الأطر والقطاعات</b>
+              <Text label="عنوان الأطر والأنظمة" value={d.security?.frameworksTitle} onChange={u(["security", "frameworksTitle"])} />
+              <Text label="الأطر والأنظمة (كل واحد في سطر، مثل NCA ECC)" ltr area value={lines(d.security?.frameworks)} onChange={(v) => u(["security", "frameworks"])(splitLines(v))} />
+              <Text label="عنوان القطاعات" value={d.security?.sectorsTitle} onChange={u(["security", "sectorsTitle"])} />
+              <Text label="القطاعات المستهدفة (كل قطاع في سطر)" area value={lines(d.security?.sectors)} onChange={(v) => u(["security", "sectors"])(splitLines(v))} />
+            </div>
+            <div className="adm-card">
+              <b>خطوات العمل</b>
+              <Text label="العنوان" value={d.security?.stepsTitle} onChange={u(["security", "stepsTitle"])} />
+              <List
+                items={d.security?.steps || []}
+                onChange={u(["security", "steps"])}
+                addLabel="إضافة خطوة"
+                title={(x, i) => `${i + 1}. ${x.title || "خطوة"}`}
+                newItem={() => ({ title: "", desc: "" })}
+                render={(x, set) => (
+                  <>
+                    <Text label="العنوان" value={x.title} onChange={(v) => set("title", v)} />
+                    <Text label="الوصف" area rows={2} value={x.desc} onChange={(v) => set("desc", v)} />
+                  </>
+                )}
+              />
+            </div>
+            <div className="adm-card">
+              <b>صور إضافية للباقة</b>
+              <List
+                items={d.security?.gallery || []}
+                onChange={u(["security", "gallery"])}
+                addLabel="إضافة صورة"
+                title={(g) => g.caption || "صورة"}
+                newItem={() => ({ src: "", caption: "" })}
+                render={(g, set) => (
+                  <>
+                    <Img label="الصورة" value={g.src} onChange={(v) => set("src", v)} />
+                    <Text label="التعليق" value={g.caption} onChange={(v) => set("caption", v)} />
+                  </>
+                )}
+              />
+            </div>
+            <div className="adm-card">
+              <b>السعر والزر</b>
+              <div className="row">
+                <Text label="كلمة فوق السعر" value={d.security?.priceLabel} onChange={u(["security", "priceLabel"])} />
+                <Text label="السعر (مثل: حسب نطاق العمل، أو يبدأ من 25,000 ريال)" value={d.security?.price} onChange={u(["security", "price"])} />
+              </div>
+              <Text label="جملة بجانب السعر" value={d.security?.priceNote} onChange={u(["security", "priceNote"])} />
+              <Text label="نص الزر (يفتح واتساب)" value={d.security?.button} onChange={u(["security", "button"])} />
+            </div>
+          </>
+        )}
+
+        {tab === "english" && <English d={d} setEn={(k, v) => setData((x) => ({ ...x, en: { ...x.en, [k]: v } }))} />}
+
         {tab === "addons" && (
           <List
             items={d.addons}
@@ -1738,7 +1977,7 @@ export default function Admin() {
         {tab === "seo" && (
           <>
             <div className="note info">
-              الموقع عربي (lang=ar)، لذلك يُفهرس في جوجل كموقع عربي. خريطة الموقع وملف robots يُبنيان تلقائياً على الرابط المعتمد أدناه:
+              الموقع عربي على الرابط الأساسي، ونسخته الإنجليزية على /en (عنوانها ووصفها في «النسخة الإنجليزية»)، وجوجل يربط النسختين ببعض تلقائياً. خريطة الموقع وملف robots يُبنيان تلقائياً على الرابط المعتمد أدناه:
               {" "}<span dir="ltr">/sitemap.xml</span> و <span dir="ltr">/robots.txt</span>
             </div>
             <Text label="الرابط المعتمد للموقع" ltr value={d.seo.siteUrl} onChange={u(["seo", "siteUrl"])} hint={`مثال: ${SITE_URL}`} />
@@ -1788,6 +2027,18 @@ export default function Admin() {
                   <Text label="عنوان فرعي (اختياري)" value={p.subtitle} onChange={(v) => set("subtitle", v)} />
                   <Text label="النص (كل فقرة في سطر)" area rows={8} value={p.body} onChange={(v) => set("body", v)} />
                   <Text label="جملة التواصل (اتركها فارغة لإخفاء رقم الجوال)" value={p.contactLabel} onChange={(v) => set("contactLabel", v)} />
+                  <details className="adm-card">
+                    <summary><b>النسخة الإنجليزية {p.slug ? <span dir="ltr">(/en/{p.slug})</span> : null}</b></summary>
+                    <span className="adm-hint">أي خانة فارغة يظهر مكانها النص العربي.</span>
+                    {[
+                      ["title", "Title"],
+                      ["subtitle", "Subtitle"],
+                      ["body", "Text (# heading, - bullet)", true],
+                      ["contactLabel", "Contact line"],
+                    ].map(([k, l, area]) => (
+                      <Text key={k} label={l} ltr area={area} rows={area ? 8 : undefined} value={p.en?.[k]} onChange={(v) => set("en", { ...(p.en || {}), [k]: v })} />
+                    ))}
+                  </details>
                   <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
                     <input type="checkbox" checked={p.published !== false} onChange={(e) => set("published", e.target.checked)} />
                     الصفحة منشورة

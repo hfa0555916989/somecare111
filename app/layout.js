@@ -1,13 +1,19 @@
 import "./globals.css";
+import { headers } from "next/headers";
 import { getContent } from "@/lib/content";
+import { localize, langOf, ui } from "@/lib/i18n";
 import { BRAND_THEME, isFont, fontsHref, siteUrl, safeColor, sizesCss, themeCss } from "@/lib/defaults";
 import { socialLinks, xHandle, plain } from "./Icons";
 import Tracking from "./Tracking";
 
 export const dynamic = "force-dynamic";
 
+// لغة الصفحة يحددها middleware.js (/en إنجليزي، والباقي عربي)
+const pageLang = () => langOf(headers().get("x-site-lang"));
+const localContent = async () => localize(await getContent(), pageLang());
+
 export async function generateMetadata() {
-  const c = await getContent();
+  const c = await localContent();
   const title = plain(c.seo.title);
   const description = c.seo.description;
   const images = c.seo.ogImage ? [c.seo.ogImage] : undefined;
@@ -17,7 +23,7 @@ export async function generateMetadata() {
     title,
     description,
     applicationName: c.brand.name,
-    openGraph: { type: "website", locale: "ar_SA", siteName: c.brand.name, title, description, images },
+    openGraph: { type: "website", locale: ui(c.lang).locale, siteName: c.brand.name, title, description, images },
     twitter: { card: "summary_large_image", title, description, images, ...(handle ? { site: handle, creator: handle } : {}) },
     icons: {
       icon: c.brand.favicon || c.brand.logo || "/icon.png",
@@ -50,7 +56,8 @@ const initScript = (mode) =>
   `(function(){try{var s=localStorage.getItem("theme");var d=document.documentElement;if(s==="dark"||s==="light")d.dataset.theme=s;else if(${JSON.stringify(mode)}==="light")d.dataset.theme="light";}catch(e){}})();`;
 
 export default async function RootLayout({ children }) {
-  const c = await getContent();
+  const c = await localContent();
+  const L = ui(c.lang);
   const t = c.theme;
   const site = siteUrl(c);
   const css =
@@ -72,7 +79,7 @@ export default async function RootLayout({ children }) {
     logo: abs(c.brand.appleIcon || c.brand.logo),
     image: abs(c.seo.ogImage),
     description: c.seo.description,
-    inLanguage: "ar-SA",
+    inLanguage: L.htmlLang,
     telephone: digits ? `+${digits}` : undefined,
     areaServed: { "@type": "Country", name: "SA" },
     address: { "@type": "PostalAddress", addressLocality: c.footer.city || undefined, addressCountry: "SA" },
@@ -82,7 +89,7 @@ export default async function RootLayout({ children }) {
       : {}),
   };
   return (
-    <html lang="ar-SA" dir="rtl" suppressHydrationWarning>
+    <html lang={L.htmlLang} dir={L.dir} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: initScript(t.mode || "auto") }} />
         <style dangerouslySetInnerHTML={{ __html: css }} />
