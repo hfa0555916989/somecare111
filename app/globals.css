@@ -602,3 +602,12 @@ p{margin:0}
 .more-link:hover{text-decoration:underline}
 .sol .more-link{justify-self:start;margin-top:4px}
 .sec .sec-title{font-size:clamp(1.6rem,3.6vw,2.4rem);margin-bottom:12px}
+/* الأمن السيبراني أول قسم بعد الواجهة: خلفية مميزة تفصله عن الباقات */
+.sec-sec{background:linear-gradient(180deg,color-mix(in srgb,var(--surface) 70%,var(--bg)),var(--bg));border-block:1px solid color-mix(in srgb,var(--price) 25%,transparent)}
+.partner-logo{height:84px;max-width:120px}
+.partner-txt h3 .hl{color:var(--price);font-size:inherit;font-weight:inherit}
+.partner-txt h3+small{display:block;color:var(--muted);font-weight:500;margin-top:2px}
+.partner-links{display:flex;flex-wrap:wrap;gap:10px}
+.partner-links .btn{margin:0}
+.sol img{object-position:top}
+.sec-sec .pk-grid{grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr))}

@@ -62,6 +62,8 @@ export default async function HomePage({ lang }) {
           </div>
         </section>
 
+        {showSecurity && <Security s={sec} t={t} waLink={waLink} />}
+
         <section id="packages" className="sec">
           <div className="wrap">
             <h2><Hl text={c.titles.packages} /></h2>
@@ -97,7 +99,6 @@ export default async function HomePage({ lang }) {
           </div>
         </section>
 
-        {showSecurity && <Security s={sec} t={t} waLink={waLink} />}
 
         <section id="addons" className="sec sec-alt">
           <div className="wrap narrow">
@@ -342,14 +343,30 @@ export function Security({ s, t, waLink, heading = "h2" }) {
 
         {p.name && (
           <div className="partner">
-            {p.logo && <img className="partner-logo" src={p.logo} alt={p.name} loading="lazy" />}
+            {p.logo && <img className="partner-logo" src={p.logo} alt={p.name} />}
             <div className="partner-txt">
-              <small>{t.partnerWith}</small>
-              <h3>{p.name}{p.country && <span> · {p.country}</span>}</h3>
+              {p.headline ? (
+                <>
+                  <h3><Hl text={p.headline} /></h3>
+                  {p.country && <small>{p.country}</small>}
+                </>
+              ) : (
+                <>
+                  <small>{t.partnerWith}</small>
+                  <h3>{p.name}{p.country && <span> · {p.country}</span>}</h3>
+                </>
+              )}
               {p.text && <p>{p.text}</p>}
             </div>
-            {partnerUrl && (
-              <a className="btn btn-ghost btn-sm" href={partnerUrl} target="_blank" rel="noopener">{t.partnerVisit}</a>
+            {(partnerUrl || p.profile) && (
+              <div className="partner-links">
+                {p.profile && (
+                  <a className="btn btn-sm" href={p.profile} target="_blank" rel="noopener">{t.partnerProfile}</a>
+                )}
+                {partnerUrl && (
+                  <a className="btn btn-ghost btn-sm" href={partnerUrl} target="_blank" rel="noopener">{t.partnerVisit}</a>
+                )}
+              </div>
             )}
           </div>
         )}
@@ -408,6 +425,14 @@ export function Security({ s, t, waLink, heading = "h2" }) {
               {s.frameworksTitle && <h3 className="sec-h3">{s.frameworksTitle}</h3>}
               <div className="chips">
                 {list(s.frameworks).map((f, i) => <span key={i} className="chip" dir="ltr">{f}</span>)}
+              </div>
+            </div>
+          )}
+          {list(s.credentials).length > 0 && (
+            <div>
+              {s.credentialsTitle && <h3 className="sec-h3">{s.credentialsTitle}</h3>}
+              <div className="chips">
+                {list(s.credentials).map((f, i) => <span key={i} className="chip" dir="ltr">{f}</span>)}
               </div>
             </div>
           )}
