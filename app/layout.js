@@ -84,6 +84,11 @@ export default async function RootLayout({ children }) {
     areaServed: { "@type": "Country", name: "SA" },
     address: { "@type": "PostalAddress", addressLocality: c.footer.city || undefined, addressCountry: "SA" },
     sameAs: socialLinks(c).filter((s) => s.key !== "email").map((s) => s.href),
+    // مجالات الخبرة لجوجل: خدمات الأمن السيبراني أولاً ثم الباقات
+    knowsAbout: [
+      ...(c.security?.show !== false && c.security?.title ? (c.security.services || []).map((x) => x?.title) : []),
+      ...(c.packages || []).map((p) => p?.name),
+    ].filter(Boolean),
     ...(a.show !== false && a.name
       ? { founder: { "@type": "Person", name: a.name, jobTitle: a.role || undefined, image: abs(a.photo) } }
       : {}),
