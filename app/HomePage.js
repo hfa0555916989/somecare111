@@ -312,7 +312,8 @@ function About({ a, t }) {
 // باقة الأمن السيبراني للشركات (بالشراكة مع شركة الأمن السيبراني)
 function Security({ s, t, waLink }) {
   const p = s.partner || {};
-  const partnerUrl = /^https?:\/\//i.test(p.url || "") ? p.url : "";
+  const httpUrl = (u) => (/^https?:\/\//i.test(u || "") ? u : "");
+  const partnerUrl = httpUrl(p.url);
   const list = (v) => (Array.isArray(v) ? v.filter(Boolean) : []);
   const services = list(s.services);
   const solutions = list(s.solutions).filter((x) => x.name);
@@ -356,6 +357,14 @@ function Security({ s, t, waLink }) {
                     {list(x.points).map((pt, j) => <li key={j}>{pt}</li>)}
                   </ul>
                 )}
+                <div className="pk-actions">
+                  <a className="btn btn-ghost btn-sm" href={waLink(x.title)} target="_blank" rel="noopener">
+                    <WaIcon size={18} /> {t.orderService}
+                  </a>
+                  {httpUrl(x.url) && (
+                    <a className="more-link" href={x.url} target="_blank" rel="noopener">{t.details}</a>
+                  )}
+                </div>
               </article>
             ))}
           </div>
@@ -370,6 +379,9 @@ function Security({ s, t, waLink }) {
                   {x.image && <img src={x.image} alt={x.name} loading="lazy" />}
                   <b dir="ltr">{x.name}</b>
                   {x.desc && <p>{x.desc}</p>}
+                  {httpUrl(x.url) && (
+                    <a className="more-link" href={x.url} target="_blank" rel="noopener">{t.details}</a>
+                  )}
                 </div>
               ))}
             </div>
