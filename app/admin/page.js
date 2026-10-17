@@ -338,6 +338,8 @@ const EN_SECTIONS = [
       ["sectors", "القطاعات (كل قطاع في سطر)", "lines"],
       ["stepsTitle", "عنوان خطوات العمل"],
       ["steps", "خطوات العمل", "list", [["title", "العنوان"], ["desc", "الوصف", "area"]]],
+      ["faqTitle", "عنوان الأسئلة الشائعة"],
+      ["faq", "الأسئلة الشائعة", "list", [["q", "السؤال"], ["a", "الجواب", "area"]]],
       ["priceLabel", "كلمة فوق السعر"],
       ["price", "السعر"],
       ["priceNote", "جملة بجانب السعر"],
@@ -1753,6 +1755,23 @@ export default function Admin() {
               />
             </div>
             <div className="adm-card">
+              <b>الأسئلة الشائعة (تظهر في القسم، ولجوجل في صفحة /security)</b>
+              <Text label="العنوان" value={d.security?.faqTitle} onChange={u(["security", "faqTitle"])} />
+              <List
+                items={d.security?.faq || []}
+                onChange={u(["security", "faq"])}
+                addLabel="إضافة سؤال"
+                title={(x) => x.q || "سؤال"}
+                newItem={() => ({ q: "", a: "" })}
+                render={(x, set) => (
+                  <>
+                    <Text label="السؤال" value={x.q} onChange={(v) => set("q", v)} />
+                    <Text label="الجواب" area rows={3} value={x.a} onChange={(v) => set("a", v)} />
+                  </>
+                )}
+              />
+            </div>
+            <div className="adm-card">
               <b>صور إضافية للباقة</b>
               <List
                 items={d.security?.gallery || []}
@@ -2013,6 +2032,14 @@ export default function Admin() {
             <Text label="الرابط المعتمد للموقع" ltr value={d.seo.siteUrl} onChange={u(["seo", "siteUrl"])} hint={`مثال: ${SITE_URL}`} />
             <Text label="عنوان الصفحة في جوجل" value={d.seo.title} onChange={u(["seo", "title"])} />
             <Text label="وصف الصفحة في جوجل" area value={d.seo.description} onChange={u(["seo", "description"])} />
+            <Text
+              label="كلمات البحث (مفصولة بفاصلة، اكتب الأشكال المختلفة للكلمة)"
+              area
+              rows={3}
+              value={d.seo.keywords}
+              onChange={u(["seo", "keywords"])}
+              hint="مثل: أمن سيبراني, الأمن السيبراني, امن سيبراني. جوجل يعتمد أكثر على العنوان والوصف ونصوص الصفحة، وBing يستفيد من هذه الكلمات."
+            />
             <Img label="صورة المشاركة (تظهر عند مشاركة الرابط في واتساب وتويتر، يفضّل 1200×630)" value={d.seo.ogImage} onChange={u(["seo", "ogImage"])} />
           </>
         )}
