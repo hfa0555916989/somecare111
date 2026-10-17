@@ -342,6 +342,8 @@ const EN_SECTIONS = [
       ["priceNote", "جملة بجانب السعر"],
       ["button", "نص الزر"],
       ["gallery", "الصور", "list", [["caption", "التعليق"]]],
+      ["seoTitle", "عنوان صفحة /en/security في جوجل وعند المشاركة"],
+      ["seoDescription", "وصف صفحة /en/security", "area"],
     ],
   ],
   ["addons", "الإضافات", [["title", "العنوان"], ["desc", "الوصف"], ["price", "السعر", "price"]], "list"],
@@ -1395,7 +1397,7 @@ export default function Admin() {
     setState("login");
   }
   async function save() {
-    const RESERVED = ["admin", "api", "en", "_next", "images", "icon.png", "robots.txt", "sitemap.xml", "favicon.ico", "admin552255"];
+    const RESERVED = ["admin", "api", "en", "security", "_next", "images", "icon.png", "robots.txt", "sitemap.xml", "favicon.ico", "admin552255"];
     const seen = new Set();
     for (const p of data.pages || []) {
       if (!p.slug) return setMsg(`الصفحة "${p.title || ""}" ليس لها رابط. اكتب رابطاً إنجليزياً مثل refund.`);
@@ -1758,6 +1760,16 @@ export default function Admin() {
               </div>
               <Text label="جملة بجانب السعر" value={d.security?.priceNote} onChange={u(["security", "priceNote"])} />
               <Text label="نص الزر (يفتح واتساب)" value={d.security?.button} onChange={u(["security", "button"])} />
+            </div>
+            <div className="adm-card">
+              <b>جوجل والمشاركة (صفحة <span dir="ltr">/security</span>)</b>
+              <span className="adm-hint">
+                للباقة صفحة مستقلة على <a href="/security" target="_blank" dir="ltr">hassandev.sa/security</a> (والإنجليزية <span dir="ltr">/en/security</span>).
+                شارك هذا الرابط في تويتر وواتساب، فتظهر معه الصورة والعنوان والوصف أدناه بدل بيانات الصفحة الرئيسية.
+              </span>
+              <Text label="عنوان الصفحة في جوجل وعند المشاركة" value={d.security?.seoTitle} onChange={u(["security", "seoTitle"])} hint="اتركه فارغاً لاستخدام عنوان الباقة." />
+              <Text label="الوصف في جوجل وعند المشاركة" area rows={3} value={d.security?.seoDescription} onChange={u(["security", "seoDescription"])} hint="يُفضّل بين 120 و160 حرفاً." />
+              <Img label="صورة المشاركة (يفضّل 1200×675 أو 1200×630)" value={d.security?.ogImage} onChange={u(["security", "ogImage"])} />
             </div>
           </>
         )}
