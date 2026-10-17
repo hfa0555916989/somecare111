@@ -333,6 +333,7 @@ export function Security({ s, t, waLink, heading = "h2" }) {
   const services = list(s.services);
   const solutions = list(s.solutions).filter((x) => x.name);
   const steps = list(s.steps).filter((x) => x.title);
+  const faq = list(s.faq).filter((x) => x.q && x.a);
   const gallery = list(s.gallery).filter((g) => g.src);
   return (
     <section id="security" className="sec sec-sec">
@@ -466,6 +467,20 @@ export function Security({ s, t, waLink, heading = "h2" }) {
                 </li>
               ))}
             </ol>
+          </>
+        )}
+
+        {faq.length > 0 && (
+          <>
+            {s.faqTitle && <h3 className="sec-h3">{s.faqTitle}</h3>}
+            <div className="faq">
+              {faq.map((x, i) => (
+                <details key={i} open={i === 0}>
+                  <summary>{x.q}</summary>
+                  <p>{x.a}</p>
+                </details>
+              ))}
+            </div>
           </>
         )}
 

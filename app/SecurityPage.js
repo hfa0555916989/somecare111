@@ -61,6 +61,17 @@ export default async function SecurityPage({ lang }) {
     },
   };
 
+  // الأسئلة الشائعة لجوجل (FAQPage)
+  const faq = (s.faq || []).filter((x) => x?.q && x?.a);
+  const faqLd = faq.length
+    ? {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        inLanguage: t.htmlLang,
+        mainEntity: faq.map((x) => ({ "@type": "Question", name: x.q, acceptedAnswer: { "@type": "Answer", text: x.a } })),
+      }
+    : null;
+
   return (
     <>
       <SiteHeader c={c} icon={<WaIcon size={18} />} altPath="/security" />
@@ -72,7 +83,9 @@ export default async function SecurityPage({ lang }) {
       <a className="wa-float" href={waLink(service)} target="_blank" rel="noopener" aria-label={t.whatsapp}>
         <WaIcon size={30} />
       </a>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld).replace(/</g, "\\u003c") }} />
+      {[ld, faqLd].filter(Boolean).map((x, i) => (
+        <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(x).replace(/</g, "\\u003c") }} />
+      ))}
     </>
   );
 }

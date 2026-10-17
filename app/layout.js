@@ -22,6 +22,7 @@ export async function generateMetadata() {
     metadataBase: new URL(siteUrl(c)),
     title,
     description,
+    ...(c.seo.keywords ? { keywords: String(c.seo.keywords) } : {}),
     applicationName: c.brand.name,
     openGraph: { type: "website", locale: ui(c.lang).locale, siteName: c.brand.name, title, description, images },
     twitter: { card: "summary_large_image", title, description, images, ...(handle ? { site: handle, creator: handle } : {}) },
@@ -86,7 +87,9 @@ export default async function RootLayout({ children }) {
     sameAs: socialLinks(c).filter((s) => s.key !== "email").map((s) => s.href),
     // مجالات الخبرة لجوجل: خدمات الأمن السيبراني أولاً ثم الباقات
     knowsAbout: [
-      ...(c.security?.show !== false && c.security?.title ? (c.security.services || []).map((x) => x?.title) : []),
+      ...(c.security?.show !== false && c.security?.title
+        ? [plain(c.security.navLabel), ...(c.security.services || []).map((x) => x?.title)]
+        : []),
       ...(c.packages || []).map((p) => p?.name),
     ].filter(Boolean),
     ...(a.show !== false && a.name

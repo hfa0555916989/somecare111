@@ -613,3 +613,12 @@ p{margin:0}
 .sec-sec .pk-grid{grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr))}
 .sec-announce{display:block;max-width:960px;margin:28px auto 0;border-radius:20px;overflow:hidden;border:1.5px solid color-mix(in srgb,var(--price) 45%,transparent);box-shadow:0 18px 50px -20px rgba(0,0,0,.45)}
 .sec-announce img{display:block;width:100%;height:auto}
+/* الأسئلة الشائعة */
+.faq{display:grid;gap:12px}
+.faq details{background:var(--surface);border:1px solid color-mix(in srgb,var(--text) 10%,transparent);border-radius:16px;padding:16px 20px}
+.faq details[open]{border-color:color-mix(in srgb,var(--price) 45%,transparent)}
+.faq summary{cursor:pointer;font-family:var(--font-head);font-weight:600;font-size:1.05rem;list-style:none;display:flex;gap:12px;align-items:center}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::before{content:"+";flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;color:var(--price);border:1.5px solid color-mix(in srgb,var(--price) 60%,transparent);font-weight:700;line-height:1}
+.faq details[open] summary::before{content:"−"}
+.faq p{color:var(--muted);margin-top:10px;line-height:1.8}
