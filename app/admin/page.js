@@ -1673,7 +1673,8 @@ export default function Admin() {
             </div>
             <Text label="العنوان (الكلمة بين { } تظهر بالذهبي)" value={d.security?.title} onChange={u(["security", "title"])} />
             <Text label="النص تحت العنوان" area rows={3} value={d.security?.subtitle} onChange={u(["security", "subtitle"])} />
-            <Img label="صورة غلاف للباقة (اختياري، عريضة)" value={d.security?.image} onChange={u(["security", "image"])} />
+            <Img label="صورة إعلان الشراكة (تظهر بعد بطاقة الشريك)" value={d.security?.announcement} onChange={u(["security", "announcement"])} />
+            <Img label="صورة غلاف للباقة (تظهر فقط إذا لم توجد صورة إعلان الشراكة)" value={d.security?.image} onChange={u(["security", "image"])} />
             <div className="adm-card">
               <b>بطاقة الشريك</b>
               <div className="row">

@@ -371,7 +371,13 @@ export function Security({ s, t, waLink, heading = "h2" }) {
           </div>
         )}
 
-        {s.image && <img className="sec-cover" src={s.image} alt="" loading="lazy" />}
+        {s.announcement ? (
+          <a className="sec-announce" href={s.announcement} target="_blank" rel="noopener">
+            <img src={s.announcement} alt={plain(p.headline || p.name || s.title)} loading="lazy" />
+          </a>
+        ) : (
+          s.image && <img className="sec-cover" src={s.image} alt="" loading="lazy" />
+        )}
 
         {services.length > 0 && (
           <div className="pk-grid">

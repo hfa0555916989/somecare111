@@ -611,3 +611,5 @@ p{margin:0}
 .partner-links .btn{margin:0}
 .sol img{object-position:top}
 .sec-sec .pk-grid{grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr))}
+.sec-announce{display:block;max-width:960px;margin:28px auto 0;border-radius:20px;overflow:hidden;border:1.5px solid color-mix(in srgb,var(--price) 45%,transparent);box-shadow:0 18px 50px -20px rgba(0,0,0,.45)}
+.sec-announce img{display:block;width:100%;height:auto}
