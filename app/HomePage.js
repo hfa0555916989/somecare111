@@ -47,10 +47,10 @@ export default async function HomePage({ lang }) {
               <h1><Hl text={c.hero.title} /></h1>
               <p className="lead">{c.hero.subtitle}</p>
               <div className="cta-row">
-                <a className="btn" href={waLink()} target="_blank" rel="noopener">
+                <a className="btn" href={waLink(showSecurity ? plain(sec.navLabel || sec.title) : undefined)} target="_blank" rel="noopener">
                   <WaIcon /> {c.hero.primaryButton}
                 </a>
-                <a className="btn btn-ghost" href="#packages">
+                <a className="btn btn-ghost" href={showSecurity ? "#security" : "#packages"}>
                   {c.hero.secondaryButton}
                 </a>
               </div>
