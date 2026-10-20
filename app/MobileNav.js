@@ -36,7 +36,11 @@ export function MobileNav({ links, openLabel, closeLabel, navLabel }) {
         onClick={() => setOpen((v) => !v)}
       >
         <span className="sr-only">{open ? closeLabel : openLabel}</span>
-        <span className={"burger-bars" + (open ? " is-open" : "")} aria-hidden="true" />
+        <span className={"burger-icon" + (open ? " is-open" : "")} aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </span>
       </button>
       {open && <button type="button" className="nav-backdrop" aria-label={closeLabel} onClick={() => setOpen(false)} />}
       <nav ref={menu} id="site-menu" className={"links" + (open ? " is-open" : "")} aria-label={navLabel}>
