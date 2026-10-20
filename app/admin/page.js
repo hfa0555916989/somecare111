@@ -1634,7 +1634,7 @@ export default function Admin() {
                 <IconPick value={p.icon} onChange={(v) => set("icon", v)} />
                 <div className="row">
                   <Text label="قبل السعر (مثل: يبدأ من)" value={p.pricePrefix} onChange={(v) => set("pricePrefix", v)} />
-                  <Text label="السعر (يقبل نطاق مثل 16,000 - 18,000)" value={p.price} onChange={(v) => set("price", v)} />
+                  <Text label="السعر (مثل 1,500)" value={p.price} onChange={(v) => set("price", v)} />
                 </div>
                 <Text label="بعد السعر (ريال / ريال فأكثر)" value={p.unit} onChange={(v) => set("unit", v)} />
                 <Text label="وصف" area value={p.desc} onChange={(v) => set("desc", v)} />

@@ -4,6 +4,8 @@ import { SiteHeader, SiteFooter, SocialRow } from "./SiteChrome";
 import { Icon, Hl, plain } from "./Icons";
 import ContactForm from "./ContactForm";
 import { turnstileSiteKey } from "@/lib/turnstile";
+import { isBigStorePackage } from "@/lib/big-store";
+import { PackagePoints, StoreShowcase, packageShowcase } from "./PackagePoints";
 
 // روابط النسختين لجوجل (hreflang)
 export const homeAlternates = (lang) => ({
@@ -70,7 +72,7 @@ export default async function HomePage({ lang }) {
             <p className="sub">{c.titles.packagesSub}</p>
             <div className="pk-grid">
               {c.packages.map((p, i) => (
-                <article key={i} className={"pk" + (p.featured ? " pk-featured" : "")}>
+                <article key={i} id={isBigStorePackage(p) ? "big-store" : undefined} className={"pk" + (p.featured ? " pk-featured" : "")}>
                   {p.image && <img className="pk-img" src={p.image} alt="" />}
                   <div className="pk-head">
                     {p.icon && <span className="ic-ring"><Icon name={p.icon} size={26} /></span>}
@@ -85,11 +87,8 @@ export default async function HomePage({ lang }) {
                     <span>{p.unit}</span>
                   </p>
                   {p.desc && <p className="pk-desc">{p.desc}</p>}
-                  <ul>
-                    {(p.features || []).map((f, j) => (
-                      <li key={j}>{f}</li>
-                    ))}
-                  </ul>
+                  <PackagePoints features={p.features} lang={c.lang} />
+                  <StoreShowcase data={packageShowcase(p)} lang={c.lang} />
                   <a className={"btn" + (p.featured ? "" : " btn-ghost")} href={waLink(p.name)} target="_blank" rel="noopener">
                     {t.orderPackage}
                   </a>
@@ -104,6 +103,13 @@ export default async function HomePage({ lang }) {
           <div className="wrap narrow">
             <h2><Hl text={c.titles.addons} /></h2>
             {c.titles.addonsSub && <p className="sub">{c.titles.addonsSub}</p>}
+            {(c.packages || []).some(isBigStorePackage) && (
+              <p className="pk-included-note">
+                {c.lang === "en"
+                  ? "In the large store package with the app, the payment gateway, shipping, domain and SSL, and WhatsApp are included free."
+                  : "داخل باقة المتجر الكبير شامل التطبيق: بوابة الدفع وربط الشحن والدومين وشهادة SSL وربط واتساب مجاناً."}
+              </p>
+            )}
             <div className="addons">
               {c.addons.map((a, i) => (
                 <div key={i} className="addon">
@@ -226,13 +232,14 @@ export function makeWaLink(c) {
 }
 
 // قسم «تواصل معنا» (يُستخدم أيضاً في صفحة الأمن السيبراني)
-export function Contact({ c, t, waLink, service }) {
+export function Contact({ c, t, waLink, service, heading = "h2", title }) {
   const sec = c.security || {};
   const showSecurity = sec.show !== false && !!sec.title;
+  const H = heading;
   return (
     <section id="contact" className="contact">
       <div className="wrap narrow center">
-        <h2><Hl text={c.titles.contact} /></h2>
+        <H><Hl text={title || c.titles.contact} /></H>
         <p className="sub">{c.contact.availability}</p>
         <a className="btn btn-lg" href={waLink(service)} target="_blank" rel="noopener">
           <WaIcon size={26} /> {t.whatsapp} <span dir="ltr">{c.contact.phone}</span>
@@ -254,12 +261,13 @@ export function Contact({ c, t, waLink, service }) {
   );
 }
 
-function About({ a, t }) {
+export function About({ a, t, heading = "h2", title }) {
   const lines = String(a.bio || "").split("\n").filter((l) => l.trim());
+  const H = heading;
   return (
     <section id="about" className="sec">
       <div className="wrap">
-        <h2><Hl text={a.title} /></h2>
+        <H><Hl text={title || a.title} /></H>
         <div className="about">
           {a.photo && (
             <div className="about-photo">

@@ -5,6 +5,7 @@ import { localize, langOf, ui } from "@/lib/i18n";
 import { BRAND_THEME, isFont, fontsHref, siteUrl, safeColor, sizesCss, themeCss } from "@/lib/defaults";
 import { socialLinks, xHandle, plain } from "./Icons";
 import Tracking from "./Tracking";
+import { SITE_NAV, navHref } from "@/lib/sitelinks";
 
 export const dynamic = "force-dynamic";
 
@@ -71,30 +72,67 @@ export default async function RootLayout({ children }) {
   const abs = (p) => (p ? new URL(p, site).href : undefined);
   const digits = String(c.contact.whatsapp || "").replace(/\D/g, "");
   const a = c.about || {};
+  const sameAs = socialLinks(c).filter((s) => s.key !== "email").map((s) => s.href);
+  const founder = a.show !== false && a.name
+    ? { "@type": "Person", name: a.name, alternateName: c.lang === "en" ? undefined : "Developer Hassan", jobTitle: a.role || undefined, image: abs(a.photo) }
+    : undefined;
+  const knowsAbout = [
+    ...(c.security?.show !== false && c.security?.title
+      ? [plain(c.security.navLabel), ...(c.security.services || []).map((x) => x?.title)]
+      : []),
+    ...(c.packages || []).map((p) => p?.name),
+  ].filter(Boolean);
   const ld = {
     "@context": "https://schema.org",
-    "@type": "ProfessionalService",
-    name: c.brand.name,
-    alternateName: c.brand.tagline || undefined,
-    url: site,
-    logo: abs(c.brand.appleIcon || c.brand.logo),
-    image: abs(c.seo.ogImage),
-    description: c.seo.description,
-    inLanguage: L.htmlLang,
-    telephone: digits ? `+${digits}` : undefined,
-    areaServed: { "@type": "Country", name: "SA" },
-    address: { "@type": "PostalAddress", addressLocality: c.footer.city || undefined, addressCountry: "SA" },
-    sameAs: socialLinks(c).filter((s) => s.key !== "email").map((s) => s.href),
-    // مجالات الخبرة لجوجل: خدمات الأمن السيبراني أولاً ثم الباقات
-    knowsAbout: [
-      ...(c.security?.show !== false && c.security?.title
-        ? [plain(c.security.navLabel), ...(c.security.services || []).map((x) => x?.title)]
-        : []),
-      ...(c.packages || []).map((p) => p?.name),
-    ].filter(Boolean),
-    ...(a.show !== false && a.name
-      ? { founder: { "@type": "Person", name: a.name, jobTitle: a.role || undefined, image: abs(a.photo) } }
-      : {}),
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": `${site}/#organization`,
+        name: c.brand.name,
+        alternateName: c.brand.tagline || undefined,
+        url: site,
+        logo: abs(c.brand.appleIcon || c.brand.logo),
+        image: abs(c.seo.ogImage),
+        description: c.seo.description,
+        telephone: digits ? `+${digits}` : undefined,
+        address: { "@type": "PostalAddress", addressLocality: c.footer.city || undefined, addressCountry: "SA" },
+        sameAs,
+        ...(founder ? { founder } : {}),
+      },
+      {
+        "@type": "WebSite",
+        "@id": `${site}/#website`,
+        name: c.brand.name,
+        url: site,
+        inLanguage: ["ar", "en"],
+        publisher: { "@id": `${site}/#organization` },
+      },
+      {
+        "@type": "ProfessionalService",
+        "@id": `${site}/#business`,
+        name: c.brand.name,
+        alternateName: c.brand.tagline || undefined,
+        url: site,
+        logo: abs(c.brand.appleIcon || c.brand.logo),
+        image: abs(c.seo.ogImage),
+        description: c.seo.description,
+        inLanguage: L.htmlLang,
+        telephone: digits ? `+${digits}` : undefined,
+        areaServed: { "@type": "Country", name: "SA" },
+        address: { "@type": "PostalAddress", addressLocality: c.footer.city || undefined, addressCountry: "SA" },
+        sameAs,
+        knowsAbout,
+        parentOrganization: { "@id": `${site}/#organization` },
+        ...(founder ? { founder } : {}),
+      },
+      ...SITE_NAV.map((item, i) => ({
+        "@type": "SiteNavigationElement",
+        "@id": `${site}/#nav-${item.id}`,
+        position: i + 1,
+        name: c.lang === "en" ? item.en : item.ar,
+        url: new URL(navHref(item, c.lang), site).href,
+      })),
+    ],
   };
   return (
     <html lang={L.htmlLang} dir={L.dir} suppressHydrationWarning>
