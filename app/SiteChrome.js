@@ -72,6 +72,11 @@ export function SiteFooter({ c }) {
       <div className="wrap">
         <FooterBrand c={c} />
         <SocialRow c={c} />
+        {c.lang !== "en" && (
+          <p style={{ margin: "0 0 6px" }}>
+            <a href="/app-store-development" style={{ textDecoration: "underline" }}>إنشاء متجر إلكتروني وتطبيق جوال</a>
+          </p>
+        )}
         {(links.length > 0 || city) && (
           <p style={{ margin: "0 0 6px" }}>
             {links.map((p, i) => (
