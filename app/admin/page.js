@@ -12,6 +12,7 @@ import Projects from "./Projects";
 import Assistant from "./Assistant";
 import Ideas from "./Ideas";
 import Guide from "./Guide";
+import Stores from "./Stores";
 
 // مسودة التعديلات على هذا الجهاز (تُحفظ تلقائياً حتى لا تضيع قبل الضغط على «حفظ التغييرات»)
 const DRAFT_KEY = "admin-draft";
@@ -442,6 +443,7 @@ const GROUPS = [
       ["ideas", "أفكار العملاء", "bulb"],
       ["docs", "العقود وعروض الأسعار", "file"],
       ["projects", "المشاريع والمفاتيح", "key"],
+      ["stores", "متاجر العملاء", "store"],
       ["archive", "الأرشيف والملفات", "archive"],
       ["guide", "الدليل والتزاماتي", "book"],
     ],
@@ -1570,6 +1572,7 @@ export default function Admin() {
         {tab === "assistant" && <Assistant onNavigate={(k) => setTab(k)} />}
         {tab === "ideas" && <Ideas onNavigate={(k) => setTab(k)} />}
         {tab === "projects" && <Projects />}
+        {tab === "stores" && <Stores />}
         {tab === "archive" && <Archive onRestore={restoreImage} />}
         {tab === "guide" && <Guide procedures={d.guide?.procedures || []} setProcedures={(v) => setData((x) => ({ ...x, guide: { ...x.guide, procedures: v } }))} />}
 

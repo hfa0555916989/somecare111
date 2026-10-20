@@ -1,0 +1,35 @@
+# متاجر العملاء (لوحة المطوّر الخاصة)
+
+تبويب «متاجر العملاء» داخل لوحة التحكم. كل عميل نسخة مستقلة من قالب المتجر: مستودع خاص + تطبيق Laravel Cloud + قاعدة بيانات. ليست منصة متعددة المستأجرين.
+كل الطلبات تمر من `/api/stores` (للجلسة المسجّلة فقط). الأسرار لا تصل للمتصفح أبداً.
+
+## متغيرات Vercel المطلوبة
+
+| المتغير | مطلوب | الوصف |
+|---|---|---|
+| `STORES_GITHUB_TOKEN` | نعم | رمز GitHub (classic بصلاحية `repo`، أو fine-grained: Contents + Pull requests + Administration لإنشاء المستودعات). لتحديث ملفات `.github/workflows` يلزم أيضاً `workflow`. |
+| `LARAVEL_CLOUD_API_TOKEN` | نعم | رمز Laravel Cloud API للمنظمة. |
+| `VAULT_KEY` | نعم (موجود مسبقاً) | مفتاح تشفير الأسرار (AES-256-GCM). نفس المفتاح المستخدم في «المشاريع والمفاتيح»؛ لا تغيّره بعد الحفظ. |
+| `UPSTASH_REDIS_REST_URL` / `_TOKEN` | نعم (موجود مسبقاً) | تخزين بيانات المتاجر والسجل. |
+| `STORES_TEMPLATE_REPO` | لا | الافتراضي `hfa0555916989/retail-store-template`. |
+| `STORES_GITHUB_OWNER` | لا | مالك مستودعات العملاء (الافتراضي مالك القالب). |
+| `LARAVEL_CLOUD_REGION` | لا | الافتراضي `eu-central-1`. |
+| `STORES_DRY_RUN` | لا | `1` = كل العمليات تجربة فقط (لا إنشاء ولا دفع ولا استرجاع). |
+| `STORES_ALLOW_LOCAL` | لا (للاختبار فقط) | يسمح برابط `http://127.0.0.1` لمتجر محلي. لا تضعه في الإنتاج. |
+
+## ما يحدث في «متجر جديد»
+1. `POST /repos/{template}/generate` → مستودع خاص `store-{slug}`، ويُحفظ commit القالب كنسخة أساس.
+2. تحديث `brand/brand.json` (الاسم، الدومين، الألوان، وشعار SVG إن وُجد).
+3. Laravel Cloud: `POST /applications` → `POST /databases/clusters` (Laravel Serverless Postgres صغير، مُدار ومفوتر من Laravel Cloud نفسها) → `PATCH /environments/{id}` (ربط القاعدة وأوامر البناء منسوخة من بيئة القالب) → `POST /buckets` حاوية خاصة + ربطها بالبيئة كقرص `backups` → `POST /environments/{id}/variables` (`BACKUP_DISK=backups`، (APP_KEY جديد، APP_URL، `CONTROL_PLANE_SECRET` عشوائي يُحفظ مشفّراً) → `POST /environments/{id}/deployments` → `POST /environments/{id}/domains` وعرض سجلات DNS → فحص `/version` موقّع.
+كل خطوة طلب مستقل، وتقدر تكمل من الخطوة المتوقفة.
+
+## التحديثات
+دمج ثلاثي على مستوى الملف عبر Git Data API: (نسخة القالب الأساس، آخر القالب، مستودع العميل). يُطبَّق الملف فقط إن لم يعدّله العميل؛ الملفات المعدّلة تُترك ويُبلَّغ عنها. `brand/brand.json` و `brand/assets/` (عدا demo) لا تُلمس. الوضع الافتراضي طلب سحب (PR) للمراجعة ثم «دمج»، أو دفع مباشر إلى main. Laravel Cloud ينشر تلقائياً عند الدفع.
+أوامر الصيانة: migrate / optimize / clear-cache / queue-restart عبر نقطة `/update` الموقّعة، و redeploy عبر Laravel Cloud API.
+
+## النسخ الاحتياطية
+قائمة، نسخة الآن، واسترجاع بتأكيد مزدوج (كتابة معرّف المتجر + `confirm` = اسم النسخة). المتجر يأخذ نسخة `pre-restore` تلقائياً ويُعرض اسمها للتراجع.
+
+## الاختبار
+`npm test` (توقيع HMAC، الدمج الثلاثي، brand.json، تصفية المتغيرات). اختبار تكامل مع نسخة محلية من القالب:
+`CP_TEST_URL=http://127.0.0.1:8799 CP_TEST_SECRET=... npm test`

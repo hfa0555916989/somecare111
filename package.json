@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "pull": "node scripts/pull-content.mjs"
+    "pull": "node scripts/pull-content.mjs",
+    "test": "node --test tests/"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",
