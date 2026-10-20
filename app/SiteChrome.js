@@ -1,6 +1,8 @@
 import { socialLinks } from "./Icons";
 import ThemeToggle from "./ThemeToggle";
 import { ui, prefix } from "@/lib/i18n";
+import { SITE_NAV, navHref, RESERVED_SLUGS } from "@/lib/sitelinks";
+import { MobileNav } from "./MobileNav";
 
 const digits = (s) => String(s || "").replace(/\D/g, "");
 const live = (c, key) => (c.pages || []).filter((p) => p.published !== false && p[key] && p.slug);
@@ -8,7 +10,7 @@ const live = (c, key) => (c.pages || []).filter((p) => p.published !== false && 
 // data-nosnippet: يمنع جوجل من أخذ نص القائمة والفوتر في وصف نتيجة البحث، لأن روابط القائمة تلتصق ببعضها فيه
 // altPath: مسار الصفحة نفسها في اللغة الأخرى (بدون /en)، والافتراضي الصفحة الرئيسية
 export function SiteHeader({ c, icon, altPath = "/" }) {
-  const extra = live(c, "showInHeader");
+  const extra = live(c, "showInHeader").filter((p) => !RESERVED_SLUGS.has(p.slug));
   const t = ui(c.lang);
   const home = prefix(c.lang) || "";
   const other = c.lang === "en" ? altPath : "/en" + (altPath === "/" ? "" : altPath);
@@ -22,17 +24,16 @@ export function SiteHeader({ c, icon, altPath = "/" }) {
             <BrandLogo b={c.brand} alt={c.brand.name} />
             {c.sizes?.showBrandText !== false && <BrandText b={c.brand} />}
           </a>
-          <nav className={"links" + (extra.length ? " links-wrap" : "")}>
-            {sec.show !== false && sec.title && <a href={`${home}/security`}>{sec.navLabel || t.nav.security}</a>}
-            <a href={`${home}/#packages`}>{t.nav.packages}</a>
-            <a className="nav-minor" href={`${home}/#addons`}>{t.nav.addons}</a>
-            {c.about?.show !== false && c.about?.name && <a href={`${home}/#about`}>{t.nav.about}</a>}
-            <a className="nav-minor" href={`${home}/#gallery`}>{t.nav.gallery}</a>
-            <a href={`${home}/#contact`}>{t.nav.contact}</a>
-            {extra.map((p) => (
-              <a key={p.slug} href={`${home}/${p.slug}`}>{p.title}</a>
-            ))}
-          </nav>
+          <MobileNav
+            openLabel={t.menu}
+            closeLabel={t.menuClose}
+            navLabel={c.lang === "en" ? "Main" : "القائمة الرئيسية"}
+            links={[
+              ...SITE_NAV.map((item) => ({ href: navHref(item, c.lang), label: c.lang === "en" ? item.en : item.ar })),
+              ...(sec.show !== false && sec.title ? [{ href: `${home}/security`, label: sec.navLabel || t.nav.security }] : []),
+              ...extra.map((p) => ({ href: `${home}/${p.slug}`, label: p.title })),
+            ]}
+          />
           <a className="lang-btn" href={other} hrefLang={c.lang === "en" ? "ar" : "en"} title={t.switchTitle}>
             {t.switchLabel}
           </a>
@@ -64,31 +65,36 @@ export function SocialRow({ c }) {
 }
 
 export function SiteFooter({ c }) {
-  const links = live(c, "showInFooter");
+  const links = live(c, "showInFooter").filter((p) => !RESERVED_SLUGS.has(p.slug));
   const home = prefix(c.lang);
   const city = c.footer.city;
+  const sec = c.security || {};
+  const en = c.lang === "en";
+  const label = en ? "Footer" : "روابط التذييل";
   return (
     <footer className="foot" data-nosnippet>
       <div className="wrap">
         <FooterBrand c={c} />
+        <nav className="foot-nav" aria-label={label}>
+          {SITE_NAV.map((item) => (
+            <a key={item.id} href={navHref(item, c.lang)}>{en ? item.en : item.ar}</a>
+          ))}
+          {sec.show !== false && sec.title && (
+            <a href={`${home}/security`}>{sec.navLabel || (en ? "Cybersecurity" : "الأمن السيبراني")}</a>
+          )}
+        </nav>
         <SocialRow c={c} />
-        {c.lang !== "en" && (
-          <p style={{ margin: "0 0 6px" }}>
-            <a href="/app-store-development" style={{ textDecoration: "underline" }}>إنشاء متجر إلكتروني وتطبيق جوال</a>
-          </p>
-        )}
-        {(links.length > 0 || city) && (
-          <p style={{ margin: "0 0 6px" }}>
+        {links.length > 0 && (
+          <p style={{ margin: 0 }}>
             {links.map((p, i) => (
               <span key={p.slug}>
                 {i > 0 && " | "}
                 <a href={`${home}/${p.slug}`} style={{ textDecoration: "underline" }}>{p.title}</a>
               </span>
             ))}
-            {city ? (links.length ? " | " : "") + city : ""}
           </p>
         )}
-        <span>© {new Date().getFullYear()} {c.brand.name}. {c.footer.text}</span>
+        <span>© {new Date().getFullYear()} {c.brand.name}{city ? ` · ${city}` : ""}. {c.footer.text}</span>
       </div>
     </footer>
   );
