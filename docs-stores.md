@@ -20,7 +20,7 @@
 ## ما يحدث في «متجر جديد»
 1. `POST /repos/{template}/generate` → مستودع خاص `store-{slug}`، ويُحفظ commit القالب كنسخة أساس.
 2. تحديث `brand/brand.json` (الاسم، الدومين، الألوان، وشعار SVG إن وُجد).
-3. Laravel Cloud: `POST /applications` → `POST /databases/clusters` (Neon Postgres صغير) → `PATCH /environments/{id}` (ربط القاعدة وأوامر البناء منسوخة من بيئة القالب) → `POST /environments/{id}/variables` (APP_KEY جديد، APP_URL، `CONTROL_PLANE_SECRET` عشوائي يُحفظ مشفّراً) → `POST /environments/{id}/deployments` → `POST /environments/{id}/domains` وعرض سجلات DNS → فحص `/version` موقّع.
+3. Laravel Cloud: `POST /applications` → `POST /databases/clusters` (Laravel Serverless Postgres صغير، مُدار ومفوتر من Laravel Cloud نفسها) → `PATCH /environments/{id}` (ربط القاعدة وأوامر البناء منسوخة من بيئة القالب) → `POST /buckets` حاوية خاصة + ربطها بالبيئة كقرص `backups` → `POST /environments/{id}/variables` (`BACKUP_DISK=backups`، (APP_KEY جديد، APP_URL، `CONTROL_PLANE_SECRET` عشوائي يُحفظ مشفّراً) → `POST /environments/{id}/deployments` → `POST /environments/{id}/domains` وعرض سجلات DNS → فحص `/version` موقّع.
 كل خطوة طلب مستقل، وتقدر تكمل من الخطوة المتوقفة.
 
 ## التحديثات
