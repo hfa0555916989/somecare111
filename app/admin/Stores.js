@@ -494,6 +494,7 @@ export default function Stores() {
                     <button type="button" className="mini" onClick={() => setEdit(s)}>تعديل</button>
                     {s.baseUrl && <a className="mini-link" href={s.baseUrl} target="_blank" rel="noreferrer">فتح المتجر</a>}
                     {s.baseUrl && <a className="mini-link" href={s.baseUrl + "/admin"} target="_blank" rel="noreferrer">لوحة العميل</a>}
+                    {s.adminEmail && <button type="button" className="mini" onClick={async () => { try { const c = await api({ action: "adminCredentials", id: s.id }); prompt(`دخول المالك: ${c.email}\nانسخ كلمة المرور:`, c.password || "(غير محفوظة)"); } catch (e) { setErr(e.message); } }}>بيانات دخول المالك</button>}
                   </div>
                   <small className="adm-hint">آخر فحص: {fmt(s.status?.at)} {!s.hasSecret && "· المفتاح غير محفوظ"}</small>
                 </div>

@@ -93,6 +93,13 @@ export async function POST(req) {
         await logAction({ store: s.name, storeId: s.id, action: b.id ? "تعديل بيانات متجر" : b.wizard ? `بدء إنشاء متجر${dryRun ? " (تجربة)" : ""}` : "إضافة متجر موجود" });
         return NextResponse.json({ store: publicStore(s) });
       }
+      case "adminCredentials": {
+        // بيانات دخول مالك المتجر لتسليمها للعميل (للمطوّر فقط، تُسجَّل في السجل)
+        const s = await one();
+        const sec = storeSecret(s);
+        await logAction({ store: s.name, storeId: s.id, action: "عرض بيانات دخول المالك" });
+        return NextResponse.json({ url: s.baseUrl ? s.baseUrl + "/admin" : "", email: s.adminEmail || "", password: sec.adminPassword || "" });
+      }
       case "delete": {
         const s = await one();
         await deleteStore(s.id);
