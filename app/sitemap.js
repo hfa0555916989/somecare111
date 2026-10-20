@@ -18,6 +18,7 @@ export default async function sitemap() {
           { url: `${base}/en/security`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.7, alternates: { languages: both("/security") } },
         ]
       : []),
+    { url: `${base}/app-store-development`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.9 },
     ...pages.flatMap((p) => [
       { url: `${base}/${p.slug}`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5, alternates: { languages: both(`/${p.slug}`) } },
       { url: `${base}/en/${p.slug}`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.4, alternates: { languages: both(`/${p.slug}`) } },
