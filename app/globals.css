@@ -362,7 +362,7 @@ p{margin:0}
 .parties [dir=ltr]{white-space:nowrap}
 .paper-h{font-size:1.15rem;margin-bottom:12px;padding-inline-start:12px;border-inline-start:4px solid var(--gold)}
 .items{display:grid;gap:14px}
-.item{border:1px solid var(--line);border-radius:14px;padding:16px 18px;break-inside:avoid}
+.item{border:1px solid var(--line);border-radius:14px;padding:16px 18px;break-inside:auto}
 .item-head{display:flex;gap:14px;align-items:flex-start}
 .item-n{flex:none;display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--ink);color:#fff;font-weight:700;font-size:.9rem}
 .item-t{flex:1;min-width:0}
@@ -423,6 +423,8 @@ p{margin:0}
   .no-print{display:none!important}
   .paper{box-shadow:none;border-radius:0;padding:0;max-width:none}
   .paper a{color:var(--ink)}
+  .feats{display:grid;grid-template-columns:1fr}
+  .feats li{break-inside:avoid}
   .sum tr.total td,.item-n,.parties>div,.bank,.verify,.recurring{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 .adm-docs-h{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
