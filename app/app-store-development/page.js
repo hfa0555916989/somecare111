@@ -1,7 +1,7 @@
 import { SiteHeader, SiteFooter } from "../SiteChrome";
 import { getContent } from "@/lib/content";
 import { localize } from "@/lib/i18n";
-import { BIG_STORE_DESC, BIG_STORE_FEATURES, BIG_STORE_NAME } from "@/lib/big-store";
+import { BIG_STORE_DESC, BIG_STORE_FEATURES, BIG_STORE_NAME, STORE_PAGE_FREE } from "@/lib/big-store";
 import { PackagePoints, StoreShowcase, packageShowcase } from "../PackagePoints";
 
 export const dynamic = "force-dynamic";
@@ -27,7 +27,7 @@ const OFFER = {
   items: BIG_STORE_FEATURES,
 };
 
-const FREE = ["بوابة الدفع: مدى و Apple Pay و STC Pay", "ربط الشحن", "الدومين وشهادة SSL", "ربط واتساب", "إشعارات الطلبات", "تحليلات جوجل"];
+const FREE = STORE_PAGE_FREE;
 
 const FAQ = [
   ["كم تكلفة إنشاء متجر إلكتروني مع تطبيق؟", "باقة المتجر الكبير شامل التطبيق بـ 1,500 ريال: منتجات غير محدودة، سلة، لوحة تحكم، وتطبيق iOS و Android."],

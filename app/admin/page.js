@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { uploadPresigned } from "@vercel/blob/client";
 import { uniqueName } from "./upload";
 import { defaultContent, BRAND_THEME, BRAND_ASSETS, FONTS, LATIN_FONTS, isFont, fontsHref, SITE_URL, SIZE_FIELDS, RATIOS, RATIO_FIELDS, DEFAULT_SIZES, sizeVars, docTotals, validIban, siteUrl, latinDigits, normalizeIban } from "@/lib/defaults";
+import { quotePackageSections } from "@/lib/quote-defaults";
 import { ICONS, SOCIALS, Icon } from "../Icons";
 import { BrandLogo, BrandText, FooterBrand } from "../SiteChrome";
 import { AIcon } from "./AdminIcons";
@@ -666,7 +667,8 @@ const readB64 = (f) =>
     r.readAsDataURL(f);
   });
 
-function blankDoc(type, k) {
+function blankDoc(type, k, catalog = []) {
+  const sections = type === "quote" ? catalog.map((s) => ({ ...s, features: [...(s.features || [])], tags: [...(s.tags || [])] })) : [];
   return {
     type,
     number: "",
@@ -674,9 +676,9 @@ function blankDoc(type, k) {
     validDays: type === "quote" ? Number(k.validDays) || 15 : 0,
     title: "",
     subtitle: "",
-    intro: "",
+    intro: type === "quote" ? "الأسعار أدناه هي أسعار الباقات المنشورة في الموقع، وكل بند يشمل مزاياه والدعم الفني المجاني والإضافات المجانية المذكورة فيه." : "",
     client: { name: "", company: "", idNumber: "", phone: "", email: "", city: "" },
-    sections: [],
+    sections,
     discount: 0,
     vatRate: type === "invoice" ? 0 : Number(k.vatRate) || 0,
     recurring: [],
@@ -775,7 +777,7 @@ function PriceAdvisor({ doc, setDoc }) {
   );
 }
 
-function DocEditor({ doc, setDoc, k, items, onSave, onCancel, saving }) {
+function DocEditor({ doc, setDoc, k, items, catalog = [], onSave, onCancel, saving }) {
   const set = (key, v) => setDoc({ ...doc, [key]: v });
   const setClient = (key, v) => setDoc({ ...doc, client: { ...doc.client, [key]: v } });
   const t = docTotals(doc);
@@ -871,6 +873,34 @@ function DocEditor({ doc, setDoc, k, items, onSave, onCancel, saving }) {
         </div>
       </div>
 
+      {doc.type === "quote" && catalog.length > 0 && (
+        <div className="adm-card">
+          <b>باقات الموقع</b>
+          <span className="adm-hint">الأسعار والمزايا من الباقات المنشورة في الموقع. أبقِ الباقة التي يريدها العميل واحذف الأخرى. الدعم الفني المجاني والإضافات المجانية داخل كل بند، وتظهر في العرض والطباعة وملف PDF.</span>
+          <div className="acc-chips small">
+            {catalog.map((s) => {
+              const on = (doc.sections || []).some((x) => x.title === s.title);
+              return (
+                <button
+                  key={s.title}
+                  type="button"
+                  className={on ? "on" : ""}
+                  onClick={() =>
+                    set(
+                      "sections",
+                      on
+                        ? doc.sections.filter((x) => x.title !== s.title)
+                        : [...(doc.sections || []), { ...s, features: [...s.features], tags: [...(s.tags || [])] }]
+                    )
+                  }
+                >
+                  {s.title} · {money(s.price)} ريال
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
       <b>البنود والأسعار</b>
       <List
         items={doc.sections}
@@ -893,7 +923,7 @@ function DocEditor({ doc, setDoc, k, items, onSave, onCancel, saving }) {
               </label>
             </div>
             <Text label="ملاحظة قصيرة (مثل: اشتراك سنوي يُدفع مع الموقع)" value={s.note} onChange={(v) => setS("note", v)} />
-            <Text label="المزايا (كل ميزة في سطر)" area rows={5} value={toLines(s.features)} onChange={(v) => setS("features", fromLines(v))} />
+            <Text label="المزايا (كل ميزة في سطر، تظهر كاملة في العرض والطباعة وPDF)" area rows={Math.min(24, Math.max(8, (s.features || []).length || 8))} value={toLines(s.features)} onChange={(v) => setS("features", fromLines(v))} />
             <Text label="شارات صغيرة (كل شارة في سطر، مثل مدى / Visa)" area rows={2} value={toLines(s.tags)} onChange={(v) => setS("tags", fromLines(v))} />
           </>
         )}
@@ -958,7 +988,8 @@ function DocEditor({ doc, setDoc, k, items, onSave, onCancel, saving }) {
   );
 }
 
-function Docs({ k, saved = {}, setK, about, site }) {
+function Docs({ k, saved = {}, setK, about, site, packages, addons, siteFeatures }) {
+  const catalog = quotePackageSections({ packages, addons, siteFeatures });
   const [items, setItems] = useState(null);
   const [info, setInfo] = useState({ db: true, ai: false });
   const [editing, setEditing] = useState(null);
@@ -1099,11 +1130,11 @@ function Docs({ k, saved = {}, setK, about, site }) {
       {msg && <div className="note info">{msg}</div>}
 
       {editing ? (
-        <DocEditor doc={editing} setDoc={setEditing} k={k} items={items} onSave={save} onCancel={() => setEditing(null)} saving={saving} />
+        <DocEditor doc={editing} setDoc={setEditing} k={k} items={items} catalog={catalog} onSave={save} onCancel={() => setEditing(null)} saving={saving} />
       ) : (
         <>
           <div className="adm-docs-h">
-            <button type="button" className="gold" onClick={() => setEditing(blankDoc("quote", k))}>+ عرض سعر جديد</button>
+            <button type="button" className="gold" onClick={() => setEditing(blankDoc("quote", k, catalog))}>+ عرض سعر جديد</button>
             <button type="button" className="gold" onClick={() => setEditing(blankDoc("contract", k))}>+ عقد جديد</button>
             <button type="button" className="gold" onClick={() => setEditing(blankDoc("invoice", k))}>+ فاتورة جديدة</button>
           </div>
@@ -2021,6 +2052,9 @@ export default function Admin() {
             setK={(key, v) => setData((x) => ({ ...x, contracts: { ...x.contracts, [key]: v } }))}
             about={d.about || {}}
             site={siteUrl(d)}
+            packages={d.packages}
+            addons={d.addons}
+            siteFeatures={d.features}
           />
         )}
 
