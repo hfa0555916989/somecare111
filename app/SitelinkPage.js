@@ -15,7 +15,7 @@ const COPY = {
   ar: {
     servicesLead: "أبني من الرياض أربعة مسارات واضحة: موقع يعرّف بنشاطك، تطبيق جوال، متجر إلكتروني مع تطبيق، وخدمات أمن سيبراني للشركات.",
     worksLead: "هذه نماذج حقيقية من المتجر التجريبي ولوحة التحكم، لترى الواجهة والطلب والإدارة قبل أن تطلب التنفيذ.",
-    packagesLead: "الأسعار الظاهرة هي أسعار الباقات الحالية. باقة المتجر الكبير شامل التطبيق 1,500 ريال، وداخلها الدفع والشحن والدومين وواتساب مجاناً.",
+    packagesLead: "الأسعار الظاهرة هي أسعار الباقات الحالية. باقة المتجر الكبير شامل التطبيق 1,500 ريال، وداخلها الدفع والشحن والدومين وواتساب مجاناً. الدعم الفني مجاني أول سنة مع الدومين والاستضافة، ومن السنة الثانية 200 ريال للسنة.",
     blogLead: "مقالات عن انشاء المتاجر والتطبيقات وأسعارها، وكل عنوان يذكر سعر 1500 ريال لباقة المتجر مع التطبيق.",
     guides: "صفحات الشرح",
     posts: "المقالات",
@@ -35,7 +35,7 @@ const COPY = {
   en: {
     servicesLead: "Four clear paths from Riyadh: a business website, a mobile app, an online store with an app, and enterprise cybersecurity.",
     worksLead: "Real screenshots of the demo store and its admin panel, so you can see the shop, the cart and the dashboard before you order.",
-    packagesLead: "These are the current packages. The large store with the app is 1,500 SAR, and payment, shipping, domain and WhatsApp are included free.",
+    packagesLead: "These are the current packages. The large store with the app is 1,500 SAR, and payment, shipping, domain and WhatsApp are included free. Technical support is free for the first year with the domain and hosting, then 200 SAR for the second year.",
     blogLead: "The articles are written in Arabic. Each one covers a different search phrase and states the 1,500 SAR store-and-app price.",
     guides: "Guides",
     posts: "Articles",

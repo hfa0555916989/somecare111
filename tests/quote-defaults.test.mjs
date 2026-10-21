@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { BIG_STORE_FEATURES, STORE_PAGE_FREE } from "../lib/big-store.js";
 import { DEMO_SHOTS } from "../lib/demo-media.js";
 import { SEO_PAGES } from "../lib/seo-pages.js";
-import { quotePackageSections, sameFeature, packageAmount, FREE_SUPPORT_LINE } from "../lib/quote-defaults.js";
+import { quotePackageSections, sameFeature, packageAmount, FREE_SUPPORT_LINE, SECOND_YEAR_SUPPORT_LINE } from "../lib/quote-defaults.js";
 
 const livePackages = [
   {
@@ -59,7 +59,8 @@ test("a new quote uses the prices stored on the packages, including the live 450
     ]
   );
   assert.ok(sections.every((s) => !String(s.features).includes("7200")));
-  assert.ok(sections.every((s) => s.features.includes(FREE_SUPPORT_LINE)));
+  assert.ok(sections.every((s) => s.price !== 7200));
+  assert.ok(sections.every((s) => s.features.includes(FREE_SUPPORT_LINE) && s.features.includes(SECOND_YEAR_SUPPORT_LINE)));
 });
 
 test("prices are taken from the package records passed in", () => {
@@ -89,7 +90,7 @@ test("the store line keeps every published package feature and the free extras",
   assert.ok(store.features.includes("دخول العميل لحسابه من الجوال"));
   assert.ok(covers(store.features, "بوابة دفع"));
   assert.ok(covers(store.features, "ربط شركة شحن واحدة"));
-  assert.ok(!store.features.some((f) => /7200|سنوي/.test(f)));
+  assert.ok(!store.features.some((f) => /(?<!\d)7200(?!\d)/.test(f)));
   assert.ok(store.features.length <= 120);
 });
 

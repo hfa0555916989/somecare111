@@ -676,12 +676,12 @@ function blankDoc(type, k, catalog = []) {
     validDays: type === "quote" ? Number(k.validDays) || 15 : 0,
     title: "",
     subtitle: "",
-    intro: type === "quote" ? "الأسعار أدناه هي أسعار الباقات المنشورة في الموقع، وكل بند يشمل مزاياه والدعم الفني المجاني والإضافات المجانية المذكورة فيه." : "",
+    intro: type === "quote" ? "الأسعار أدناه هي أسعار الباقات المنشورة في الموقع. الدعم الفني مجاني أول سنة مع الدومين والاستضافة، ومن السنة الثانية 200 ريال للسنة." : "",
     client: { name: "", company: "", idNumber: "", phone: "", email: "", city: "" },
     sections,
     discount: 0,
     vatRate: type === "invoice" ? 0 : Number(k.vatRate) || 0,
-    recurring: [],
+    recurring: type === "quote" ? ["السنة الثانية: الدعم بـ 200 ريال للسنة"] : [],
     duration: "",
     terms: type === "invoice" ? [...INVOICE_TERMS] : [...((type === "contract" ? k.contractTerms : k.quoteTerms) || [])],
     annex: [],
@@ -876,7 +876,7 @@ function DocEditor({ doc, setDoc, k, items, catalog = [], onSave, onCancel, savi
       {doc.type === "quote" && catalog.length > 0 && (
         <div className="adm-card">
           <b>باقات الموقع</b>
-          <span className="adm-hint">الأسعار والمزايا من الباقات المنشورة في الموقع. أبقِ الباقة التي يريدها العميل واحذف الأخرى. الدعم الفني المجاني والإضافات المجانية داخل كل بند، وتظهر في العرض والطباعة وملف PDF.</span>
+          <span className="adm-hint">الأسعار والمزايا من الباقات المنشورة في الموقع. أبقِ الباقة التي يريدها العميل واحذف الأخرى. الدعم الفني مجاني أول سنة مع الدومين والاستضافة، ومن السنة الثانية 200 ريال للسنة، وتظهر البنود في العرض والطباعة وملف PDF.</span>
           <div className="acc-chips small">
             {catalog.map((s) => {
               const on = (doc.sections || []).some((x) => x.title === s.title);
