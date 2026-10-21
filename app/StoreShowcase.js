@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { DEMO_SHOTS, DEMO_VIDEO, DEMO_URL } from "@/lib/demo-media";
+import { DEMO_ADMIN_URL, DEMO_SHOTS, DEMO_VIDEO, DEMO_URL } from "@/lib/demo-media";
 
 export function DemoCarousel({ lang = "ar" }) {
   const [i, setI] = useState(0);
@@ -110,6 +110,10 @@ export function LazyDemoVideo({ lang = "ar" }) {
       <p className="demo-live">
         <a href={DEMO_URL} target="_blank" rel="noopener">
           {en ? "Open the live demo store" : "افتح المتجر التجريبي"}
+        </a>
+        {" · "}
+        <a href={DEMO_ADMIN_URL} target="_blank" rel="noopener">
+          {en ? "Admin panel" : "لوحة التحكم"}
         </a>
       </p>
     </div>

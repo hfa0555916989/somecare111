@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { getContent } from "@/lib/content";
 import { localize } from "@/lib/i18n";
 import { SEO_PAGES, articleJsonLd, getSeoPage } from "@/lib/seo-pages";
-import { DEMO_EMAIL, DEMO_PASSWORD, DEMO_URL } from "@/lib/demo-media";
+import { DEMO_ADMIN_URL, DEMO_EMAIL, DEMO_PASSWORD, DEMO_URL } from "@/lib/demo-media";
 import { SiteHeader, SiteFooter } from "./SiteChrome";
 import { DemoGallery } from "./StoreShowcase";
 import { makeWaLink, WaIcon } from "./HomePage";
@@ -107,6 +107,10 @@ export default async function SeoArticle({ id }) {
             </p>
             <a href={DEMO_URL} target="_blank" rel="noopener">
               افتح المتجر التجريبي
+            </a>
+            {" · "}
+            <a href={DEMO_ADMIN_URL} target="_blank" rel="noopener">
+              لوحة التحكم
             </a>
           </aside>
           <div className="prose">
