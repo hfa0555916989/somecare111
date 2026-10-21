@@ -3,7 +3,7 @@ import { localize, prefix, ui } from "@/lib/i18n";
 import { siteUrl } from "@/lib/defaults";
 import { isBigStorePackage } from "@/lib/big-store";
 import { SEO_PAGES } from "@/lib/seo-pages";
-import { DEMO_EMAIL, DEMO_PASSWORD, DEMO_URL } from "@/lib/demo-media";
+import { DEMO_ADMIN_URL, DEMO_EMAIL, DEMO_PASSWORD, DEMO_URL } from "@/lib/demo-media";
 import { breadcrumbJsonLd, navItem } from "@/lib/sitelinks";
 import { SiteFooter, SiteHeader } from "./SiteChrome";
 import { Icon } from "./Icons";
@@ -23,6 +23,7 @@ const COPY = {
     email: "البريد",
     password: "كلمة المرور",
     openDemo: "افتح المتجر التجريبي",
+    openAdmin: "لوحة التحكم",
     ask: "اطلب هذه الخدمة",
     services: [
       { href: "/packages", title: "مواقع تعريفية", text: "موقع يعرض خدمتك ورقم التواصل ونموذج الطلب، مناسب إن لم تكن تبيع منتجات بسلة شراء." },
@@ -42,6 +43,7 @@ const COPY = {
     email: "Email",
     password: "Password",
     openDemo: "Open the live demo store",
+    openAdmin: "Admin panel",
     ask: "Ask about this service",
     services: [
       { href: "/en/packages", title: "Business websites", text: "A site that presents your service, phone number and inquiry form when you are not selling through a cart." },
@@ -77,6 +79,10 @@ function DemoAccess({ lang }) {
       </p>
       <a href={DEMO_URL} target="_blank" rel="noopener">
         {t.openDemo}
+      </a>
+      {" · "}
+      <a href={DEMO_ADMIN_URL} target="_blank" rel="noopener">
+        {t.openAdmin}
       </a>
     </aside>
   );
