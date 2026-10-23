@@ -1,5 +1,6 @@
 // بطاقة السعر الحالي. تُعرض تحت النص الأصلي ولا تستبدله.
-import { ANNUAL_AR, ANNUAL_EN, PLANS, POLICY_AR, POLICY_EN, publicPlans } from "@/lib/subscription-plans";
+import { ANNUAL_AR, ANNUAL_EN, POLICY_AR, POLICY_EN, publicPlans } from "@/lib/subscription-plans";
+import { CARE_LINE_AR, CARE_LINE_EN } from "@/lib/store-care";
 
 const ROWS = {
   ar: [
@@ -79,6 +80,7 @@ export default function PriceAddendum({ lang = "ar" }) {
           </div>
         ))}
         <p className="offer-policy">{en ? ANNUAL_EN : ANNUAL_AR}</p>
+        <p className="offer-policy">{en ? CARE_LINE_EN : CARE_LINE_AR}</p>
         <p className="offer-policy">{en ? POLICY_EN : POLICY_AR}</p>
       </div>
     </section>

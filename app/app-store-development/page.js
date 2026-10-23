@@ -4,6 +4,8 @@ import { localize } from "@/lib/i18n";
 import { BIG_STORE_DESC, BIG_STORE_FEATURES, BIG_STORE_NAME, STORE_PAGE_FREE } from "@/lib/big-store";
 import { PackagePoints, StoreShowcase, packageShowcase } from "../PackagePoints";
 import PriceAddendum from "../PriceAddendum";
+import StoreCare from "../StoreCare";
+import { STORE_CARE } from "@/lib/store-care";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +38,7 @@ const FAQ = [
   ["هل بوابة الدفع والشحن داخلة في السعر؟", "نعم، ضمن رسوم التجهيز وليست فاتورة بعدها: بوابة الدفع، وربط الشحن، والدومين وشهادة SSL، وزر واتساب يفتح محادثة مع صاحب المتجر، وتنبيهات الطلب داخل لوحة التحكم، وتحليلات جوجل."],
   ["هل التعامل موثق؟", "نعم، عرض سعر وعقد رسمي مرتبطان بوثيقة العمل الحر، والتحويل على آيبان باسم المطور حسن فقط."],
   ["كم الدعم الفني؟", "في الاشتراك، الدعم داخل الرسم الشهري: من 300 ريال للمتجر، ومن 700 مع التطبيقات، مع الاستضافة والنسخ الاحتياطي. في الشراء من 12,000 ريال، إصلاح الأعطال مجاني من شهر إلى شهرين بعد التسليم، ثم صيانة 500 أو 800 ريال شهرياً. إصلاح العطل خلل في ما تم تسليمه، والميزات الجديدة تتسعّر بشكل منفصل. إذا تأخر السداد يوقف الدعم بعد 7 أيام، ويوقف المتجر بعد 15 يوماً."],
+  [STORE_CARE.ar.faqQ, STORE_CARE.ar.faqA],
 ];
 
 const LD = {
@@ -139,6 +142,7 @@ export default async function AppStoreDevelopment() {
           </div>
         </section>
         <PriceAddendum lang="ar" />
+        <StoreCare lang="ar" />
       </main>
       <SiteFooter c={c} />
     </>
