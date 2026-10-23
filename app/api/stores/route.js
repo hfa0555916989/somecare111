@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { isAuthed } from "@/lib/auth";
-import { listStores, getStore, saveStore, patchStore, deleteStore, publicStore, storeSecret, logAction, listLog, slugOk, domainOk } from "@/lib/stores/db";
+import { listStores, getStore, saveStore, patchStore, deleteStore, publicStore, storeSecret, logAction, listLog, slugOk, domainOk, getRollout, saveRollout } from "@/lib/stores/db";
 import { cpCall } from "@/lib/stores/signing";
 import { STEPS, runStep } from "@/lib/stores/provision";
-import { syncStore, mergeSyncPr } from "@/lib/stores/sync";
-import { readFile, templateRepo, ghToken, gh } from "@/lib/stores/github";
+import { syncStore, mergeSyncPr, revertSyncCommit } from "@/lib/stores/sync";
+import { readFile, templateRepo, ghToken, gh, headSha } from "@/lib/stores/github";
 import { cloudToken, lc } from "@/lib/stores/cloud";
+import { applyDeployKick, applyProbe, applyRedeploy, applyRevert, applySyncResult, beginPromote, cancelRollout, confirmCanaryPush, emptyRollout, failStore, finishIfDrained, markCanary, nextAction, noteTimeout, publicRollout, publishIntent, rolloutBusy } from "@/lib/stores/rollout";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -27,6 +28,120 @@ async function templateVersion() {
 
 async function cp(store, endpoint, method = "GET", payload) {
   return cpCall({ baseUrl: store.baseUrl, secret: storeSecret(store).cpSecret, endpoint, method, payload });
+}
+
+const nowIso = () => new Date().toISOString();
+const BANNED_ACTIONS = new Set(["restore", "backup", "backups", "backups/restore"]);
+
+function guardRollout(action) {
+  if (!action || BANNED_ACTIONS.has(action.type) || (action.actions || []).some((a) => BANNED_ACTIONS.has(a)) || action.restoreDatabase) {
+    throw new Error("مسار النشر لا يسترجع قاعدة البيانات");
+  }
+}
+
+async function rememberSync(s, r) {
+  if (r.status === "pushed") await patchStore(s.id, { templateSha: r.nextSha, syncPr: null, pendingTemplateSha: null, syncPrUrl: null });
+  else if (r.status === "pr") await patchStore(s.id, { syncPr: r.pr, syncPrUrl: r.prUrl, pendingTemplateSha: r.nextSha });
+  else if (r.status === "uptodate" || r.status === "nothing") await patchStore(s.id, { templateSha: r.nextSha });
+}
+
+async function stepRollout(rollout) {
+  const now = nowIso();
+  const action = nextAction(rollout);
+  guardRollout(action);
+  if (action.type === "none") return rollout;
+  if (action.type === "finish") return finishIfDrained(rollout, now);
+  const s = await getStore(action.storeId);
+  if (!s && action.type !== "redeploy") return failStore(rollout, action.storeId, "المتجر غير موجود", now);
+  if (action.type === "sync") {
+    if (forcedDry() || rollout.dry || s.dryRun) return failStore(rollout, s.id, "المتجر في وضع التجربة، لن يُدفع تحديث حقيقي.", now);
+    try {
+      const r = await syncStore({ store: s, templateRepo: templateRepo(), mode: "direct", dryRun: false });
+      const next = applySyncResult(rollout, s, r, now);
+      await rememberSync(s, r);
+      await logAction({ store: s.name, storeId: s.id, action: `تعميم: مزامنة ${r.status}`, detail: r.commit || r.prUrl || "" });
+      return next;
+    } catch (e) {
+      await logAction({ store: s.name, storeId: s.id, ok: false, action: "فشل تعميم التحديث", detail: e.message });
+      return failStore(rollout, s.id, e.message, now);
+    }
+  }
+  if (action.type === "kick") {
+    let result = { skipped: true };
+    try {
+      if (s.cloud?.envId && cloudToken() && !forcedDry() && !rollout.dry && !s.dryRun) {
+        await lc(`/environments/${s.cloud.envId}/deployments`, { method: "POST" });
+        result = { ok: true };
+      }
+    } catch (e) {
+      result = { ok: false, error: e.message };
+    }
+    return applyDeployKick(rollout, s.id, result, now);
+  }
+  if (action.type === "probe") {
+    let health = "", version = "", error = "";
+    try {
+      const [v, h] = await Promise.all([cp(s, "version"), cp(s, "health")]);
+      version = String(v?.templateVersion || "").trim();
+      health = String(h?.status || "").trim();
+    } catch (e) {
+      error = e.message;
+      health = "down";
+    }
+    const next = applyProbe(rollout, s.id, { health, version, error }, now, Date.now());
+    const st = next.stores[s.id];
+    if (st?.status === "healthy") await patchStore(s.id, { status: { ...(s.status || {}), at: now, version, health, error: "" } });
+    if (st?.status === "healthy" || st?.status === "reverting") await logAction({ store: s.name, storeId: s.id, ok: st.status === "healthy", action: st.status === "healthy" ? "النشر سليم والنسخة مطابقة" : "انتهت مهلة النشر", detail: next.log?.[0]?.msg || "" });
+    return next;
+  }
+  if (action.type === "revert") {
+    const plan = action.actions || [];
+    if (!plan.includes("revert_commit")) return applyRevert(rollout, action.storeId, { ok: false, error: "لا يوجد التزام مدفوع للتراجع" }, now);
+    if (forcedDry() || rollout.dry) return applyRevert(rollout, action.storeId, { ok: false, error: "وضع التجربة لا يتراجع على مستودع حقيقي" }, now);
+    try {
+      const rev = await revertSyncCommit({ repo: s.repo, parent: action.parent, pushedSha: action.pushedSha });
+      const next = applyRevert(rollout, s.id, { ok: true, revertSha: rev.revert }, now);
+      const prev = next.stores[s.id]?.prevTemplateSha;
+      if (prev) await patchStore(s.id, { templateSha: prev, syncPr: null, pendingTemplateSha: null, syncPrUrl: null });
+      await logAction({ store: s.name, storeId: s.id, action: "تراجع عن مزامنة القالب دون استرجاع قاعدة البيانات", detail: rev.revert });
+      return next;
+    } catch (e) {
+      await logAction({ store: s.name, storeId: s.id, ok: false, action: "فشل التراجع عن التزام التحديث", detail: e.message });
+      return applyRevert(rollout, s.id, { ok: false, error: e.message }, now);
+    }
+  }
+  if (action.type === "redeploy") {
+    let result = { skipped: true };
+    try {
+      if (s?.cloud?.envId && cloudToken() && !forcedDry() && !rollout.dry) {
+        await lc(`/environments/${s.cloud.envId}/deployments`, { method: "POST" });
+        result = { ok: true };
+      }
+    } catch (e) {
+      result = { ok: false, error: e.message };
+    }
+    const next = applyRedeploy(rollout, action.storeId, result, now);
+    await logAction({ store: s?.name, storeId: action.storeId, ok: !!(result.ok || result.skipped), action: "إعادة النشر بعد التراجع", detail: "لم تُسترجع قاعدة البيانات" });
+    return next;
+  }
+  return rollout;
+}
+
+async function rolloutTick() {
+  let rollout = (await getRollout()) || emptyRollout();
+  if (rollout.ticking && Date.now() - Date.parse(rollout.tickStartedAt || 0) < 50000) return rollout;
+  rollout = { ...noteTimeout(rollout, Date.now()), ticking: true, tickStartedAt: nowIso() };
+  await saveRollout(rollout);
+  try {
+    rollout = await stepRollout(rollout);
+  } catch (e) {
+    const id = rollout.activeId;
+    rollout = id ? failStore(rollout, id, e.message, nowIso()) : { ...rollout, error: e.message };
+  } finally {
+    rollout = { ...rollout, ticking: false };
+    await saveRollout(rollout);
+  }
+  return rollout;
 }
 
 async function refresh(store) {
@@ -61,6 +176,7 @@ export async function GET(req) {
       stores: stores.map(publicStore),
       steps: STEPS,
       template: { repo: templateRepo(), version: latest },
+      rollout: publicRollout(await getRollout()),
       config: { github: !!ghToken(), cloud: !!cloudToken(), vault: !!(process.env.VAULT_KEY || process.env.AUTH_SECRET), forcedDry: forcedDry() },
     });
   } catch (e) {
@@ -193,6 +309,87 @@ export async function POST(req) {
         const r = await cp(s, "backups", "POST", {});
         await logAction({ store: s.name, storeId: s.id, action: "نسخة احتياطية يدوية", detail: r.name });
         return NextResponse.json(r);
+      }
+      case "setCanary": {
+        const stores = await listStores();
+        const current = await getRollout();
+        if (current && rolloutBusy(current)) return bad("لا يمكن تغيير متجر التجربة أثناء النشر.");
+        const decided = markCanary(stores, b.id);
+        if (!decided.ok) return bad(decided.error);
+        let updated = null;
+        for (const p of decided.patches) {
+          const s = await patchStore(p.id, { canary: p.canary });
+          if (p.id === b.id) updated = s;
+        }
+        await logAction({ store: updated?.name, storeId: b.id, action: "تعيين متجر التجربة" });
+        return NextResponse.json({ store: publicStore(updated) });
+      }
+      case "publish": {
+        const current = (await getRollout()) || emptyRollout();
+        if (rolloutBusy(current) || ["canary_pr", "canary_deploy", "promoting"].includes(current.phase)) return bad("هناك نشر جارٍ.");
+        const stores = await listStores();
+        const now = nowIso();
+        const version = await templateVersion();
+        const intent = publishIntent({ stores, mode: b.mode, confirmSlug: b.confirmSlug, templateVersion: version, now });
+        if (!intent.ok) return bad(intent.error);
+        let rollout = { ...intent.rollout, dry: dryRun || !!intent.canary.dryRun };
+        const canary = await getStore(intent.canary.id);
+        try {
+          if (!canary) throw new Error("المتجر غير موجود");
+          const raw = await syncStore({ store: canary, templateRepo: templateRepo(), mode: intent.mode, dryRun: dryRun || !!canary.dryRun });
+          const r = rollout.dry && raw.status !== "dry" && raw.status !== "pr" ? { ...raw, status: "dry" } : raw;
+          rollout = applySyncResult(rollout, canary, r, now);
+          if (!(dryRun || canary.dryRun)) await rememberSync(canary, r);
+          await logAction({ store: canary.name, storeId: canary.id, action: `نشر التحديث: ${r.status}${rollout.dry ? " (تجربة)" : ""}`, detail: r.prUrl || r.commit || "" });
+        } catch (e) {
+          rollout = failStore(rollout, canary.id, e.message, now);
+          await logAction({ store: canary.name, storeId: canary.id, ok: false, action: "فشل نشر التحديث", detail: e.message });
+        }
+        await saveRollout(rollout);
+        return NextResponse.json({ rollout: publicRollout(rollout) });
+      }
+      case "confirmPush": {
+        const rollout0 = await getRollout();
+        const canary = (await listStores()).find((s) => s.id === rollout0?.canaryId);
+        const now = nowIso();
+        const decided = confirmCanaryPush({ rollout: rollout0, canary, confirmSlug: b.confirmSlug, now });
+        if (!decided.ok) return bad(decided.error);
+        let rollout = decided.rollout;
+        if (decided.merge) {
+          if (dryRun || canary.dryRun) {
+            rollout = { ...rollout, dry: true };
+            rollout.stores = { ...rollout.stores, [canary.id]: { ...rollout.stores[canary.id], status: "dry", pushedSha: null } };
+          } else {
+            const merged = await mergeSyncPr(canary);
+            const pushedSha = merged.sha || (await headSha(canary.repo, "main"));
+            rollout = { ...rollout, stores: { ...rollout.stores, [canary.id]: { ...rollout.stores[canary.id], pushedSha, status: "starting", deployStartedAt: now } } };
+            await patchStore(canary.id, { templateSha: canary.pendingTemplateSha || rollout.stores[canary.id].nextSha, syncPr: null, pendingTemplateSha: null, syncPrUrl: null });
+            await logAction({ store: canary.name, storeId: canary.id, action: `دمج نشر متجر التجربة #${canary.syncPr}`, detail: pushedSha });
+          }
+        }
+        await saveRollout(rollout);
+        return NextResponse.json({ rollout: publicRollout(rollout) });
+      }
+      case "promote": {
+        const rollout0 = await getRollout();
+        const now = nowIso();
+        const decided = beginPromote({ rollout: rollout0, stores: await listStores(), batchSize: b.batchSize, now });
+        if (!decided.ok) return bad(decided.error);
+        if (dryRun || decided.rollout.dry) return bad("وضع التجربة لا يعمّم على المتاجر.");
+        await saveRollout(decided.rollout);
+        await logAction({ action: "بدء تعميم التحديث", detail: `دفعة ${decided.rollout.batchSize}` });
+        return NextResponse.json({ rollout: publicRollout(decided.rollout) });
+      }
+      case "cancelRollout": {
+        const decided = cancelRollout(await getRollout(), nowIso());
+        if (!decided.ok) return bad(decided.error);
+        await saveRollout(decided.rollout);
+        await logAction({ action: "إلغاء مسار النشر" });
+        return NextResponse.json({ rollout: publicRollout(decided.rollout) });
+      }
+      case "rolloutTick": {
+        const rollout = await rolloutTick();
+        return NextResponse.json({ rollout: publicRollout(rollout) });
       }
       case "restore": {
         const s = await one();

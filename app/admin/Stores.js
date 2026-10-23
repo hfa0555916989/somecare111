@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { PHASE_AR, STATUS_AR, canPromote, rolloutBusy } from "@/lib/stores/rollout";
 
 // متاجر العملاء: كل عميل نسخة مستقلة (مستودع + تطبيق Laravel Cloud + قاعدة بيانات). خاصة بك فقط
 const VIEWS = [
@@ -167,6 +168,114 @@ function Wizard({ data, reload, setErr }) {
         )}
         <button type="button" className="mini" disabled={!!running} onClick={() => setStore(null)}>متجر آخر</button>
       </div>
+    </div>
+  );
+}
+
+function Rollout({ data, reload, setErr }) {
+  const rollout = data.rollout || { phase: "idle", stores: {}, log: [], batchSize: 3, restoreDatabase: false };
+  const busy = rolloutBusy(rollout);
+  const canary = data.stores.find((s) => s.canary);
+  const [slug, setSlug] = useState("");
+  const [batch, setBatch] = useState(String(rollout.batchSize || 3));
+  const [pending, setPending] = useState("");
+  const reloadRef = useRef(reload);
+  reloadRef.current = reload;
+  useEffect(() => {
+    if (!busy) return;
+    let stop = false;
+    const tick = async () => {
+      try {
+        await api({ action: "rolloutTick" });
+        if (!stop) await reloadRef.current();
+      } catch (e) {
+        if (!stop) setErr(e.message);
+      }
+    };
+    tick();
+    const id = setInterval(tick, 4000);
+    return () => {
+      stop = true;
+      clearInterval(id);
+    };
+  }, [busy, setErr]);
+  async function run(action, body) {
+    setPending(action);
+    setErr("");
+    try {
+      await api({ action, ...body });
+      await reload();
+    } catch (e) {
+      setErr(e.message);
+    }
+    setPending("");
+  }
+  const template = data.template.version || rollout.templateVersion || "—";
+  const phase = rollout.phase || "idle";
+  const phaseClass = phase === "failed" ? "bad" : phase === "canary_ok" || phase === "done" ? "ok" : phase === "idle" ? "" : "warn";
+  return (
+    <div className="adm-card st-roll">
+      <b>نشر التحديث</b>
+      <span className="adm-hint">يُجرَّب التحديث على متجر واحد، ثم يُعمَّم على الباقي بدفعات صغيرة. عند الفشل يُتراجع عن التزام ذلك المتجر فقط ويُعاد نشره. لا تُسترجع قاعدة البيانات تلقائياً.</span>
+      <div className="acc-row st-roll-actions">
+        <span className={`st-pill ${phaseClass}`}>{PHASE_AR[phase] || phase}</span>
+        <span className="adm-hint">نسخة القالب: <b dir="ltr">{template}</b></span>
+        {busy && <span className="adm-hint">جارٍ فحص الصحة والنسخة…</span>}
+      </div>
+      {!data.stores.length ? (
+        <div className="note info">أضف متجراً ثم حدّده كمتجر التجربة.</div>
+      ) : (
+        <div className="st-roll-table">
+          <div className="th"><span>المتجر</span><span>النسخة العاملة</span><span>نسخة القالب</span><span>آخر حالة</span><span>السجل</span></div>
+          {data.stores.map((s) => {
+            const st = rollout.stores?.[s.id];
+            const running = st?.version || s.status?.version || "—";
+            const mismatch = running !== "—" && template !== "—" && String(running).trim() !== String(template).trim();
+            const log = (rollout.log || []).find((e) => e.storeId === s.id);
+            return (
+              <div key={s.id} className={s.canary ? "is-canary" : ""}>
+                <span data-l="المتجر">
+                  <b>{s.name}</b>
+                  {s.canary ? <small className="st-pill warn">متجر التجربة</small> : <button type="button" className="mini" disabled={!!pending || busy} onClick={() => run("setCanary", { id: s.id })}>متجر التجربة</button>}
+                </span>
+                <span data-l="النسخة العاملة" dir="ltr" className={mismatch ? "warn" : ""}>{running}</span>
+                <span data-l="نسخة القالب" dir="ltr">{template}</span>
+                <span data-l="آخر حالة">
+                  {STATUS_AR[st?.status] || "—"}
+                  {st?.prUrl && <> · <a href={st.prUrl} target="_blank" rel="noreferrer">طلب السحب</a></>}
+                  {st?.error && <small>{st.error}</small>}
+                </span>
+                <span data-l="السجل">{log?.msg || "—"}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      <div className="acc-row st-roll-actions">
+        <button type="button" className="primary" disabled={!canary || !!pending || busy || phase === "canary_pr"} onClick={() => run("publish", { mode: "pr" })}>نشر التحديث</button>
+        <button type="button" className="gold" disabled={!canPromote(rollout) || !!pending} onClick={() => run("promote", { batchSize: Number(batch) || 3 })}>تعميم</button>
+        <label className="st-batch">حجم الدفعة
+          <input type="number" min={1} max={10} dir="ltr" value={batch} onChange={(e) => setBatch(e.target.value)} />
+        </label>
+      </div>
+      <label>
+        تأكيد ثانٍ للدفع أو الدمج. اكتب معرّف متجر التجربة{canary ? <>: <b dir="ltr">{canary.slug}</b></> : ""}.
+        <input type="text" dir="ltr" value={slug} onChange={(e) => setSlug(e.target.value)} placeholder={canary?.slug || "slug"} autoComplete="off" />
+      </label>
+      <div className="acc-row st-roll-actions">
+        <button type="button" className="gold" disabled={!canary || slug.trim() !== canary.slug || !!pending || busy || phase === "canary_pr"} onClick={() => { if (!confirm(`دفع تحديث القالب مباشرة إلى main في متجر التجربة «${canary.name}»؟`)) return; run("publish", { mode: "direct", confirmSlug: slug.trim() }); }}>دفع مباشر</button>
+        {phase === "canary_pr" && <button type="button" className="primary" disabled={!canary || slug.trim() !== canary.slug || !!pending} onClick={() => run("confirmPush", { confirmSlug: slug.trim() })}>تأكيد الدمج والنشر</button>}
+        {(phase === "canary_pr" || phase === "failed") && <button type="button" className="mini" disabled={!!pending || busy} onClick={() => run("cancelRollout")}>إلغاء</button>}
+        <button type="button" className="mini" disabled={!!pending} onClick={() => run("rolloutTick")}>تحديث الحالة</button>
+      </div>
+      <p className="adm-hint">«نشر التحديث» يفتح طلب سحب لمتجر التجربة فقط. الدفع إلى main، أو دمج الطلب، يحتاج كتابة المعرّف. «تعميم» يعمل بعد أن تصبح الصحة سليمة والنسخة العاملة مساوية لـ VERSION، ويتوقف عند أول فشل.</p>
+      {(rollout.log || []).length > 0 && (
+        <div className="st-roll-log">
+          {rollout.log.slice(0, 12).map((e, i) => (
+            <p key={`${e.at}-${i}`}><small>{fmt(e.at)}</small> {e.msg}</p>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -478,7 +587,7 @@ export default function Stores() {
                 <div key={s.id} className="adm-card st-card">
                   <div className="st-card-h">
                     <b>{s.name}</b>
-                    <Health s={s} />
+                    <span>{s.canary && <span className="st-pill warn">متجر التجربة</span>} <Health s={s} /></span>
                   </div>
                   <dl>
                     <dt>الدومين</dt><dd dir="ltr">{s.domain || s.baseUrl?.replace(/^https:\/\//, "") || "—"}</dd>
@@ -504,7 +613,12 @@ export default function Stores() {
         </>
       ))}
       {view === "new" && <Wizard data={data} reload={load} setErr={setErr} />}
-      {view === "updates" && <Updates data={data} reload={load} setErr={setErr} />}
+      {view === "updates" && (
+        <>
+          <Rollout data={data} reload={load} setErr={setErr} />
+          <Updates data={data} reload={load} setErr={setErr} />
+        </>
+      )}
       {view === "backups" && <Backups data={data} setErr={setErr} />}
       {view === "log" && <Log />}
     </div>
