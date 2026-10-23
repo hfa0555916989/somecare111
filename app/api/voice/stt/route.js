@@ -9,7 +9,7 @@ export const maxDuration = 60;
 
 // تحويل تسجيل صوتي قصير إلى نص (عربي، مع أسماء العملاء والمصطلحات لتحسين الدقة)
 export async function POST(req) {
-  if (!isAuthed()) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!(await isAuthed())) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   if (!voiceEnabled()) return NextResponse.json({ error: "أضف ELEVENLABS_API_KEY في Vercel لتفعيل المحادثة الصوتية." }, { status: 503 });
   const form = await req.formData().catch(() => null);
   const file = form?.get("file");

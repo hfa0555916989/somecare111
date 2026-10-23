@@ -57,7 +57,7 @@ const AS = {
 };
 
 export async function POST(req) {
-  if (!isAuthed()) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!(await isAuthed())) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   if (!process.env.ANTHROPIC_API_KEY)
     return NextResponse.json({ error: "أضف ANTHROPIC_API_KEY في Vercel لتفعيل الاستيراد من PDF." }, { status: 503 });
 

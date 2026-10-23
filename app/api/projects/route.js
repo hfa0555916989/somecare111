@@ -22,14 +22,14 @@ const fail = (e) =>
 const noStore = { headers: { "Cache-Control": "private, no-store" } };
 
 export async function GET() {
-  if (!isAuthed()) return deny();
+  if (!(await isAuthed())) return deny();
   const [items, docs] = await Promise.all([listProjects(), listDocs()]);
   const contracts = docs.filter((d) => d.status === "accepted").map((d) => ({ number: d.number, title: d.title, client: d.client?.company || d.client?.name || "", date: d.date }));
   return NextResponse.json({ items, contracts, statuses: PROJECT_STATUS, db: dbConnected(), keySource: vaultKeySource() }, noStore);
 }
 
 export async function POST(req) {
-  if (!isAuthed()) return deny();
+  if (!(await isAuthed())) return deny();
   try {
     return NextResponse.json({ item: await saveProject(null, await req.json().catch(() => ({}))) }, noStore);
   } catch (e) {
@@ -38,7 +38,7 @@ export async function POST(req) {
 }
 
 export async function PUT(req) {
-  if (!isAuthed()) return deny();
+  if (!(await isAuthed())) return deny();
   const b = await req.json().catch(() => ({}));
   if (!b.id) return NextResponse.json({ error: "id" }, { status: 400 });
   try {
@@ -50,7 +50,7 @@ export async function PUT(req) {
 }
 
 export async function DELETE(req) {
-  if (!isAuthed()) return deny();
+  if (!(await isAuthed())) return deny();
   const id = new URL(req.url).searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id" }, { status: 400 });
   try {

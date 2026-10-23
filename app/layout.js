@@ -9,9 +9,9 @@ import { SITE_NAV, navHref } from "@/lib/sitelinks";
 
 export const dynamic = "force-dynamic";
 
-// لغة الصفحة يحددها middleware.js (/en إنجليزي، والباقي عربي)
-const pageLang = () => langOf(headers().get("x-site-lang"));
-const localContent = async () => localize(await getContent(), pageLang());
+// لغة الصفحة يحددها proxy.js (/en إنجليزي، والباقي عربي)
+const pageLang = async () => langOf((await headers()).get("x-site-lang"));
+const localContent = async () => localize(await getContent(), await pageLang());
 
 export async function generateMetadata() {
   const c = await localContent();

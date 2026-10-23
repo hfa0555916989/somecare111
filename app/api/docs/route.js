@@ -26,12 +26,12 @@ const fail = (e) =>
   );
 
 export async function GET() {
-  if (!isAuthed()) return deny();
+  if (!(await isAuthed())) return deny();
   return NextResponse.json({ items: await listDocs(), db: dbConnected(), ai: !!process.env.ANTHROPIC_API_KEY });
 }
 
 export async function POST(req) {
-  if (!isAuthed()) return deny();
+  if (!(await isAuthed())) return deny();
   try {
     const item = await createDoc(cleanDoc(await req.json().catch(() => ({}))));
     return NextResponse.json({ item });
@@ -41,7 +41,7 @@ export async function POST(req) {
 }
 
 export async function PUT(req) {
-  if (!isAuthed()) return deny();
+  if (!(await isAuthed())) return deny();
   const b = await req.json().catch(() => ({}));
   if (!b.id) return NextResponse.json({ error: "id" }, { status: 400 });
   try {
@@ -75,7 +75,7 @@ export async function PUT(req) {
 }
 
 export async function DELETE(req) {
-  if (!isAuthed()) return deny();
+  if (!(await isAuthed())) return deny();
   const id = new URL(req.url).searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id" }, { status: 400 });
   try {

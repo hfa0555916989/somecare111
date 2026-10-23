@@ -22,14 +22,14 @@ const fail = (e) =>
   );
 
 export async function GET() {
-  if (!isAuthed()) return deny();
+  if (!(await isAuthed())) return deny();
   const [items, history] = await Promise.all([listFiles(), imageHistory()]);
   return NextResponse.json({ items, history, cats: FILE_CATS, db: dbConnected(), ...storageStatus(), ai: !!process.env.ANTHROPIC_API_KEY });
 }
 
 // تسجيل ملف بعد رفعه للمخزن الخاص من المتصفح
 export async function POST(req) {
-  if (!isAuthed()) return deny();
+  if (!(await isAuthed())) return deny();
   const b = await req.json().catch(() => ({}));
   const blob = b.blob || {};
   let host = "";
@@ -45,7 +45,7 @@ export async function POST(req) {
 }
 
 export async function PUT(req) {
-  if (!isAuthed()) return deny();
+  if (!(await isAuthed())) return deny();
   const b = await req.json().catch(() => ({}));
   if (!b.id) return NextResponse.json({ error: "id" }, { status: 400 });
   try {
@@ -57,7 +57,7 @@ export async function PUT(req) {
 }
 
 export async function DELETE(req) {
-  if (!isAuthed()) return deny();
+  if (!(await isAuthed())) return deny();
   const id = new URL(req.url).searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id" }, { status: 400 });
   try {
@@ -70,7 +70,7 @@ export async function DELETE(req) {
 
 // أرشفة العروض والعقود الموافق عليها سابقاً (قبل ربط المخزن الخاص)
 export async function PATCH() {
-  if (!isAuthed()) return deny();
+  if (!(await isAuthed())) return deny();
   if (!storageStatus().privateBlob) return NextResponse.json({ error: "اربط المخزن الخاص أولاً" }, { status: 400 });
   const c = await getContent();
   return NextResponse.json(await archivePending(await listDocs(), liveProvider(c).site));

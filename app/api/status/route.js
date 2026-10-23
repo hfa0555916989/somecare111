@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 // حالة الخدمات المربوطة + التزاماتك (للدليل الإرشادي والإجرائي)
 export async function GET() {
-  if (!isAuthed()) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!(await isAuthed())) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const [c, docs, projects] = await Promise.all([getContent(), listDocs().catch(() => []), listProjects().catch(() => [])]);
   const s = await storageHealth();
   const services = {

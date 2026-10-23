@@ -27,12 +27,12 @@ Rules:
 - Never put the developer's own details in client.`;
 
 export async function GET() {
-  if (!isAuthed()) return deny();
+  if (!(await isAuthed())) return deny();
   return NextResponse.json({ items: await listIdeas(), statuses: IDEA_STATUS, ai: aiEnabled() });
 }
 
 export async function POST(req) {
-  if (!isAuthed()) return deny();
+  if (!(await isAuthed())) return deny();
   const b = await req.json().catch(() => ({}));
   if (b.action !== "draft") {
     try {
@@ -67,7 +67,7 @@ export async function POST(req) {
 }
 
 export async function PUT(req) {
-  if (!isAuthed()) return deny();
+  if (!(await isAuthed())) return deny();
   const b = await req.json().catch(() => ({}));
   if (!b.id) return NextResponse.json({ error: "id" }, { status: 400 });
   try {
@@ -79,7 +79,7 @@ export async function PUT(req) {
 }
 
 export async function DELETE(req) {
-  if (!isAuthed()) return deny();
+  if (!(await isAuthed())) return deny();
   const id = new URL(req.url).searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id" }, { status: 400 });
   try {

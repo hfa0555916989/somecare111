@@ -10,12 +10,12 @@ export const dynamic = "force-dynamic";
 const deny = () => NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
 export async function GET() {
-  if (!isAuthed()) return deny();
+  if (!(await isAuthed())) return deny();
   return NextResponse.json({ items: await listInquiries(), db: dbConnected(), turnstile: turnstileEnabled(), mail: mailEnabled() });
 }
 
 export async function PATCH(req) {
-  if (!isAuthed()) return deny();
+  if (!(await isAuthed())) return deny();
   const { id, status, note } = await req.json().catch(() => ({}));
   if (!id) return NextResponse.json({ error: "id" }, { status: 400 });
   const item = await updateInquiry(String(id), { status, note });
@@ -23,7 +23,7 @@ export async function PATCH(req) {
 }
 
 export async function DELETE(req) {
-  if (!isAuthed()) return deny();
+  if (!(await isAuthed())) return deny();
   const id = new URL(req.url).searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id" }, { status: 400 });
   await deleteInquiry(id);

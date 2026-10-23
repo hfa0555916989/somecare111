@@ -7,7 +7,7 @@ export const maxDuration = 60;
 
 // إعدادات المساعد الصوتي وقائمة الأصوات المتاحة
 export async function GET() {
-  if (!isAuthed()) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!(await isAuthed())) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const settings = await getAssistantSettings();
   let voices = [];
   if (voiceEnabled()) voices = await listVoices().catch(() => []);
@@ -15,7 +15,7 @@ export async function GET() {
 }
 
 export async function PUT(req) {
-  if (!isAuthed()) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!(await isAuthed())) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   try {
     return NextResponse.json({ settings: await saveAssistantSettings(await req.json().catch(() => ({}))) });
   } catch {
@@ -25,7 +25,7 @@ export async function PUT(req) {
 
 // قراءة رد المساعد بصوت
 export async function POST(req) {
-  if (!isAuthed()) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!(await isAuthed())) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   if (!voiceEnabled()) return NextResponse.json({ error: "أضف ELEVENLABS_API_KEY في Vercel." }, { status: 503 });
   const { text } = await req.json().catch(() => ({}));
   const t = speakable(text);

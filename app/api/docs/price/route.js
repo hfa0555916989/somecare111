@@ -27,7 +27,7 @@ Output (Arabic text):
 - notes: practical advice (items missing compared to similar past deals, recurring fees to add, etc.). Keep it short.`;
 
 export async function POST(req) {
-  if (!isAuthed()) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!(await isAuthed())) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   if (!aiEnabled()) return NextResponse.json({ error: "أضف ANTHROPIC_API_KEY في Vercel لتفعيل مساعد التسعير." }, { status: 503 });
   const b = await req.json().catch(() => ({}));
   const d = cleanDoc(b.doc || {});

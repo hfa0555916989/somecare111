@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 // فتح ملف من المخزن الخاص بعد التأكد من دخول لوحة التحكم
 export async function GET(req) {
-  if (!isAuthed()) return new NextResponse("غير مصرّح", { status: 401 });
+  if (!(await isAuthed())) return new NextResponse("غير مصرّح", { status: 401 });
   const sp = new URL(req.url).searchParams;
   const f = await getFile(String(sp.get("id") || "")).catch(() => null);
   if (!f) return new NextResponse("غير موجود", { status: 404 });

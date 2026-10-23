@@ -36,7 +36,7 @@ Fields:
 ${ENTRY_RULES}`;
 
 export async function POST(req) {
-  if (!isAuthed()) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!(await isAuthed())) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   if (!aiEnabled()) return NextResponse.json({ error: "أضف ANTHROPIC_API_KEY في Vercel لتفعيل الفرز الذكي." }, { status: 503 });
   const { id } = await req.json().catch(() => ({}));
   const f = await getFile(String(id || "")).catch(() => null);

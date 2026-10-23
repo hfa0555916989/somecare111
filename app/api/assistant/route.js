@@ -204,7 +204,7 @@ async function runTool(u, decision, actions) {
 const MAX_MESSAGES = 160;
 
 export async function POST(req) {
-  if (!isAuthed()) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!(await isAuthed())) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   if (!aiEnabled()) return NextResponse.json({ error: "أضف ANTHROPIC_API_KEY في Vercel لتفعيل المساعد." }, { status: 503 });
   const b = await req.json().catch(() => ({}));
   let messages = Array.isArray(b.messages) ? b.messages : [];

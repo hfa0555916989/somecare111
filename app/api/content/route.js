@@ -7,13 +7,13 @@ import { recordImageChanges } from "@/lib/storage";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  if (!isAuthed()) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!(await isAuthed())) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const storage = storageMode();
   return NextResponse.json({ content: await getContent(), dbConnected: !!storage, storage });
 }
 
 export async function PUT(req) {
-  if (!isAuthed()) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!(await isAuthed())) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   try {
     const content = await req.json();
     const prev = await getContent().catch(() => null);
