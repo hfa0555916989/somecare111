@@ -62,8 +62,10 @@ test("order tracking is listed for the customer and the merchant", () => {
 
 test("ranked titles and H1s stay, and the current offer is added below", () => {
   const seo = readFileSync(new URL("../lib/seo-pages.js", import.meta.url), "utf8");
-  assert.match(seo, /شركة برمجة في السعودية \| متجر \+ تطبيق باشتراك من 300 ريال شهرياً/);
-  assert.match(seo, /h1: "شركة برمجة في السعودية تسلّمك المتجر والتطبيق باشتراك من 300 ريال شهرياً"/);
+  assert.match(seo, /شركة برمجة في السعودية \| متجر \+ تطبيق باشتراك من 700 ريال شهرياً/);
+  assert.match(seo, /h1: "شركة برمجة في السعودية تسلّمك المتجر والتطبيق باشتراك من 700 ريال شهرياً"/);
+  assert.match(seo, /تصميم متجر الكتروني \| في السعودية باشتراك من 300 ريال شهرياً/);
+  assert.doesNotMatch(seo, /مع تطبيق جوال باشتراك من 300 ريال/);
   assert.match(seo, /slug: "matjar-tatbeeq-1500"/);
   assert.match(seo, /slug: "matjar-jahiz-1500"/);
   assert.doesNotMatch(seo, /1500 ريال|1,500 ريال/);
@@ -74,7 +76,8 @@ test("ranked titles and H1s stay, and the current offer is added below", () => {
   assert.match(home, /<h1><Hl text=\{c\.hero\.title\} \/><\/h1>/);
   assert.match(home, /PriceAddendum/);
   const store = readFileSync(new URL("../app/app-store-development/page.js", import.meta.url), "utf8");
-  assert.match(store, /إنشاء متجر إلكتروني وتطبيق جوال باشتراك من 300 ريال شهرياً/);
+  assert.match(store, /إنشاء متجر إلكتروني وتطبيق جوال باشتراك من 700 ريال شهرياً/);
+  assert.doesNotMatch(store, /تطبيق جوال باشتراك من 300 ريال/);
   assert.match(store, /canonical: "\/app-store-development"/);
   assert.match(store, /PriceAddendum/);
   assert.doesNotMatch(store, /1500|1,500/);
