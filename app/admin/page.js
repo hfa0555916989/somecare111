@@ -676,12 +676,12 @@ function blankDoc(type, k, catalog = []) {
     validDays: type === "quote" ? Number(k.validDays) || 15 : 0,
     title: "",
     subtitle: "",
-    intro: type === "quote" ? "الأسعار أدناه هي أسعار الباقات المنشورة في الموقع. الدعم الفني مجاني أول سنة مع الدومين والاستضافة، ومن السنة الثانية 200 ريال للسنة." : "",
+    intro: type === "quote" ? "الأسعار أدناه بداية النطاقات المنشورة. الاشتراك هو الخيار الذي نوصي به. إصلاح الأعطال داخل الدعم، وطلب الميزة الجديدة يُسعَّر بشكل مستقل. احذف الباقة التي لا يريدها العميل قبل الإرسال." : "",
     client: { name: "", company: "", idNumber: "", phone: "", email: "", city: "" },
     sections,
     discount: 0,
     vatRate: type === "invoice" ? 0 : Number(k.vatRate) || 0,
-    recurring: type === "quote" ? ["السنة الثانية: الدعم بـ 200 ريال للسنة"] : [],
+    recurring: type === "quote" ? ["بعد الشراء: عقد صيانة من 500 إلى 800 ريال شهرياً بعد شهر إلى شهرين من إصلاح الأعطال. الاشتراك السنوي بشهرين مجاناً."] : [],
     duration: "",
     terms: type === "invoice" ? [...INVOICE_TERMS] : [...((type === "contract" ? k.contractTerms : k.quoteTerms) || [])],
     annex: [],
@@ -876,7 +876,7 @@ function DocEditor({ doc, setDoc, k, items, catalog = [], onSave, onCancel, savi
       {doc.type === "quote" && catalog.length > 0 && (
         <div className="adm-card">
           <b>باقات الموقع</b>
-          <span className="adm-hint">الأسعار والمزايا من الباقات المنشورة في الموقع. أبقِ الباقة التي يريدها العميل واحذف الأخرى. الدعم الفني مجاني أول سنة مع الدومين والاستضافة، ومن السنة الثانية 200 ريال للسنة، وتظهر البنود في العرض والطباعة وملف PDF.</span>
+          <span className="adm-hint">الأرقام بداية النطاق المنشور (الاشتراك هو الخيار الذي نوصي به). احذف الباقة التي لا يريدها العميل قبل الإرسال لأن الإجمالي يجمع كل البنود، وعدّل الرقم داخل النطاق. إصلاح الأعطال داخل الدعم، والميزة الجديدة عرض مستقل.</span>
           <div className="acc-chips small">
             {catalog.map((s) => {
               const on = (doc.sections || []).some((x) => x.title === s.title);
@@ -943,7 +943,7 @@ function DocEditor({ doc, setDoc, k, items, catalog = [], onSave, onCancel, savi
       </div>
       {doc.type !== "proposal" && doc.type !== "invoice" && <PriceAdvisor doc={doc} setDoc={setDoc} />}
       <Text label="رسوم متكررة / تجديد (كل سطر منفصل)" area rows={2} value={toLines(doc.recurring)} onChange={(v) => set("recurring", fromLines(v))} />
-      <Text label="مدة التنفيذ" value={doc.duration} onChange={(v) => set("duration", v)} hint="مثال: من 21 إلى 30 يوم عمل من استلام المحتوى والدفعة الأولى" />
+      <Text label="مدة التنفيذ" value={doc.duration} onChange={(v) => set("duration", v)} hint="مثال: التسليم سريع ويتوقف على تسليم المحتوى في وقته، بدون عدد أيام ثابت" />
       <Text label={doc.type === "contract" ? "بنود العقد (كل بند في سطر)" : "الشروط والملاحظات (كل شرط في سطر)"} area rows={8} value={toLines(doc.terms)} onChange={(v) => set("terms", fromLines(v))} hint={doc.type === "contract" ? "بند «حساب السداد المعتمد» بالآيبان يُضاف تلقائياً في آخر بنود العقد. ولو تبيه داخل بند معيّن اكتب {الآيبان} و{البنك} و{المستفيد} في نص البند." : "تقدر تكتب {الآيبان} و{البنك} و{المستفيد} داخل أي شرط فتُستبدل ببيانات حسابك."} />
       <button type="button" className="mini" style={{ justifySelf: "start" }} onClick={() => confirm("استبدال البنود الحالية بالبنود الافتراضية من الإعدادات؟") && set("terms", [...((doc.type === "contract" ? k.contractTerms : k.quoteTerms) || [])])}>
         استعادة البنود الافتراضية
@@ -1668,7 +1668,7 @@ export default function Admin() {
                 <IconPick value={p.icon} onChange={(v) => set("icon", v)} />
                 <div className="row">
                   <Text label="قبل السعر (مثل: يبدأ من)" value={p.pricePrefix} onChange={(v) => set("pricePrefix", v)} />
-                  <Text label="السعر (مثل 1,500)" value={p.price} onChange={(v) => set("price", v)} />
+                  <Text label="السعر (بداية النطاق، مثل 2,000)" value={p.price} onChange={(v) => set("price", v)} />
                 </div>
                 <Text label="بعد السعر (ريال / ريال فأكثر)" value={p.unit} onChange={(v) => set("unit", v)} />
                 <Text label="وصف" area value={p.desc} onChange={(v) => set("desc", v)} />

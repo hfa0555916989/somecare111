@@ -15,6 +15,29 @@ export function splitPackageFeatures(features) {
   return { core, free };
 }
 
+export function PackagePrice({ p }) {
+  if (Array.isArray(p?.tiers) && p.tiers.length) {
+    return (
+      <div className="pk-tiers">
+        {p.tiers.map((t) => (
+          <p className="pk-price" key={t.label}>
+            {t.label && <small>{t.label}</small>}
+            <strong>{t.price}</strong>
+            {t.unit && <span>{t.unit}</span>}
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return (
+    <p className="pk-price">
+      {p.pricePrefix && <small>{p.pricePrefix}</small>}
+      <strong>{p.price}</strong>
+      {p.unit && <span>{p.unit}</span>}
+    </p>
+  );
+}
+
 export function PackagePoints({ features, lang }) {
   const { core, free } = splitPackageFeatures(features);
   const en = lang === "en";

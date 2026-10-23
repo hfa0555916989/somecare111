@@ -8,15 +8,19 @@ import { breadcrumbJsonLd, navItem } from "@/lib/sitelinks";
 import { SiteFooter, SiteHeader } from "./SiteChrome";
 import { Icon } from "./Icons";
 import { About, Contact, makeWaLink, WaIcon } from "./HomePage";
-import { PackagePoints, StoreShowcase, packageShowcase } from "./PackagePoints";
+import { PackagePoints, PackagePrice, StoreShowcase, packageShowcase } from "./PackagePoints";
+import { NOTE_AR, NOTE_EN } from "@/lib/platform-offer";
 import { DemoGallery } from "./StoreShowcase";
+import PreviousWork from "./PreviousWork";
+import { PREVIOUS_WORK_COPY } from "@/lib/previous-work";
 
 const COPY = {
   ar: {
-    servicesLead: "أبني من الرياض أربعة مسارات واضحة: موقع يعرّف بنشاطك، تطبيق جوال، متجر إلكتروني مع تطبيق، وخدمات أمن سيبراني للشركات.",
-    worksLead: "هذه نماذج حقيقية من المتجر التجريبي ولوحة التحكم، لترى الواجهة والطلب والإدارة قبل أن تطلب التنفيذ.",
-    packagesLead: "الأسعار الظاهرة هي أسعار الباقات الحالية. باقة المتجر الكبير شامل التطبيق 1,500 ريال، وداخلها الدفع والشحن والدومين وواتساب مجاناً. الدعم الفني مجاني أول سنة مع الدومين والاستضافة، ومن السنة الثانية 200 ريال للسنة.",
-    blogLead: "مقالات عن انشاء المتاجر والتطبيقات وأسعارها، وكل عنوان يذكر سعر 1500 ريال لباقة المتجر مع التطبيق.",
+    servicesLead: "أبني من الرياض نسخة مستقلة من المتجر لكل عميل، مع اشتراك شهري أو شراء لمرة واحدة، وإلى جانبها خدمات الأمن السيبراني للشركات.",
+    worksLead: PREVIOUS_WORK_COPY.ar.lead,
+    demoLead: "وهذه نماذج من المتجر التجريبي ولوحة التحكم، لترى الواجهة والطلب والإدارة قبل أن تطلب التنفيذ.",
+    packagesLead: "الاشتراك هو الخيار الذي نوصي به: تجهيز من 2,000 إلى 3,000 ريال مرة واحدة، ثم 300 إلى 500 ريال شهرياً بدون تطبيقات أو 700 إلى 1,000 مع التطبيقات، وسنوياً بشهرين مجاناً. الشراء من 12,000 إلى 18,000 ريال للمتجر أو 20,000 إلى 30,000 مع التطبيقين.",
+    blogLead: "مقالات عن إنشاء المتاجر والتطبيقات، والأسعار فيها هي نطاقات الاشتراك والشراء الحالية.",
     guides: "صفحات الشرح",
     posts: "المقالات",
     demoLogin: "دخول لوحة التحكم التجريبية",
@@ -26,17 +30,18 @@ const COPY = {
     openAdmin: "لوحة التحكم",
     ask: "اطلب هذه الخدمة",
     services: [
-      { href: "/packages", title: "مواقع تعريفية", text: "موقع يعرض خدمتك ورقم التواصل ونموذج الطلب، مناسب إن لم تكن تبيع منتجات بسلة شراء." },
-      { href: "/app-design-saudi", title: "تطبيقات الجوال", text: "تطبيق المتجر على iOS وAndroid داخل باقة 1500 ريال مع المتجر، والدفع والشحن والدومين مجاناً." },
-      { href: "/create-online-store", title: "متجر إلكتروني مع تطبيق", text: "منتجات غير محدودة، سلة، لوحة تحكم، وتطبيق جوال. السعر 1500 ريال، والدفع والشحن والدومين مجاناً." },
+      { href: "/packages", title: "الاشتراك", text: "الخيار الذي نوصي به: تجهيز من 2,000 إلى 3,000 ريال، ثم 300 إلى 500 شهرياً بدون تطبيقات أو 700 إلى 1,000 مع التطبيقات." },
+      { href: "/app-design-saudi", title: "تطبيقات الجوال", text: "تطبيق iOS وAndroid بهوية المتجر ضمن الاشتراك أو الشراء، مع إشعارات الدفع عند التسليم. النشر يعتمد على مراجعة المتاجر وغالباً من أسبوع إلى أسبوعين." },
+      { href: "/create-online-store", title: "متجر إلكتروني", text: "نسخة مستقلة مع لوحة تاجر. الشراء من 12,000 إلى 18,000 ريال، أو مع التطبيقين من 20,000 إلى 30,000." },
       { href: "/security", title: "الأمن السيبراني", text: "خدمات الأمن للشركات بالشراكة مع فريق متخصص، في صفحة مستقلة بتفاصيلها وعرضها." },
     ],
   },
   en: {
-    servicesLead: "Four clear paths from Riyadh: a business website, a mobile app, an online store with an app, and enterprise cybersecurity.",
-    worksLead: "Real screenshots of the demo store and its admin panel, so you can see the shop, the cart and the dashboard before you order.",
-    packagesLead: "These are the current packages. The large store with the app is 1,500 SAR, and payment, shipping, domain and WhatsApp are included free. Technical support is free for the first year with the domain and hosting, then 200 SAR for the second year.",
-    blogLead: "The articles are written in Arabic. Each one covers a different search phrase and states the 1,500 SAR store-and-app price.",
+    servicesLead: "From Riyadh: an independent store for each client, on a monthly subscription or a one-time purchase, plus enterprise cybersecurity.",
+    worksLead: PREVIOUS_WORK_COPY.en.lead,
+    demoLead: "Below are screenshots of the demo store and its admin panel, so you can see the shop, the cart and the dashboard before you order.",
+    packagesLead: "The subscription is what we recommend: setup 2,000–3,000 SAR once, then 300–500 SAR per month without apps or 700–1,000 with apps, and two months free on the annual plan. Purchase is 12,000–18,000 SAR for the store or 20,000–30,000 with both apps.",
+    blogLead: "The articles are in Arabic. They describe the current subscription and purchase ranges.",
     guides: "Guides",
     posts: "Articles",
     demoLogin: "Demo admin login",
@@ -46,9 +51,9 @@ const COPY = {
     openAdmin: "Admin panel",
     ask: "Ask about this service",
     services: [
-      { href: "/en/packages", title: "Business websites", text: "A site that presents your service, phone number and inquiry form when you are not selling through a cart." },
-      { href: "/app-design-saudi", title: "Mobile apps", text: "The store app for iOS and Android is inside the 1,500 SAR package, with payment, shipping and the domain included free." },
-      { href: "/create-online-store", title: "Online store with an app", text: "Unlimited products, cart, admin panel and a mobile app for 1,500 SAR. Payment, shipping and the domain are free." },
+      { href: "/en/packages", title: "Subscription", text: "The option we recommend: setup 2,000–3,000 SAR, then 300–500 per month without apps or 700–1,000 with apps." },
+      { href: "/app-design-saudi", title: "Mobile apps", text: "Branded iOS and Android apps on the subscription or the purchase, with push notifications at delivery. Publishing depends on store review, usually about one to two weeks." },
+      { href: "/create-online-store", title: "Online store", text: "An independent instance with a merchant dashboard. Purchase is 12,000–18,000 SAR, or 20,000–30,000 with both apps." },
       { href: "/en/security", title: "Cybersecurity", text: "Enterprise security services with a specialist partner, on their own page with the offer details." },
     ],
   },
@@ -163,7 +168,9 @@ export default async function SitelinkPage({ id, lang }) {
             )}
             {id === "works" && (
               <>
-                <p className="sub">{copy.worksLead}</p>
+                <PreviousWork lang={c.lang} showHeading={false} />
+                <h2>{c.lang === "en" ? "Demo store" : "المتجر التجريبي"}</h2>
+                <p className="sub">{copy.demoLead}</p>
                 <DemoGallery lang={c.lang} />
                 <DemoAccess lang={c.lang} />
                 {c.gallery?.length > 0 && (
@@ -183,6 +190,7 @@ export default async function SitelinkPage({ id, lang }) {
             {id === "packages" && (
               <>
                 <p className="sub">{copy.packagesLead}</p>
+                <p className="pk-included-note">{c.lang === "en" ? NOTE_EN : NOTE_AR}</p>
                 <div className="pk-grid">
                   {(c.packages || []).map((p, i) => (
                     <article key={i} id={isBigStorePackage(p) ? "big-store" : undefined} className={"pk" + (p.featured ? " pk-featured" : "")}>
@@ -197,11 +205,7 @@ export default async function SitelinkPage({ id, lang }) {
                           <h2>{p.name}</h2>
                         </div>
                       </div>
-                      <p className="pk-price">
-                        {p.pricePrefix && <small>{p.pricePrefix}</small>}
-                        <strong>{p.price}</strong>
-                        <span>{p.unit}</span>
-                      </p>
+                      <PackagePrice p={p} />
                       {p.desc && <p className="pk-desc">{p.desc}</p>}
                       <PackagePoints features={p.features} lang={c.lang} />
                       <StoreShowcase data={packageShowcase(p)} lang={c.lang} />
