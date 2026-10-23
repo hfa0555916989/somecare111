@@ -18,7 +18,7 @@ const COPY = {
   ar: {
     servicesLead: "أبني من الرياض أربعة مسارات واضحة: موقع يعرّف بنشاطك، تطبيق جوال، متجر إلكتروني مع تطبيق، وخدمات أمن سيبراني للشركات.",
     worksLead: "هذه نماذج حقيقية من المتجر التجريبي ولوحة التحكم، لترى الواجهة والطلب والإدارة قبل أن تطلب التنفيذ.",
-    packagesLead: "الأسعار الظاهرة هي أسعار الباقات الحالية. التجهيز 2,000 ريال مرة واحدة، والاشتراك من 300 ريال شهرياً ويشمل الاستضافة والدعم والنسخ الاحتياطي، أو الشراء من 12,000 ريال. بعد الشراء إصلاح الأعطال مجاني من شهر إلى شهرين ثم صيانة من 500 إلى 800 ريال شهرياً. في المتجر زر واتساب يفتح محادثة مع صاحب المتجر.",
+    packagesLead: "الأسعار الظاهرة هي أسعار الباقات الحالية. التجهيز 2,000 ريال مرة واحدة. الاشتراك: أساسية 300 ريال شهرياً، أو متقدمة 500، ومع التطبيقات 700 أو 1,000، وسنوياً بشهرين مجاناً. الشراء من 12,000 ريال، ثم صيانة 500 أو 800 ريال شهرياً بعد شهر إلى شهرين من إصلاح الأعطال. الدفع مقدّم. في المتجر زر واتساب يفتح محادثة مع صاحب المتجر.",
     blogLead: "مقالات عن انشاء المتاجر والتطبيقات وأسعارها، وكل عنوان يذكر باشتراك من 300 ريال شهرياً لباقة المتجر مع التطبيق.",
     guides: "صفحات الشرح",
     posts: "المقالات",
@@ -38,7 +38,7 @@ const COPY = {
   en: {
     servicesLead: "Four clear paths from Riyadh: a business website, a mobile app, an online store with an app, and enterprise cybersecurity.",
     worksLead: "Real screenshots of the demo store and its admin panel, so you can see the shop, the cart and the dashboard before you order.",
-    packagesLead: "These are the current packages. Setup is 2,000 SAR once, the subscription is from 300 SAR per month and includes hosting, support and backups, or purchase is from 12,000 SAR. After purchase, bug fixes are free for one to two months, then maintenance is 500–800 SAR per month. The store has a WhatsApp button that opens a chat with the store owner.",
+    packagesLead: "These are the current packages. Setup is 2,000 SAR once. Subscription: Basic 300 SAR per month, Advanced 500, or 700 and 1,000 with the apps, with two months free on the annual plan. Purchase is from 12,000 SAR, then maintenance is 500 or 800 SAR per month after one to two months of bug fixes. Payment is prepaid. The store has a WhatsApp button that opens a chat with the store owner.",
     blogLead: "The articles are written in Arabic. Each one covers a different search phrase and states a subscription from 300 SAR/month.",
     guides: "Guides",
     posts: "Articles",
