@@ -7,13 +7,13 @@ import PriceAddendum from "../PriceAddendum";
 
 export const dynamic = "force-dynamic";
 
-const TITLE = "إنشاء متجر إلكتروني وتطبيق جوال من 2,000 ريال | المطور حسن";
-const DESC = "باقة المتجر الكبير شامل التطبيق من 2,000 ريال للتجهيز، والاشتراك من 300 ريال شهرياً، أو الشراء من 12,000 ريال: منتجات غير محدودة ولوحة تحكم وتطبيق iOS وAndroid، والدفع والشحن والدومين وواتساب مجاناً.";
+const TITLE = "إنشاء متجر إلكتروني وتطبيق جوال باشتراك من 300 ريال شهرياً | المطور حسن";
+const DESC = "باقة المتجر الكبير شامل التطبيق باشتراك من 300 ريال شهرياً، والتجهيز من 2,000 ريال، أو الشراء من 12,000 ريال: منتجات غير محدودة ولوحة تحكم وتطبيق iOS وAndroid، والدفع والشحن والدومين وواتساب مجاناً.";
 
 export const metadata = {
   title: { absolute: TITLE },
   description: DESC,
-  keywords: "انشاء متجر الكتروني, انشاء متجر الكتروني في السعودية, متجر الكتروني مع تطبيق, تكلفة تطبيق متجر الكتروني, من 2000 ريال, المطور حسن",
+  keywords: "انشاء متجر الكتروني, انشاء متجر الكتروني في السعودية, متجر الكتروني مع تطبيق, تكلفة تطبيق متجر الكتروني, اشتراك من 300 ريال, المطور حسن",
   alternates: { canonical: "/app-store-development" },
   robots: { index: true, follow: true },
   openGraph: { type: "website", locale: "ar_SA", url: "/app-store-development", title: TITLE, description: DESC, images: ["/images/brand-og.png"] },
@@ -76,9 +76,9 @@ export default async function AppStoreDevelopment() {
       <main id="top">
         <section className="hero" style={{ padding: "56px 0 24px", textAlign: "center" }}>
           <div className="wrap">
-            <p className="hero-badge">متجر إلكتروني مع تطبيق جوال · من 2,000 ريال</p>
+            <p className="hero-badge">متجر إلكتروني مع تطبيق جوال · باشتراك من 300 ريال شهرياً</p>
             <h1 style={{ maxWidth: 900, marginInline: "auto" }}>
-              إنشاء متجر إلكتروني وتطبيق جوال <span className="hl">من 2,000 ريال</span> مع المطور حسن
+              إنشاء متجر إلكتروني وتطبيق جوال <span className="hl">باشتراك من 300 ريال شهرياً</span> مع المطور حسن
             </h1>
             <p className="lead" style={{ maxWidth: 780, marginInline: "auto" }}>
               أنا <strong>المطور حسن</strong>. أبني لك المتجر ولوحة التحكم وتطبيق iOS و Android في باقة واحدة من 2,000 ريال للتجهيز، والاشتراك من 300 ريال شهرياً، أو الشراء من 12,000 ريال، والدفع والشحن والدومين وواتساب مجاناً داخلها.
