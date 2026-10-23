@@ -8,6 +8,8 @@ import { isBigStorePackage } from "@/lib/big-store";
 import AdvancedFeatures from "./AdvancedFeatures";
 import PreviousWork from "./PreviousWork";
 import { NOTE_AR, NOTE_EN, OFFER_DESC_AR, OFFER_DESC_EN, offerJsonLd } from "@/lib/platform-offer";
+import StoreCare from "./StoreCare";
+import { STORE_CARE } from "@/lib/store-care";
 
 const FAQ = {
   ar: [
@@ -16,6 +18,7 @@ const FAQ = {
     ["هل بوابات الدفع والشحن متاحة؟", "نعم. ميسر وتابي وتمارا والراجحي والدفع عند الاستلام، وأرامكس وسمسا وأوتو وطرود والبريد السعودي، جزء من المنصة، وربطها ضمن رسوم التجهيز. فاتورة زاتكا مع رمز QR كذلك."],
     ["ما الفرق بين إصلاح العطل والميزة الجديدة؟", "إصلاح العطل خلل في ما تم تسليمه. في الاشتراك، الدعم داخل الرسم الشهري من 300 ريال للمتجر ومن 700 مع التطبيقات، مع الاستضافة والنسخ الاحتياطي. في الشراء من 12,000 ريال، إصلاح الأعطال مجاني من شهر إلى شهرين بعد التسليم، ثم صيانة 500 أو 800 ريال شهرياً. الميزات الجديدة تتسعّر بشكل منفصل."],
     ["كم يستغرق التسليم؟", "التسليم سريع ويتوقف على تسليمك للمحتوى في وقته. لا نعد بعدد أيام ثابت."],
+    [STORE_CARE.ar.faqQ, STORE_CARE.ar.faqA],
   ],
   en: [
     ["What does the store cost?", "Setup is 2,000–3,000 SAR once. Subscription: Basic 300 SAR per month (up to 500 products and one staff user), Advanced 500, or 700 and 1,000 with the apps. The annual plan includes two months free and payment is prepaid. Purchase is from 12,000 SAR. After purchase, bug fixes are free for one to two months, then maintenance is 500 or 800 SAR per month. New features are quoted separately."],
@@ -23,6 +26,7 @@ const FAQ = {
     ["Are payment and shipping available?", "Yes. Moyasar, Tabby, Tamara, Al Rajhi and cash on delivery, and Aramex, SMSA, OTO, Torod and Saudi Post, are part of the platform and are connected during setup. The ZATCA QR invoice is included too."],
     ["What is a bug fix versus a new feature?", "A bug fix is a defect in what was delivered. On the subscription, support is included in the monthly fee from 300 SAR for the store and from 700 SAR with the apps, together with hosting and backups. After purchase from 12,000 SAR, bug fixes are free for one to two months, then maintenance is 500 or 800 SAR per month. A new feature is quoted separately."],
     ["How long does delivery take?", "Delivery is fast and depends on you providing the content on time. We do not promise a fixed number of days. App store publishing usually takes about one to two weeks of review."],
+    [STORE_CARE.en.faqQ, STORE_CARE.en.faqA],
   ],
 };
 
@@ -163,6 +167,7 @@ export default async function StorePage({ lang }) {
             </div>
           </div>
         </section>
+        <StoreCare lang={c.lang} />
         <Contact c={c} t={t} waLink={waLink} />
       </main>
       <SiteFooter c={c} />

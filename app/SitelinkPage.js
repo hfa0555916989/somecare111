@@ -13,6 +13,7 @@ import { NOTE_AR, NOTE_EN } from "@/lib/platform-offer";
 import PriceAddendum from "./PriceAddendum";
 import { DemoGallery } from "./StoreShowcase";
 import PreviousWork from "./PreviousWork";
+import StoreCare from "./StoreCare";
 
 const COPY = {
   ar: {
@@ -219,6 +220,7 @@ export default async function SitelinkPage({ id, lang }) {
             {id === "blog" && <BlogList lang={c.lang} />}
           </div>
         )}
+        {id === "packages" && <StoreCare lang={c.lang} />}
       </main>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld).replace(/</g, "\\u003c") }} />
       <SiteFooter c={c} />
