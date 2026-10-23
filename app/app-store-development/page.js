@@ -7,13 +7,13 @@ import PriceAddendum from "../PriceAddendum";
 
 export const dynamic = "force-dynamic";
 
-const TITLE = "إنشاء متجر إلكتروني وتطبيق جوال بـ 1500 ريال | المطور حسن";
-const DESC = "باقة المتجر الكبير شامل التطبيق بـ 1,500 ريال: منتجات غير محدودة ولوحة تحكم وتطبيق iOS وAndroid، والدفع والشحن والدومين وواتساب مجاناً.";
+const TITLE = "إنشاء متجر إلكتروني وتطبيق جوال من 2,000 ريال | المطور حسن";
+const DESC = "باقة المتجر الكبير شامل التطبيق من 2,000 ريال للتجهيز، والاشتراك من 300 ريال شهرياً، أو الشراء من 12,000 ريال: منتجات غير محدودة ولوحة تحكم وتطبيق iOS وAndroid، والدفع والشحن والدومين وواتساب مجاناً.";
 
 export const metadata = {
   title: { absolute: TITLE },
   description: DESC,
-  keywords: "انشاء متجر الكتروني, انشاء متجر الكتروني في السعودية, متجر الكتروني مع تطبيق, تكلفة تطبيق متجر الكتروني, 1500 ريال, المطور حسن",
+  keywords: "انشاء متجر الكتروني, انشاء متجر الكتروني في السعودية, متجر الكتروني مع تطبيق, تكلفة تطبيق متجر الكتروني, من 2000 ريال, المطور حسن",
   alternates: { canonical: "/app-store-development" },
   robots: { index: true, follow: true },
   openGraph: { type: "website", locale: "ar_SA", url: "/app-store-development", title: TITLE, description: DESC, images: ["/images/brand-og.png"] },
@@ -22,8 +22,8 @@ export const metadata = {
 
 const OFFER = {
   name: BIG_STORE_NAME,
-  price: "1,500",
-  unit: "ريال",
+  price: "من 2,000",
+  unit: "ريال للتجهيز",
   desc: BIG_STORE_DESC,
   items: BIG_STORE_FEATURES,
 };
@@ -31,8 +31,8 @@ const OFFER = {
 const FREE = STORE_PAGE_FREE;
 
 const FAQ = [
-  ["كم تكلفة إنشاء متجر إلكتروني مع تطبيق؟", "باقة المتجر الكبير شامل التطبيق بـ 1,500 ريال: منتجات غير محدودة، سلة، لوحة تحكم، وتطبيق iOS و Android."],
-  ["هل التطبيق داخل سعر الـ 1,500 ريال؟", "نعم. تطبيق iOS و Android جزء من الباقة نفسها، وليس عرضاً بعده."],
+  ["كم تكلفة إنشاء متجر إلكتروني مع تطبيق؟", "باقة المتجر الكبير شامل التطبيق من 2,000 ريال للتجهيز، والاشتراك من 300 ريال شهرياً، أو الشراء من 12,000 ريال: منتجات غير محدودة، سلة، لوحة تحكم، وتطبيق iOS و Android."],
+  ["هل التطبيق داخل السعر من 2,000 ريال؟", "تطبيق iOS و Android جزء من الباقة نفسها، وليس عرضاً بعده. التجهيز من 2,000 ريال، والاشتراك من 300 ريال شهرياً، أو الشراء من 12,000 ريال."],
   ["هل بوابة الدفع والشحن داخلة في السعر؟", "نعم، مجاناً داخل الباقة: بوابة الدفع، وربط الشحن، والدومين وشهادة SSL، وربط واتساب، وإشعارات الطلبات، وتحليلات جوجل."],
   ["هل التعامل موثق؟", "نعم، عرض سعر وعقد رسمي مرتبطان بوثيقة العمل الحر، والتحويل على آيبان باسم المطور حسن فقط."],
   ["كم الدعم الفني؟", "الدعم الفني مجاني أول سنة مع الدومين والاستضافة. السنة الثانية: الدعم بـ 200 ريال للسنة."],
@@ -56,7 +56,7 @@ const LD = {
       name: BIG_STORE_NAME,
       description: DESC,
       brand: { "@type": "Brand", name: "المطور حسن" },
-      offers: { "@type": "Offer", price: "1500", priceCurrency: "SAR", availability: "https://schema.org/InStock", url: "https://www.hassandev.sa/app-store-development" },
+      offers: { "@type": "AggregateOffer", lowPrice: "2000", highPrice: "30000", priceCurrency: "SAR", offerCount: 2, availability: "https://schema.org/InStock", url: "https://www.hassandev.sa/app-store-development" },
     },
     {
       "@type": "FAQPage",
@@ -65,7 +65,7 @@ const LD = {
   ],
 };
 
-const WA = "https://wa.me/966530779934?text=" + encodeURIComponent("أبغى باقة المتجر الكبير شامل التطبيق بـ 1500 ريال");
+const WA = "https://wa.me/966530779934?text=" + encodeURIComponent("أبغى باقة المتجر الكبير شامل التطبيق من 2,000 ريال للتجهيز، والاشتراك من 300 ريال شهرياً، أو الشراء من 12,000 ريال");
 
 export default async function AppStoreDevelopment() {
   const c = localize(await getContent(), "ar");
@@ -76,12 +76,12 @@ export default async function AppStoreDevelopment() {
       <main id="top">
         <section className="hero" style={{ padding: "56px 0 24px", textAlign: "center" }}>
           <div className="wrap">
-            <p className="hero-badge">متجر إلكتروني مع تطبيق جوال · 1,500 ريال</p>
+            <p className="hero-badge">متجر إلكتروني مع تطبيق جوال · من 2,000 ريال</p>
             <h1 style={{ maxWidth: 900, marginInline: "auto" }}>
-              إنشاء متجر إلكتروني وتطبيق جوال <span className="hl">بـ 1,500 ريال</span> مع المطور حسن
+              إنشاء متجر إلكتروني وتطبيق جوال <span className="hl">من 2,000 ريال</span> مع المطور حسن
             </h1>
             <p className="lead" style={{ maxWidth: 780, marginInline: "auto" }}>
-              أنا <strong>المطور حسن</strong>. أبني لك المتجر ولوحة التحكم وتطبيق iOS و Android في باقة واحدة بسعر 1,500 ريال، والدفع والشحن والدومين وواتساب مجاناً داخلها.
+              أنا <strong>المطور حسن</strong>. أبني لك المتجر ولوحة التحكم وتطبيق iOS و Android في باقة واحدة من 2,000 ريال للتجهيز، والاشتراك من 300 ريال شهرياً، أو الشراء من 12,000 ريال، والدفع والشحن والدومين وواتساب مجاناً داخلها.
             </p>
             <div className="cta-row" style={{ justifyContent: "center" }}>
               <a className="btn" href={WA} target="_blank" rel="noopener">اطلب الباقة على واتساب</a>
@@ -93,7 +93,7 @@ export default async function AppStoreDevelopment() {
         <section id="packages" className="sec">
           <div className="wrap">
             <h2>باقة المتجر الكبير شامل التطبيق</h2>
-            <p className="sub">سعر واحد معلن: 1,500 ريال للمتجر مع التطبيق. لا توجد باقة متجر أو تطبيق بسعر آخر في هذه الصفحة.</p>
+            <p className="sub">التجهيز من 2,000 ريال، والاشتراك من 300 ريال شهرياً، أو الشراء من 12,000 ريال للمتجر مع التطبيق.</p>
             <div className="pk-grid">
               <article id="big-store" className="pk pk-featured">
                 <div className="pk-head"><div><h3>{OFFER.name}</h3></div></div>
@@ -113,7 +113,7 @@ export default async function AppStoreDevelopment() {
         <section id="addons" className="sec sec-alt">
           <div className="wrap narrow">
             <h2>إضافات داخلة مجاناً</h2>
-            <p className="sub">هذه البنود جزء من سعر 1,500 ريال، وليست فاتورة بعدها.</p>
+            <p className="sub">هذه البنود جزء من التجهيز من 2,000 ريال، وليست فاتورة بعدها.</p>
             <div className="addons">
               {FREE.map((item) => (
                 <div key={item} className="addon">
@@ -127,7 +127,7 @@ export default async function AppStoreDevelopment() {
 
         <section id="faq" className="sec">
           <div className="wrap narrow">
-            <h2>أسئلة عن سعر 1,500 ريال</h2>
+            <h2>أسئلة عن السعر من 2,000 ريال</h2>
             <div className="faq">
               {FAQ.map(([q, a], i) => (
                 <details key={q} open={i === 0}><summary>{q}</summary><p>{a}</p></details>

@@ -120,7 +120,7 @@ export default async function SeoArticle({ id }) {
           </div>
           <p>
             <a className="btn" href={wa} target="_blank" rel="noopener">
-              <WaIcon /> اطلب باقة 1500 ريال
+              <WaIcon /> اطلب باقة من 2,000 ريال
             </a>
           </p>
           <section className="related">
