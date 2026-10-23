@@ -2,8 +2,12 @@ import CustomPage, { pageMetadata } from "../CustomPage";
 
 export const dynamic = "force-dynamic";
 
-export const generateMetadata = ({ params }) => pageMetadata(params.page, "ar");
+export async function generateMetadata({ params }) {
+  const { page } = await params;
+  return pageMetadata(page, "ar");
+}
 
-export default function DynamicPage({ params }) {
-  return <CustomPage slug={params.page} lang="ar" />;
+export default async function DynamicPage({ params }) {
+  const { page } = await params;
+  return <CustomPage slug={page} lang="ar" />;
 }

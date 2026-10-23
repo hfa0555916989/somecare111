@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 // مسار لوحة التحكم السري. لتغييره لاحقاً غيّر هذا السطر فقط.
 const ADMIN_PATH = "/admin552255";
 
-export function middleware(req) {
+export function proxy(req) {
   const { pathname } = req.nextUrl;
 
   // النسخة الإنجليزية: تخبر layout بلغة الصفحة حتى يضبط lang و dir

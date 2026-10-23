@@ -16,7 +16,7 @@ const fail = (e) =>
   );
 
 export async function GET() {
-  if (!isAuthed()) return deny();
+  if (!(await isAuthed())) return deny();
   const [items, settings, docs] = await Promise.all([listEntries(), getSettings(), listDocs()]);
   // العروض والعقود (لربط الإيراد بها وحساب المستحقات)
   // الفواتير غير المدفوعة تُحسب مستحقات، إلا إذا كانت مبنية على عقد موافق عليه (لأن العقد محسوب أصلاً)
@@ -35,7 +35,7 @@ export async function GET() {
 
 // إضافة عملية واحدة أو عدة عمليات ({ entries: [...] })
 export async function POST(req) {
-  if (!isAuthed()) return deny();
+  if (!(await isAuthed())) return deny();
   const b = await req.json().catch(() => ({}));
   const list = (Array.isArray(b.entries) ? b.entries : [b]).slice(0, 50).map(cleanEntry).filter((e) => e.amount > 0);
   if (!list.length) return NextResponse.json({ error: "اكتب المبلغ" }, { status: 400 });
@@ -48,7 +48,7 @@ export async function POST(req) {
 
 // تعديل عملية ({ id, ... }) أو حفظ الإعدادات ({ settings })
 export async function PUT(req) {
-  if (!isAuthed()) return deny();
+  if (!(await isAuthed())) return deny();
   const b = await req.json().catch(() => ({}));
   try {
     if (b.settings) return NextResponse.json({ settings: await saveSettings(b.settings) });
@@ -63,7 +63,7 @@ export async function PUT(req) {
 }
 
 export async function DELETE(req) {
-  if (!isAuthed()) return deny();
+  if (!(await isAuthed())) return deny();
   const id = new URL(req.url).searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id" }, { status: 400 });
   try {

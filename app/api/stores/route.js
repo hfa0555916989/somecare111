@@ -52,7 +52,7 @@ async function refresh(store) {
 }
 
 export async function GET(req) {
-  if (!isAuthed()) return deny();
+  if (!(await isAuthed())) return deny();
   const what = new URL(req.url).searchParams.get("what");
   try {
     if (what === "log") return NextResponse.json({ log: await listLog() });
@@ -69,7 +69,7 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
-  if (!isAuthed()) return deny();
+  if (!(await isAuthed())) return deny();
   const b = await req.json().catch(() => ({}));
   const dryRun = forcedDry() || !!b.dryRun;
   const one = async () => {

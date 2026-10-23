@@ -17,7 +17,7 @@ export async function POST(request) {
       maxBytes: 100 * 1024 * 1024,
       prefix: "archive/",
       authorize: async () => {
-        if (!isAuthed()) throw new Error("غير مصرّح");
+        if (!(await isAuthed())) throw new Error("غير مصرّح");
         if (!privateEnabled()) throw new Error("المخزن الخاص غير مربوط");
       },
     });

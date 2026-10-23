@@ -49,7 +49,7 @@ Give a practical analysis:
 Base everything on the data. If there is too little data, say so and keep the lists short. Do not invent numbers.`;
 
 export async function POST(req) {
-  if (!isAuthed()) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!(await isAuthed())) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   if (!aiEnabled()) return NextResponse.json({ error: "أضف ANTHROPIC_API_KEY في Vercel لتفعيل المحاسب الذكي." }, { status: 503 });
 
   const b = await req.json().catch(() => ({}));

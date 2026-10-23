@@ -8,7 +8,8 @@ export const dynamic = "force-dynamic";
 
 // روابط الوثائق خاصة بالعميل: لا تُفهرس في محركات البحث
 export async function generateMetadata({ params }) {
-  const doc = await getDocByToken(params.token);
+  const { token } = await params;
+  const doc = await getDocByToken(token);
   if (!doc) return { robots: { index: false, follow: false } };
   return {
     title: `${TYPES[doc.type]} ${doc.number}${doc.title ? " | " + doc.title : ""}`,
@@ -30,7 +31,8 @@ const groupIban = (s) => String(s || "").replace(/(.{4})/g, "$1 ").trim();
 const http = (u) => /^(https?:\/\/|\/)/i.test(String(u || ""));
 
 export default async function DocPage({ params }) {
-  const doc = await getDocByToken(params.token);
+  const { token } = await params;
+  const doc = await getDocByToken(token);
   if (!doc) notFound();
   const c = await getContent();
   const accepted = doc.status === "accepted";

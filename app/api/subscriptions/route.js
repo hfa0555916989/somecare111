@@ -15,7 +15,7 @@ const fail = (e) => {
 };
 
 export async function GET() {
-  if (!isAuthed()) return deny();
+  if (!(await isAuthed())) return deny();
   try {
     const data = await listSubscriptions();
     return NextResponse.json({ ...data, plans: PLANS });
@@ -25,7 +25,7 @@ export async function GET() {
 }
 
 export async function POST(req) {
-  if (!isAuthed()) return deny();
+  if (!(await isAuthed())) return deny();
   const b = await req.json().catch(() => ({}));
   try {
     return NextResponse.json({ item: await saveSubscription(b) });
@@ -35,7 +35,7 @@ export async function POST(req) {
 }
 
 export async function PUT(req) {
-  if (!isAuthed()) return deny();
+  if (!(await isAuthed())) return deny();
   const b = await req.json().catch(() => ({}));
   if (!b.id) return NextResponse.json({ error: "المعرّف مطلوب" }, { status: 400 });
   try {
@@ -47,7 +47,7 @@ export async function PUT(req) {
 }
 
 export async function DELETE(req) {
-  if (!isAuthed()) return deny();
+  if (!(await isAuthed())) return deny();
   const id = new URL(req.url).searchParams.get("id");
   if (!id) return NextResponse.json({ error: "المعرّف مطلوب" }, { status: 400 });
   try {
