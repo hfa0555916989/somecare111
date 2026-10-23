@@ -14,6 +14,7 @@ import Assistant from "./Assistant";
 import Ideas from "./Ideas";
 import Guide from "./Guide";
 import Stores from "./Stores";
+import Subscriptions from "./Subscriptions";
 
 // مسودة التعديلات على هذا الجهاز (تُحفظ تلقائياً حتى لا تضيع قبل الضغط على «حفظ التغييرات»)
 const DRAFT_KEY = "admin-draft";
@@ -445,6 +446,7 @@ const GROUPS = [
       ["docs", "العقود وعروض الأسعار", "file"],
       ["projects", "المشاريع والمفاتيح", "key"],
       ["stores", "متاجر العملاء", "store"],
+      ["subs", "الاشتراكات والصيانة", "renew"],
       ["archive", "الأرشيف والملفات", "archive"],
       ["guide", "الدليل والتزاماتي", "book"],
     ],
@@ -681,7 +683,7 @@ function blankDoc(type, k, catalog = []) {
     sections,
     discount: 0,
     vatRate: type === "invoice" ? 0 : Number(k.vatRate) || 0,
-    recurring: type === "quote" ? ["بعد الشراء: عقد صيانة من 500 إلى 800 ريال شهرياً بعد شهر إلى شهرين من إصلاح الأعطال. الاشتراك السنوي بشهرين مجاناً."] : [],
+    recurring: type === "quote" ? ["بعد الشراء: صيانة 500 أو 800 ريال شهرياً بعد شهر إلى شهرين من إصلاح الأعطال. الاشتراك السنوي بشهرين مجاناً، والدفع مقدّم."] : [],
     duration: "",
     terms: type === "invoice" ? [...INVOICE_TERMS] : [...((type === "contract" ? k.contractTerms : k.quoteTerms) || [])],
     annex: [],
@@ -1299,6 +1301,7 @@ export default function Admin() {
   const [msg, setMsg] = useState("");
   const [saving, setSaving] = useState(false);
   const [newCount, setNewCount] = useState(0);
+  const [lateCount, setLateCount] = useState(0);
   const [blob, setBlob] = useState(true);
   const [storage, setStorage] = useState("redis");
   // آخر نسخة محفوظة في الموقع (لمعرفة هل توجد تعديلات لم تُحفظ)
@@ -1326,6 +1329,10 @@ export default function Admin() {
     fetch("/api/inquiries")
       .then((x) => (x.ok ? x.json() : null))
       .then((x) => x && setNewCount(x.items.filter((i) => i.status === "new").length))
+      .catch(() => {});
+    fetch("/api/subscriptions")
+      .then((x) => (x.ok ? x.json() : null))
+      .then((x) => x && setLateCount(x.summary?.overdue || 0))
       .catch(() => {});
   }
   useEffect(() => {
@@ -1526,6 +1533,7 @@ export default function Admin() {
           <button key={k} className={tab === k ? "on" : ""} onClick={() => setTab(k)}>
             {l}
             {k === "inquiries" && newCount > 0 && <span className="count">{newCount}</span>}
+            {k === "subs" && lateCount > 0 && <span className="count">{lateCount}</span>}
           </button>
         ))}
       </div>
@@ -1566,10 +1574,11 @@ export default function Admin() {
                 <h2>{g}</h2>
                 <div className="adm-tiles">
                   {items.map(([k, l, ic]) => (
-                    <button key={k} type="button" className={"adm-tile" + (k === "accounting" || k === "assistant" ? " hl" : "")} onClick={() => setTab(k)}>
+                    <button key={k} type="button" className={"adm-tile" + (k === "accounting" || k === "assistant" || k === "subs" ? " hl" : "")} onClick={() => setTab(k)}>
                       <AIcon name={ic} size={28} />
                       <span>{l}</span>
                       {k === "inquiries" && newCount > 0 && <span className="count">{newCount}</span>}
+                      {k === "subs" && lateCount > 0 && <span className="count">{lateCount}</span>}
                     </button>
                   ))}
                 </div>
@@ -1604,6 +1613,7 @@ export default function Admin() {
         {tab === "ideas" && <Ideas onNavigate={(k) => setTab(k)} />}
         {tab === "projects" && <Projects />}
         {tab === "stores" && <Stores />}
+        {tab === "subs" && <Subscriptions onCount={setLateCount} />}
         {tab === "archive" && <Archive onRestore={restoreImage} />}
         {tab === "guide" && <Guide procedures={d.guide?.procedures || []} setProcedures={(v) => setData((x) => ({ ...x, guide: { ...x.guide, procedures: v } }))} />}
 

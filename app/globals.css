@@ -716,8 +716,51 @@ p{margin:0}
 @media(max-width:430px){
   .offer-band{width:min(760px,calc(100% - 24px))}
   .offer-card{padding:16px 14px;border-radius:16px}
-  .offer-rows li{padding:12px}
+  .offer-rows li,.offer-plans li{padding:12px}
 }
+.offer-plans{list-style:none;margin:0;padding:0;display:grid;gap:8px;min-width:0}
+.offer-plans li{
+  box-sizing:border-box;min-width:0;max-width:100%;display:grid;gap:2px;padding:12px 14px;border-radius:14px;
+  background:color-mix(in srgb,var(--bg) 72%,transparent);
+  border:1px solid color-mix(in srgb,var(--text) 10%,transparent);
+}
+.offer-plan-h{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;justify-content:space-between}
+.offer-plan-h strong{overflow-wrap:anywhere}
+.offer-plan-h span{color:var(--price);font-family:var(--font-head);font-weight:700;line-height:1.45}
+.offer-plans p,.offer-policy{margin:0;line-height:1.75;overflow-wrap:anywhere}
+.offer-group{margin:4px 0 0;font-size:1.05rem}
+.sub-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.sub-kpi{min-width:0;background:#131d36;border:1px solid #ffffff1a;border-radius:14px;padding:12px;display:grid;gap:2px}
+.sub-kpi span,.sub-kpi small{color:#8b96b8;overflow-wrap:anywhere}
+.sub-kpi b{font-size:1.35rem;color:#f3d98b}
+.sub-kpi.soon b{color:#f3d98b}
+.sub-kpi.late b{color:#ff9b9b}
+.sub-search input{width:100%}
+.sub-filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.sub-filters button{background:#1a2647;color:#e8ecf8;border:1px solid #ffffff26;border-radius:999px;padding:6px 14px;font-family:inherit;cursor:pointer}
+.sub-filters button.on{background:#d4a84b;color:#0b1628;border-color:#d4a84b}
+.sub-list{display:grid;gap:12px}
+.sub-card,.sub-actions,.sub-meta{min-width:0}
+.sub-actions{display:flex;flex-wrap:wrap;gap:8px}
+.sub-pill{border-radius:999px;padding:2px 10px;font-size:.82rem;font-weight:700;border:1px solid #ffffff26}
+.sub-pill.ok{background:#12351f;color:#7ee2b0}
+.sub-pill.soon{background:#2a2410;color:#f3d98b}
+.sub-pill.late{background:#3a2a10;color:#f3c27a}
+.sub-pill.pause{background:#3a2410;color:#ffb067}
+.sub-pill.stop{background:#3a1416;color:#ff9b9b}
+.sub-answer{margin:0;overflow-wrap:anywhere;line-height:1.7}
+.sub-answer.ok{color:#7ee2b0}
+.sub-answer.soon{color:#f3d98b}
+.sub-answer.late,.sub-answer.pause{color:#ffb067}
+.sub-answer.stop{color:#ff9b9b}
+.sub-meta{display:grid;gap:6px;margin:0}
+.sub-meta div{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 12px}
+.sub-meta dt{color:#8b96b8}
+.sub-meta dd{margin:0;overflow-wrap:anywhere}
+.sub-meta a{color:#d4a84b}
+.sub-pays{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.sub-pays li{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-width:0}
+@media(max-width:420px){.sub-kpis{grid-template-columns:1fr}}
 
 /* متاجر العملاء */
 .st-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
