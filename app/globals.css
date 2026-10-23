@@ -175,13 +175,25 @@ p{margin:0}
 .gal figcaption{margin-top:8px;color:var(--muted);font-size:.92rem}
 .gal figure{margin:0}
 
-.work-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:28px}
-.work-card{display:flex;flex-direction:column;background:var(--surface);border:1px solid color-mix(in srgb,var(--text) 10%,transparent);border-radius:18px;overflow:hidden}
-.work-card img{width:100%;aspect-ratio:16/10;object-fit:cover;object-position:top;display:block}
-.work-body{display:flex;flex-direction:column;gap:8px;padding:16px 18px 18px;flex:1}
-.work-body h3{margin:0;font-size:1.12rem}
-.work-body p{margin:0;color:var(--muted);line-height:1.7}
-.work-body .more-link{margin-top:auto}
+.work-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;margin-top:28px;align-items:stretch}
+.work-card{display:flex;flex-direction:column;min-width:0;background:var(--surface);border:1px solid color-mix(in srgb,var(--text) 10%,transparent);border-radius:22px;padding:16px 14px 18px}
+.work-phone{
+  display:block;box-sizing:border-box;width:min(100%,320px);max-width:100%;margin:0 auto;
+  padding:14px 10px 16px;border-radius:32px;text-decoration:none;
+  background:linear-gradient(180deg,#16263f 0%,#0c1628 100%);
+  border:1.5px solid color-mix(in srgb,var(--price) 62%,transparent);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.05);
+}
+.work-phone-speaker{display:block;width:64px;height:6px;margin:0 auto 10px;border-radius:999px;background:color-mix(in srgb,var(--price) 48%,#9aabc8)}
+.work-phone img{width:100%;max-width:100%;height:auto;aspect-ratio:390/844;object-fit:cover;object-position:top center;border-radius:20px;background:#fff}
+.work-body{display:flex;flex-direction:column;gap:8px;padding:14px 6px 0;flex:1;min-width:0}
+.work-body h3{margin:0;font-size:1.12rem;overflow-wrap:anywhere}
+.work-body p{margin:0;color:var(--muted);line-height:1.7;overflow-wrap:anywhere}
+.work-body .more-link{margin-top:auto;overflow-wrap:anywhere}
+@media(max-width:720px){
+  .work-grid{grid-template-columns:minmax(0,1fr);max-width:420px;margin-inline:auto}
+  .work-phone{width:min(100%,300px)}
+}
 .previous-work-embed{margin-top:8px}
 .previous-work-lead{margin-bottom:0}
 
@@ -678,7 +690,34 @@ p{margin:0}
 .faq summary::-webkit-details-marker{display:none}
 .faq summary::before{content:"+";flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;color:var(--price);border:1.5px solid color-mix(in srgb,var(--price) 60%,transparent);font-weight:700;line-height:1}
 .faq details[open] summary::before{content:"−"}
-.faq p{color:var(--muted);margin-top:10px;line-height:1.8}
+.faq p{color:var(--muted);margin-top:10px;line-height:1.8;overflow-wrap:anywhere}
+.faq summary{overflow-wrap:anywhere}
+
+.offer-band{width:min(760px,calc(100% - 32px));max-width:100%;margin:12px auto 56px}
+.wrap .offer-band,.prose .offer-band{width:100%;margin-inline:0}
+.offer-card{
+  box-sizing:border-box;width:100%;max-width:100%;min-width:0;
+  background:var(--surface);
+  border:1.5px solid color-mix(in srgb,var(--price) 55%,transparent);
+  border-radius:20px;padding:18px 16px;
+  display:grid;gap:14px;
+}
+.offer-card h2{margin:0;font-size:clamp(1.2rem,4.6vw,1.65rem);line-height:1.35;overflow-wrap:anywhere}
+.offer-rows{list-style:none;margin:0;padding:0;display:grid;gap:10px;min-width:0}
+.offer-rows li{
+  box-sizing:border-box;min-width:0;max-width:100%;
+  display:grid;gap:4px;padding:12px 14px;border-radius:14px;
+  background:color-mix(in srgb,var(--bg) 72%,transparent);
+  border:1px solid color-mix(in srgb,var(--text) 10%,transparent);
+}
+.offer-label{color:var(--muted);font-size:.92rem;line-height:1.4}
+.offer-rows strong{color:var(--price);font-family:var(--font-head);font-size:clamp(1rem,4.2vw,1.2rem);font-weight:700;line-height:1.45;overflow-wrap:anywhere}
+.offer-rows p{margin:0;color:var(--text);line-height:1.75;overflow-wrap:anywhere}
+@media(max-width:430px){
+  .offer-band{width:min(760px,calc(100% - 24px))}
+  .offer-card{padding:16px 14px;border-radius:16px}
+  .offer-rows li{padding:12px}
+}
 
 /* متاجر العملاء */
 .st-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}

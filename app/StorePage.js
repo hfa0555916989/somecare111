@@ -11,17 +11,17 @@ import { NOTE_AR, NOTE_EN, OFFER_DESC_AR, OFFER_DESC_EN, offerJsonLd } from "@/l
 
 const FAQ = {
   ar: [
-    ["كم تكلفة إنشاء المتجر؟", "الاشتراك الذي نوصي به: تجهيز من 2,000 إلى 3,000 ريال مرة واحدة، ثم 300 إلى 500 ريال شهرياً بدون تطبيقات أو 700 إلى 1,000 مع التطبيقات، وسنوياً بشهرين مجاناً. الشراء من 12,000 إلى 18,000 ريال، أو 20,000 إلى 30,000 مع التطبيقين."],
+    ["كم تكلفة إنشاء المتجر؟", "التجهيز من 2,000 إلى 3,000 ريال مرة واحدة. الاشتراك من 300 ريال شهرياً (300 إلى 500 بدون تطبيقات أو 700 إلى 1,000 مع التطبيقات) ويشمل الاستضافة والدعم والنسخ الاحتياطي، وسنوياً بشهرين مجاناً. الشراء من 12,000 ريال (12,000 إلى 18,000 للمتجر أو 20,000 إلى 30,000 مع التطبيقين)، وبعد التسليم إصلاح الأعطال مجاني من شهر إلى شهرين ثم صيانة من 500 إلى 800 ريال شهرياً."],
     ["هل التطبيقان ضمن الباقة؟", "نعم. iOS وAndroid ضمن باقة التطبيقات، وإشعارات الدفع تصل معهما عند التسليم. النشر على App Store وGoogle Play يعتمد على مراجعة المتجر، وغالباً من أسبوع إلى أسبوعين، ويحتاج حسابات المطوّر الخاصة بك (رسوم Apple السنوية ورسوم Google لمرة واحدة)."],
     ["هل بوابات الدفع والشحن متاحة؟", "نعم. ميسر وتابي وتمارا والراجحي والدفع عند الاستلام، وأرامكس وسمسا وأوتو وطرود والبريد السعودي، جزء من المنصة، وربطها ضمن رسوم التجهيز. فاتورة زاتكا مع رمز QR كذلك."],
-    ["ما الفرق بين إصلاح العطل والميزة الجديدة؟", "إصلاح العطل خلل في ما تم تسليمه، وهو داخل الدعم. طلب الميزة الجديدة يُسعَّر ويُدفع بشكل مستقل. بعد الشراء دعم مجاني من شهر إلى شهرين ثم صيانة من 500 إلى 800 ريال شهرياً."],
+    ["ما الفرق بين إصلاح العطل والميزة الجديدة؟", "إصلاح العطل خلل في ما تم تسليمه. في الاشتراك، الدعم داخل الرسم الشهري من 300 ريال مع الاستضافة والنسخ الاحتياطي. في الشراء من 12,000 ريال، إصلاح الأعطال مجاني من شهر إلى شهرين بعد التسليم، ثم صيانة من 500 إلى 800 ريال شهرياً. الميزات الجديدة تتسعّر بشكل منفصل."],
     ["كم يستغرق التسليم؟", "التسليم سريع ويتوقف على تسليمك للمحتوى في وقته. لا نعد بعدد أيام ثابت."],
   ],
   en: [
-    ["What does the store cost?", "The subscription we recommend: setup 2,000–3,000 SAR once, then 300–500 SAR per month without apps or 700–1,000 with apps, and two months free on the annual plan. Purchase is 12,000–18,000 SAR, or 20,000–30,000 with both apps."],
+    ["What does the store cost?", "Setup is 2,000–3,000 SAR once. The subscription is from 300 SAR per month (300–500 without apps or 700–1,000 with apps) and includes hosting, support and backups, with two months free on the annual plan. Purchase is from 12,000 SAR (12,000–18,000 for the store or 20,000–30,000 with both apps). After purchase, bug fixes are free for one to two months, then maintenance is 500–800 SAR per month."],
     ["Are both apps included?", "Yes. iOS and Android are part of the apps plan, and push notifications are included at delivery. App Store and Google Play publishing depends on store review, usually about one to two weeks, and needs your developer accounts."],
     ["Are payment and shipping available?", "Yes. Moyasar, Tabby, Tamara, Al Rajhi and cash on delivery, and Aramex, SMSA, OTO, Torod and Saudi Post, are part of the platform and are connected during setup. The ZATCA QR invoice is included too."],
-    ["What is a bug fix versus a new feature?", "A bug fix is a defect in what was delivered, and it is covered by support. A new feature is quoted and paid separately. After purchase, bug fixes are free for one to two months, then maintenance is 500–800 SAR per month."],
+    ["What is a bug fix versus a new feature?", "A bug fix is a defect in what was delivered. On the subscription, support is included in the monthly fee from 300 SAR, together with hosting and backups. After purchase from 12,000 SAR, bug fixes are free for one to two months, then maintenance is 500–800 SAR per month. A new feature is quoted separately."],
     ["How long does delivery take?", "Delivery is fast and depends on you providing the content on time. We do not promise a fixed number of days. App store publishing usually takes about one to two weeks of review."],
   ],
 };

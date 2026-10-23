@@ -23,8 +23,9 @@ export default function PreviousWork({ lang, showHeading = true }) {
             const desc = lang === "en" ? item.descEn : item.descAr;
             return (
               <article key={item.id} className="work-card">
-                <a href={item.url} target="_blank" rel="noopener noreferrer">
-                  <img src={item.image} alt={name} width={1280} height={800} loading="lazy" />
+                <a className="work-phone" href={item.url} target="_blank" rel="noopener noreferrer">
+                  <span className="work-phone-speaker" aria-hidden="true" />
+                  <img src={item.image} alt={name} width={390} height={844} loading="lazy" decoding="async" />
                 </a>
                 <div className="work-body">
                   <h3>{name}</h3>
