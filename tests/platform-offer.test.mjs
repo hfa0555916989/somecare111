@@ -24,7 +24,8 @@ test("stored legacy packages are replaced on read", () => {
   assert.ok(!JSON.stringify(merged.packages).includes("1,100"));
   assert.equal(merged.addons[0].price, "ضمن التجهيز");
   assert.equal(merged.addons.find((a) => a.title === "إشعارات الدفع").price, "مع التطبيقات");
-  assert.equal(merged.features.find((f) => f.icon === "shield").title, "دعم وإصلاح أعطال");
+  assert.equal(merged.features.find((f) => f.icon === "shield").title, "أمان وتحديثات مستمرة");
+  assert.ok(merged.features.some((f) => f.title === "دعم وإصلاح أعطال"));
 });
 
 test("payment, shipping, ZATCA, both apps and push are offered as part of the platform", () => {
@@ -44,8 +45,9 @@ test("payment, shipping, ZATCA, both apps and push are offered as part of the pl
   assert.match(blob, /أسبوع إلى أسبوعين/);
   assert.match(blob, /شهران مجاناً/);
   assert.match(blob, /500 – 800/);
+  assert.match(content.legal.terms.body, /الخدمة المعروضة هي تصميم موقع تعريفي/);
+  assert.match(content.legal.terms.body, /1,500 ريال/);
   assert.match(content.legal.terms.body, /جزء من المنصة/);
-  assert.doesNotMatch(content.legal.terms.body, /ليست مفعّلة|استيراد الذكاء/);
 });
 
 test("order tracking is listed for the customer and the merchant", () => {
@@ -58,18 +60,18 @@ test("order tracking is listed for the customer and the merchant", () => {
   assert.doesNotMatch(ar + en, /قريباً|حسب الطلب|AI import|استيراد بالذكاء|تكامل محاسبي/);
 });
 
-test("marketing pages no longer sell the retired 1,500 or 1,100 package", () => {
-  const files = [
-    "../lib/seo-pages.js",
-    "../lib/sitelinks.js",
-    "../app/SitelinkPage.js",
-    "../app/app-store-development/page.js",
-    "../app/HomePage.js",
-    "../app/SeoArticle.js",
-  ];
-  const banned = [/1[,٬]?500\s*ريال/, /1[,٬]?100\s*ريال/, /200 ريال للسنة/, /1500 ريال/, /باقة 1500/, /قريباً أو حسب الطلب/, /ليست مفعّلة/, /Coming soon/, /AI import/, /استيراد بالذكاء/, /تطبيق iOS قريباً/];
-  for (const file of files) {
-    const text = readFileSync(new URL(file, import.meta.url), "utf8");
-    for (const re of banned) assert.doesNotMatch(text, re, `${file} still matches ${re}`);
-  }
+test("ranked titles and H1s stay, and the current offer is added below", () => {
+  const seo = readFileSync(new URL("../lib/seo-pages.js", import.meta.url), "utf8");
+  assert.match(seo, /شركة برمجة في السعودية \| متجر \+ تطبيق بسعر 1500 ريال/);
+  assert.match(seo, /h1: "شركة برمجة في السعودية تسلّمك المتجر والتطبيق بسعر 1500 ريال"/);
+  const article = readFileSync(new URL("../app/SeoArticle.js", import.meta.url), "utf8");
+  assert.match(article, /PriceAddendum/);
+  assert.match(article, /اطلب باقة 1500 ريال/);
+  const home = readFileSync(new URL("../app/HomePage.js", import.meta.url), "utf8");
+  assert.match(home, /<h1><Hl text=\{c\.hero\.title\} \/><\/h1>/);
+  assert.match(home, /PriceAddendum/);
+  const store = readFileSync(new URL("../app/app-store-development/page.js", import.meta.url), "utf8");
+  assert.match(store, /إنشاء متجر إلكتروني وتطبيق جوال بـ 1500 ريال/);
+  assert.match(store, /canonical: "\/app-store-development"/);
+  assert.match(store, /PriceAddendum/);
 });

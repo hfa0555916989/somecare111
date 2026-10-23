@@ -5,8 +5,11 @@ import { Icon, Hl, plain } from "./Icons";
 import ContactForm from "./ContactForm";
 import { turnstileSiteKey } from "@/lib/turnstile";
 import PreviousWork from "./PreviousWork";
-import { PREVIOUS_WORK } from "@/lib/previous-work";
 import { HOME_LANDING } from "@/lib/home-landing";
+import PriceAddendum from "./PriceAddendum";
+import { isBigStorePackage } from "@/lib/big-store";
+import { PackagePoints, StoreShowcase, packageShowcase } from "./PackagePoints";
+
 // روابط النسختين لجوجل (hreflang)
 export const homeAlternates = (lang) => ({
   canonical: lang === "en" ? "/en" : "/",
@@ -14,6 +17,11 @@ export const homeAlternates = (lang) => ({
 });
 
 const digits = (s) => String(s || "").replace(/\D/g, "");
+
+function youtubeId(url) {
+  const m = String(url || "").match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{11})/);
+  return m ? m[1] : null;
+}
 
 export function WaIcon({ size = 22 }) {
   return (
@@ -27,10 +35,10 @@ export function WaIcon({ size = 22 }) {
 export default async function HomePage({ lang }) {
   const c = localize(await getContent(), lang);
   const t = ui(c.lang);
+  const sec = c.security || {};
+  const showSecurity = sec.show !== false && !!sec.title;
   const waLink = makeWaLink(c);
-  const copy = lang === "en" ? HOME_LANDING.en : HOME_LANDING.ar;
-  const shots = [0, 4, 3, 2].map((i) => PREVIOUS_WORK[i]).filter(Boolean);
-  const base = prefix(lang);
+  const yt = youtubeId(c.video.url);
 
   return (
     <>
@@ -40,31 +48,181 @@ export default async function HomePage({ lang }) {
         <section className="hero">
           <div className="wrap hero-in">
             <div className="hero-text">
-              <p className="hero-badge">{c.brand?.name}</p>
-              <h1>{copy.h1}</h1>
-              <p className="lead">{copy.lead}</p>
+              <p className="hero-badge">{c.hero.badge}</p>
+              <h1><Hl text={c.hero.title} /></h1>
+              <p className="lead">{c.hero.subtitle}</p>
+              <div className="cta-row">
+                <a className="btn" href={waLink(showSecurity ? plain(sec.navLabel || sec.title) : undefined)} target="_blank" rel="noopener">
+                  <WaIcon /> {c.hero.primaryButton}
+                </a>
+                <a className="btn btn-ghost" href={showSecurity ? "#security" : "#packages"}>
+                  {c.hero.secondaryButton}
+                </a>
+              </div>
               <p className="avail">{c.contact.availability}</p>
             </div>
             <div className="hero-media">
-              <div className="hero-collage">
-                {shots.map((shot) => (
-                  <a key={shot.id} href={shot.url} target="_blank" rel="noopener noreferrer">
-                    <img src={shot.image} alt={lang === "en" ? shot.nameEn : shot.nameAr} width={1280} height={800} />
-                  </a>
-                ))}
-              </div>
+              {c.hero.image && <img src={c.hero.image} alt="" />}
             </div>
           </div>
         </section>
 
-        <section id="paths" className="sec" aria-label={copy.doorsLabel}>
+        {showSecurity && <Security s={sec} t={t} waLink={waLink} />}
+
+        <section id="packages" className="sec">
+          <div className="wrap">
+            <h2><Hl text={c.titles.packages} /></h2>
+            <p className="sub">{c.titles.packagesSub}</p>
+            <div className="pk-grid">
+              {c.packages.map((p, i) => (
+                <article key={i} id={isBigStorePackage(p) ? "big-store" : undefined} className={"pk" + (p.featured ? " pk-featured" : "")}>
+                  {p.image && <img className="pk-img" src={p.image} alt="" />}
+                  <div className="pk-head">
+                    {p.icon && <span className="ic-ring"><Icon name={p.icon} size={26} /></span>}
+                    <div>
+                      {p.label && <p className="pk-label">{p.label}</p>}
+                      <h3>{p.name}</h3>
+                    </div>
+                  </div>
+                  <p className="pk-price">
+                    {p.pricePrefix && <small>{p.pricePrefix}</small>}
+                    <strong>{p.price}</strong>
+                    <span>{p.unit}</span>
+                  </p>
+                  {p.desc && <p className="pk-desc">{p.desc}</p>}
+                  <PackagePoints features={p.features} lang={c.lang} />
+                  <StoreShowcase data={packageShowcase(p)} lang={c.lang} />
+                  <a className={"btn" + (p.featured ? "" : " btn-ghost")} href={waLink(p.name)} target="_blank" rel="noopener">
+                    {t.orderPackage}
+                  </a>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+
+        <section id="addons" className="sec sec-alt">
+          <div className="wrap narrow">
+            <h2><Hl text={c.titles.addons} /></h2>
+            {c.titles.addonsSub && <p className="sub">{c.titles.addonsSub}</p>}
+            {(c.packages || []).some(isBigStorePackage) && (
+              <p className="pk-included-note">
+                {c.lang === "en"
+                  ? "In the large store package with the app, the payment gateway, shipping, domain and SSL, and WhatsApp are included free."
+                  : "داخل باقة المتجر الكبير شامل التطبيق: بوابة الدفع وربط الشحن والدومين وشهادة SSL وربط واتساب مجاناً."}
+              </p>
+            )}
+            <div className="addons">
+              {c.addons.map((a, i) => (
+                <div key={i} className="addon">
+                  {a.icon && <span className="ic-ring"><Icon name={a.icon} size={24} /></span>}
+                  <div className="addon-txt">
+                    <h3>{a.title}</h3>
+                    {a.desc && <p>{a.desc}</p>}
+                  </div>
+                  <span className="addon-price">{a.price}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="sec">
+          <div className="wrap">
+            <h2><Hl text={c.titles.features} /></h2>
+            <div className="ft-grid">
+              {c.features.map((f, i) => (
+                <div key={i} className="ft">
+                  <span className="ic-ring" aria-hidden="true"><Icon name={f.icon} size={24} /></span>
+                  <div>
+                    <h3>{f.title}</h3>
+                    <p>{f.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {c.trust?.show !== false && c.trust?.title && (
+          <section id="trust" className="sec sec-alt">
+            <div className="wrap">
+              <h2><Hl text={c.trust.title} /></h2>
+              {c.trust.subtitle && <p className="sub">{c.trust.subtitle}</p>}
+              <div className="trust-grid">
+                {(c.trust.points || []).map((p, i) => (
+                  <div key={i} className="trust-card">
+                    {p.icon && <span className="ic-ring" aria-hidden="true"><Icon name={p.icon} size={24} /></span>}
+                    <div>
+                      <h3>{p.title}</h3>
+                      {p.desc && <p>{p.desc}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {(c.trust.note || c.trust.button) && (
+                <div className="trust-cta">
+                  {c.trust.note && <p>{c.trust.note}</p>}
+                  {c.trust.button && (
+                    <a className="btn" href={waLink(c.trust.button)} target="_blank" rel="noopener">
+                      <WaIcon /> {c.trust.button}
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
+        {c.about?.show !== false && c.about?.name && <About a={c.about} t={t} />}
+
+        {c.gallery.length > 0 && (
+          <section id="gallery" className="sec sec-alt">
+            <div className="wrap">
+              <h2><Hl text={c.titles.gallery} /></h2>
+              <div className="gal">
+                {c.gallery.map((g, i) => (
+                  <figure key={i}>
+                    <a href={g.src} target="_blank" rel="noopener">
+                      <img src={g.src} alt={g.caption || ""} loading="lazy" />
+                    </a>
+                    {g.caption && <figcaption>{g.caption}</figcaption>}
+                  </figure>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {c.video.url && (
+          <section className="sec">
+            <div className="wrap narrow">
+              <h2><Hl text={c.titles.video} /></h2>
+              <div className="video">
+                {yt ? (
+                  <iframe
+                    src={`https://www.youtube.com/embed/${yt}`}
+                    title="video"
+                    allowFullScreen
+                    loading="lazy"
+                  />
+                ) : (
+                  <video src={c.video.url} controls playsInline preload="metadata" />
+                )}
+              </div>
+            </div>
+          </section>
+        )}
+
+        <section id="paths" className="sec">
           <div className="wrap">
             <div className="door-grid">
-              {copy.doors.map((door) => (
+              {(lang === "en" ? HOME_LANDING.en : HOME_LANDING.ar).doors.map((door) => (
                 <article key={door.href} className="door">
                   <h2>{door.title}</h2>
                   <p>{door.text}</p>
-                  <a className="btn" href={`${base}${door.href}`}>{door.cta}</a>
+                  <a className="btn" href={`${prefix(lang)}${door.href}`}>{door.cta}</a>
                 </article>
               ))}
             </div>
@@ -72,6 +230,7 @@ export default async function HomePage({ lang }) {
         </section>
 
         <PreviousWork lang={c.lang} />
+        <div className="wrap"><PriceAddendum lang={c.lang} /></div>
 
         <Contact c={c} t={t} waLink={waLink} />
       </main>

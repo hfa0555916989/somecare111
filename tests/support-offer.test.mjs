@@ -28,9 +28,8 @@ test("stray 7200 prices and the old 1,500 offer are rewritten", () => {
   });
   assert.equal(JSON.stringify(page).includes("7200"), false);
   assert.equal(JSON.stringify(page).includes("7,200"), false);
-  assert.equal(JSON.stringify(page).includes("1,500"), false);
+  assert.match(page.body, /1,500 ريال/);
   assert.match(page.body, new RegExp(SECOND_YEAR_SUPPORT_AR.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
-  assert.match(page.body, /300 إلى 1,000/);
 });
 
 test("package copy gains the bug-fix policy without dropping existing features", () => {

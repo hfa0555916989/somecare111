@@ -6,6 +6,7 @@ import { DEMO_ADMIN_URL, DEMO_EMAIL, DEMO_PASSWORD, DEMO_URL } from "@/lib/demo-
 import { SiteHeader, SiteFooter } from "./SiteChrome";
 import { DemoGallery } from "./StoreShowcase";
 import { makeWaLink, WaIcon } from "./HomePage";
+import PriceAddendum from "./PriceAddendum";
 
 function Parts({ parts }) {
   return (
@@ -115,10 +116,11 @@ export default async function SeoArticle({ id }) {
           </aside>
           <div className="prose">
             <Blocks blocks={page.blocks} />
+            <PriceAddendum lang="ar" />
           </div>
           <p>
             <a className="btn" href={wa} target="_blank" rel="noopener">
-              <WaIcon /> اطلب الاشتراك على واتساب
+              <WaIcon /> اطلب باقة 1500 ريال
             </a>
           </p>
           <section className="related">

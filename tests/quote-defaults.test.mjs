@@ -1,9 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { BIG_STORE_FEATURES } from "../lib/big-store.js";
 import { DEMO_SHOTS } from "../lib/demo-media.js";
-import { PACKAGES_AR } from "../lib/platform-offer.js";
+import { PACKAGES_AR, SUBSCRIPTION_FEATURES_AR } from "../lib/platform-offer.js";
 import { quotePackageSections, sameFeature, packageAmount, FREE_SUPPORT_LINE, SECOND_YEAR_SUPPORT_LINE } from "../lib/quote-defaults.js";
 
 const livePackages = PACKAGES_AR;
@@ -50,7 +49,7 @@ test("prices are taken from the package records passed in", () => {
 
 test("the subscription quote keeps the published features and does not call payment free", () => {
   const store = quotePackageSections({ packages: livePackages, addons: [{ title: "بوابة دفع", price: "مجاناً" }], siteFeatures: [] })[0];
-  for (const feature of BIG_STORE_FEATURES) assert.ok(covers(store.features, feature), feature);
+  for (const feature of SUBSCRIPTION_FEATURES_AR) assert.ok(covers(store.features, feature), feature);
   for (const shot of DEMO_SHOTS) assert.ok(covers(store.features, shot.caption), shot.caption);
   assert.ok(!store.features.some((f) => /مجاناً/.test(f) && /دفع|شحن/.test(f)));
   assert.ok(!store.features.some((f) => /مدى|Apple Pay|STC Pay|تكامل محاسبي/.test(f)));
