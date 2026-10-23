@@ -109,8 +109,8 @@ export default async function HomePage({ lang }) {
             {(c.packages || []).some(isBigStorePackage) && (
               <p className="pk-included-note">
                 {c.lang === "en"
-                  ? "In the large store package with the app, the payment gateway, shipping, domain and SSL, and WhatsApp are included free."
-                  : "داخل باقة المتجر الكبير شامل التطبيق: بوابة الدفع وربط الشحن والدومين وشهادة SSL وربط واتساب مجاناً."}
+                  ? "In the large store package with the app: payment gateway, shipping, domain and SSL, and a WhatsApp button that opens a chat with the store owner."
+                  : "داخل باقة المتجر الكبير شامل التطبيق: بوابة الدفع وربط الشحن والدومين وشهادة SSL، وزر واتساب يفتح محادثة مع صاحب المتجر."}
               </p>
             )}
             <div className="addons">
