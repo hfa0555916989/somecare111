@@ -50,7 +50,7 @@ function StoreForm({ init, onSave, onCancel, onDelete }) {
         <label>نسخة القالب الأساسية (commit)<input type="text" dir="ltr" value={s.templateSha || ""} onChange={(e) => set("templateSha", e.target.value.trim())} placeholder="sha من مستودع القالب" /></label>
         <label>العميل<input type="text" value={s.client} onChange={(e) => set("client", e.target.value)} /></label>
         <label>جوال العميل<input type="text" dir="ltr" value={s.phone} onChange={(e) => set("phone", e.target.value)} /></label>
-        <label>الاشتراك / الباقة<input type="text" value={s.plan} onChange={(e) => set("plan", e.target.value)} placeholder="1500 ريال سنوي" /></label>
+        <label>الاشتراك / الباقة<input type="text" value={s.plan} onChange={(e) => set("plan", e.target.value)} placeholder="اشتراك 300–500 ريال شهرياً" /></label>
         <label>تاريخ التجديد<input type="date" value={s.renewal} onChange={(e) => set("renewal", e.target.value)} /></label>
       </div>
       <label>
@@ -121,7 +121,7 @@ function Wizard({ data, reload, setErr }) {
           <label>اللون الثانوي<input type="color" value={f.secondary} onChange={(e) => set("secondary", e.target.value)} /></label>
           <label>رابط الشعار SVG (اختياري)<input type="text" dir="ltr" value={f.logoUrl} onChange={(e) => set("logoUrl", e.target.value)} placeholder="https://..." /><span className="adm-hint">أو يرفعه العميل من لوحة متجره لاحقاً.</span></label>
           <label>العميل<input type="text" value={f.client} onChange={(e) => set("client", e.target.value)} /></label>
-          <label>الباقة<input type="text" value={f.plan} onChange={(e) => set("plan", e.target.value)} placeholder="1500 ريال شامل الاستضافة" /></label>
+          <label>الباقة<input type="text" value={f.plan} onChange={(e) => set("plan", e.target.value)} placeholder="اشتراك شهري أو شراء" /></label>
           <label>تاريخ التجديد<input type="date" value={f.renewal} onChange={(e) => set("renewal", e.target.value)} /></label>
         </div>
         <label className="st-check">

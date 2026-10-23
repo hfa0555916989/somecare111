@@ -1,9 +1,12 @@
 import { getContent } from "@/lib/content";
-import { localize, ui } from "@/lib/i18n";
+import { localize, prefix, ui } from "@/lib/i18n";
 import { SiteHeader, SiteFooter, SocialRow } from "./SiteChrome";
 import { Icon, Hl, plain } from "./Icons";
 import ContactForm from "./ContactForm";
 import { turnstileSiteKey } from "@/lib/turnstile";
+import PreviousWork from "./PreviousWork";
+import { HOME_LANDING } from "@/lib/home-landing";
+import PriceAddendum from "./PriceAddendum";
 import { isBigStorePackage } from "@/lib/big-store";
 import { PackagePoints, StoreShowcase, packageShowcase } from "./PackagePoints";
 
@@ -211,6 +214,23 @@ export default async function HomePage({ lang }) {
             </div>
           </section>
         )}
+
+        <section id="paths" className="sec">
+          <div className="wrap">
+            <div className="door-grid">
+              {(lang === "en" ? HOME_LANDING.en : HOME_LANDING.ar).doors.map((door) => (
+                <article key={door.href} className="door">
+                  <h2>{door.title}</h2>
+                  <p>{door.text}</p>
+                  <a className="btn" href={`${prefix(lang)}${door.href}`}>{door.cta}</a>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <PreviousWork lang={c.lang} />
+        <div className="wrap"><PriceAddendum lang={c.lang} /></div>
 
         <Contact c={c} t={t} waLink={waLink} />
       </main>

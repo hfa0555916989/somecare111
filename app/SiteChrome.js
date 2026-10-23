@@ -29,8 +29,7 @@ export function SiteHeader({ c, icon, altPath = "/" }) {
             closeLabel={t.menuClose}
             navLabel={c.lang === "en" ? "Main" : "القائمة الرئيسية"}
             links={[
-              ...SITE_NAV.map((item) => ({ href: navHref(item, c.lang), label: c.lang === "en" ? item.en : item.ar })),
-              ...(sec.show !== false && sec.title ? [{ href: `${home}/security`, label: sec.navLabel || t.nav.security }] : []),
+              ...SITE_NAV.map((item) => ({ href: navHref(item, c.lang), label: item.id === "security" && sec.navLabel ? sec.navLabel : (c.lang === "en" ? item.en : item.ar) })),
               ...extra.map((p) => ({ href: `${home}/${p.slug}`, label: p.title })),
             ]}
           />
@@ -77,11 +76,8 @@ export function SiteFooter({ c }) {
         <FooterBrand c={c} />
         <nav className="foot-nav" aria-label={label}>
           {SITE_NAV.map((item) => (
-            <a key={item.id} href={navHref(item, c.lang)}>{en ? item.en : item.ar}</a>
+            <a key={item.id} href={navHref(item, c.lang)}>{item.id === "security" && sec.navLabel ? sec.navLabel : (en ? item.en : item.ar)}</a>
           ))}
-          {sec.show !== false && sec.title && (
-            <a href={`${home}/security`}>{sec.navLabel || (en ? "Cybersecurity" : "الأمن السيبراني")}</a>
-          )}
         </nav>
         <SocialRow c={c} />
         {links.length > 0 && (

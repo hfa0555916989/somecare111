@@ -44,7 +44,7 @@ Rules:
 - sections: every priced line item in order. price is a plain number in SAR (6,350 -> 6350), qty 1 unless stated. desc is the item's short description; note is a short qualifier like "اشتراك سنوي يُدفع مع الموقع"; features are its bullet points; tags are small labels/logos shown on it (e.g. مدى, Visa, Mastercard, Apple Pay).
 - Do not add the summary/total table as sections; it is recomputed from the sections.
 - recurring: lines about renewals or recurring fees (e.g. "تجديد الدعم الفني من السنة الثانية: 3,750 ريال سنوياً").
-- duration: the delivery time sentence if stated (e.g. "من 21 إلى 30 يوم عمل من استلام المحتوى والدفعة الأولى").
+- duration: the delivery time sentence if stated (e.g. "التسليم سريع ويتوقف على تسليم المحتوى في وقته"). Do not invent a fixed number of days.
 - terms: each term/condition/clause as its own string, without its number.
 - annex: if a file describes features/specifications, turn each numbered section into one annex entry: title, intro sentence, and points (one string per feature, written as "العنوان: الوصف" when the feature has a heading). Include table rows as points too ("القسم: الاستخدام").
 - client: the customer's details if printed; leave empty otherwise. Never put the developer's own details in client.`;
