@@ -188,6 +188,13 @@ export default async function DocPage({ params }) {
           </section>
         )}
 
+        {doc.support?.length > 0 && (
+          <section>
+            <h3 className="paper-h">الدعم الفني</h3>
+            <ul className="feats">{doc.support.map((x, i) => <li key={i}>{x}</li>)}</ul>
+          </section>
+        )}
+
         {(hasBank || p.bankName) && doc.type !== "proposal" && (
           <section className="bank">
             <h3 className="paper-h">طريقة الدفع: تحويل بنكي</h3>

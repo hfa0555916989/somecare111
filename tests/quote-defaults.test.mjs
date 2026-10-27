@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { DEMO_SHOTS } from "../lib/demo-media.js";
 import { PACKAGES_AR, SUBSCRIPTION_FEATURES_AR } from "../lib/platform-offer.js";
-import { quotePackageSections, sameFeature, packageAmount, FREE_SUPPORT_LINE, SECOND_YEAR_SUPPORT_LINE } from "../lib/quote-defaults.js";
+import { quotePackageSections, sameFeature, packageAmount, FREE_SUPPORT_LINE, SECOND_YEAR_SUPPORT_LINE, packageOptions, quoteFromPackage, supportPoints, maintenanceTier } from "../lib/quote-defaults.js";
 
 const livePackages = PACKAGES_AR;
 
@@ -86,4 +86,65 @@ test("the public quote renders every feature, and print does not hide them", () 
   assert.match(page, /s\.features\.map/);
   assert.match(css, /@media print\{[\s\S]*\.feats\{display:grid/);
   assert.doesNotMatch(css, /\.feats\{[^}]*display:\s*none/);
+});
+
+const [subscription, purchase] = livePackages;
+const clientText = (q) => JSON.stringify([q.title, q.intro, q.sections, q.recurring, q.support]);
+
+test("a subscription quote bills the setup and the first month, never the purchase", () => {
+  const q = quoteFromPackage(subscription, {});
+  assert.deepEqual(
+    q.sections.map((s) => [s.title, s.qty, s.price]),
+    [
+      ["اشتراك المتجر: تجهيز وتخصيص", 1, 2000],
+      ["الاشتراك الشهري: متجر بدون تطبيقات", 1, 300],
+    ]
+  );
+  assert.match(q.recurring[0], /شهرياً بمبلغ 300 ريال/);
+  assert.ok(q.sections[0].features.length > 8);
+});
+
+test("the chosen level, price and annual billing go into the quote", () => {
+  const q = quoteFromPackage(subscription, { monthly: 1, monthlyPrice: 1000, oncePrice: 2500, billing: "annual" });
+  assert.deepEqual(q.sections.map((s) => [s.qty, s.price]), [[1, 2500], [10, 1000]]);
+  assert.match(q.sections[1].title, /السنوي: متجر مع التطبيقات/);
+  assert.match(q.recurring[0], /سنوياً بمبلغ 10,000 ريال/);
+  assert.equal(quoteFromPackage(subscription, { monthly: -1 }).sections.length, 1);
+});
+
+test("a purchase quote is one line, and its support says the free period and the maintenance range", () => {
+  const q = quoteFromPackage(purchase, { once: 1, freeMonths: 2 });
+  assert.deepEqual(q.sections.map((s) => [s.title, s.price]), [["شراء المتجر: المتجر مع تطبيقي iOS وAndroid", 20000]]);
+  assert.deepEqual(q.recurring, []);
+  assert.match(q.support[0], /لمدة شهرين من تاريخ التسليم/);
+  assert.match(q.support[1], /من 500 إلى 800 ريال شهرياً/);
+  assert.ok(!q.sections[0].features.some((f) => /دعم مجاني|صيانة/.test(f)));
+});
+
+test("support is its own clear section and the client never sees notes meant for the owner", () => {
+  for (const q of [quoteFromPackage(subscription, {}), quoteFromPackage(purchase, {})]) {
+    assert.ok(q.support.length >= 4);
+    assert.ok(q.support.some((x) => x.includes(FREE_SUPPORT_LINE)));
+    assert.doesNotMatch(clientText(q), /احذف|قبل إرسال|يُعدَّل داخل النطاق/);
+  }
+  assert.match(supportPoints({ purchase: false })[0], /مشمول في الاشتراك/);
+  assert.match(supportPoints({ purchase: true, freeMonths: 1, maintenance: maintenanceTier(livePackages) })[0], /لمدة شهر من/);
+  assert.match(supportPoints({ purchase: true })[1], /حسب الاتفاق/);
+  for (const s of quotePackageSections({ packages: livePackages })) assert.doesNotMatch(s.note, /احذف/);
+});
+
+test("a renamed package keeps its levels in the quote builder", () => {
+  const o = packageOptions({ ...subscription, name: "باقة الاشتراك" });
+  assert.equal(o.name, "باقة الاشتراك");
+  assert.deepEqual(o.once.map((t) => t.min), [2000]);
+  assert.deepEqual(o.monthly.map((t) => [t.min, t.max]), [[300, 500], [700, 1000]]);
+  assert.equal(packageOptions({ ...purchase, name: "تملّك المتجر" }).purchase, true);
+  assert.deepEqual(packageOptions({ name: "موقع تعريفي", price: "1,100" }).once.map((t) => t.min), [1100]);
+});
+
+test("documents save the support points and the public page shows them", () => {
+  const docs = readFileSync(new URL("../lib/docs.js", import.meta.url), "utf8");
+  const page = readFileSync(new URL("../app/doc/[token]/page.js", import.meta.url), "utf8");
+  assert.match(docs, /support: lines\(b\.support/);
+  assert.match(page, /الدعم الفني[\s\S]*doc\.support\.map/);
 });
