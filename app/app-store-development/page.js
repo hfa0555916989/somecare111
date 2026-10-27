@@ -1,7 +1,7 @@
 import { SiteHeader, SiteFooter } from "../SiteChrome";
 import { getContent } from "@/lib/content";
 import { localize } from "@/lib/i18n";
-import { BIG_STORE_DESC, BIG_STORE_FEATURES, BIG_STORE_NAME, STORE_PAGE_FREE } from "@/lib/big-store";
+import { BIG_STORE_NAME, BIG_STORE_PRODUCT, STORE_PAGE_FREE } from "@/lib/big-store";
 import { PackagePoints, StoreShowcase, packageShowcase } from "../PackagePoints";
 import PriceAddendum from "../PriceAddendum";
 import StoreCare from "../StoreCare";
@@ -10,7 +10,7 @@ import { STORE_CARE } from "@/lib/store-care";
 export const dynamic = "force-dynamic";
 
 const TITLE = "إنشاء متجر إلكتروني وتطبيق جوال باشتراك من 700 ريال شهرياً | المطور حسن";
-const DESC = "باقة المتجر الكبير شامل التطبيق باشتراك من 700 ريال شهرياً، والتجهيز من 2,000 ريال، أو الشراء من 12,000 ريال: منتجات غير محدودة ولوحة تحكم وتطبيق iOS وAndroid، والدفع والشحن والدومين، وزر واتساب يفتح محادثة مع صاحب المتجر.";
+const DESC = "متجر إلكتروني مع تطبيق iOS وAndroid: اشتراك من 700 ريال شهرياً بعد تجهيز من 2,000 ريال، أو شراء من 20,000 ريال. منتجات غير محدودة ولوحة تحكم، والدفع والشحن والدومين داخل السعر.";
 
 export const metadata = {
   title: { absolute: TITLE },
@@ -22,22 +22,50 @@ export const metadata = {
   twitter: { card: "summary_large_image", title: TITLE, description: DESC, images: ["/images/brand-og.png"] },
 };
 
-const OFFER = {
-  name: BIG_STORE_NAME,
-  price: "من 2,000",
-  unit: "ريال للتجهيز",
-  desc: BIG_STORE_DESC,
-  items: BIG_STORE_FEATURES,
-};
+const wa = (text) => "https://wa.me/966530779934?text=" + encodeURIComponent(text);
+const WA = wa("أبغى متجر إلكتروني مع تطبيق جوال");
+
+// المتجر والتطبيق نفسهما في الطريقتين، والفرق في طريقة الدفع فقط
+const PLANS = [
+  {
+    id: "subscription",
+    name: "اشتراك شهري",
+    price: "من 700",
+    unit: "ريال شهرياً مع التطبيق",
+    points: [
+      "التجهيز من 2,000 ريال مرة واحدة",
+      "الاستضافة والنسخ الاحتياطي والدعم داخل الرسم الشهري",
+      "السنوي بشهرين مجاناً: تدفع 10 أشهر",
+    ],
+    cta: "اطلب الاشتراك",
+    wa: wa("أبغى متجر مع تطبيق بالاشتراك: التجهيز من 2,000 ريال، ثم من 700 ريال شهرياً"),
+  },
+  {
+    id: "purchase",
+    name: "شراء",
+    price: "من 20,000",
+    unit: "ريال للمتجر مع التطبيقين",
+    points: [
+      "من 20,000 إلى 30,000 حسب حجم المتجر",
+      "دفعات حسب مراحل العمل، ويصير المتجر والتطبيق ملكك",
+      "إصلاح أعطال مجاني من شهر إلى شهرين، ثم صيانة اختيارية 500 أو 800 ريال شهرياً",
+    ],
+    cta: "اطلب الشراء",
+    wa: wa("أبغى شراء متجر مع التطبيقين من 20,000 ريال"),
+  },
+];
+
+const OFFER = { name: BIG_STORE_NAME, items: BIG_STORE_PRODUCT };
 
 const FREE = STORE_PAGE_FREE;
 
 const FAQ = [
-  ["كم تكلفة إنشاء متجر إلكتروني مع تطبيق؟", "التجهيز 2,000 ريال مرة واحدة. الاشتراك: أساسية 300 ريال شهرياً أو متقدمة 500، ومع التطبيقات 700 أو 1,000، وسنوياً بشهرين مجاناً. الشراء من 12,000 ريال، وبعد التسليم إصلاح الأعطال مجاني من شهر إلى شهرين ثم صيانة 500 أو 800 ريال شهرياً. الدفع مقدّم، والميزات الجديدة تتسعّر بشكل منفصل."],
-  ["هل التطبيق داخل رسوم التجهيز؟", "لا. التجهيز 2,000 ريال مرة واحدة لتهيئة المتجر. تطبيق iOS وAndroid ضمن اشتراك التطبيقات أو شراء المتجر مع التطبيقين، وليس عرضاً يُضاف بعد التسليم."],
-  ["هل بوابة الدفع والشحن داخلة في السعر؟", "نعم، ضمن رسوم التجهيز وليست فاتورة بعدها: بوابة الدفع، وربط الشحن، والدومين وشهادة SSL، وزر واتساب يفتح محادثة مع صاحب المتجر، وتنبيهات الطلب داخل لوحة التحكم، وتحليلات جوجل."],
+  ["كم تكلفة إنشاء متجر إلكتروني مع تطبيق؟", "طريقتان. بالاشتراك: التجهيز من 2,000 ريال مرة واحدة، ثم من 700 ريال شهرياً مع التطبيق، أو 1,000 للباقة الأعلى، والسنوي بشهرين مجاناً. بالشراء: من 20,000 إلى 30,000 ريال للمتجر مع التطبيقين. وإذا أردت المتجر بدون تطبيق: اشتراك من 300 ريال شهرياً، أو شراء من 12,000 ريال."],
+  ["ما الفرق بين الاشتراك والشراء؟", "المتجر والتطبيق نفسهما. في الاشتراك تدفع شهرياً، والاستضافة والدعم والنسخ الاحتياطي داخل الرسم. في الشراء تدفع المبلغ على دفعات حسب مراحل العمل ويصير المتجر ملكك، ثم الصيانة اختيارية."],
+  ["هل التطبيق داخل رسوم التجهيز؟", "لا. التجهيز لتهيئة المتجر: الهوية، وربط الدفع والشحن، واستيراد المنتجات. التطبيق داخل اشتراك التطبيقات من 700 ريال، أو داخل الشراء من 20,000 ريال."],
+  ["هل بوابة الدفع والشحن داخلة في السعر؟", "نعم، وليست فاتورة بعدها: بوابة الدفع، وربط الشحن، والدومين وشهادة SSL، وزر واتساب يتواصل به عملاؤك معك، وتنبيهات الطلب داخل لوحة التحكم، وتحليلات جوجل."],
+  ["كم الدعم الفني؟", "في الاشتراك، الدعم داخل الرسم الشهري. بعد الشراء، إصلاح الأعطال مجاني من شهر إلى شهرين، ثم صيانة 500 أو 800 ريال شهرياً. إصلاح العطل خلل في ما تم تسليمه، والميزات الجديدة تتسعّر بشكل منفصل. إذا تأخر سداد الاشتراك يوقف الدعم بعد 7 أيام، ويوقف المتجر بعد 15 يوماً."],
   ["هل التعامل موثق؟", "نعم، عرض سعر وعقد رسمي مرتبطان بوثيقة العمل الحر، والتحويل على آيبان باسم المطور حسن فقط."],
-  ["كم الدعم الفني؟", "في الاشتراك، الدعم داخل الرسم الشهري: من 300 ريال للمتجر، ومن 700 مع التطبيقات، مع الاستضافة والنسخ الاحتياطي. في الشراء من 12,000 ريال، إصلاح الأعطال مجاني من شهر إلى شهرين بعد التسليم، ثم صيانة 500 أو 800 ريال شهرياً. إصلاح العطل خلل في ما تم تسليمه، والميزات الجديدة تتسعّر بشكل منفصل. إذا تأخر السداد يوقف الدعم بعد 7 أيام، ويوقف المتجر بعد 15 يوماً."],
   [STORE_CARE.ar.faqQ, STORE_CARE.ar.faqA],
 ];
 
@@ -68,8 +96,6 @@ const LD = {
   ],
 };
 
-const WA = "https://wa.me/966530779934?text=" + encodeURIComponent("أبغى باقة المتجر الكبير شامل التطبيق من 2,000 ريال للتجهيز، والاشتراك مع التطبيق من 700 ريال شهرياً، أو الشراء من 12,000 ريال");
-
 export default async function AppStoreDevelopment() {
   const c = localize(await getContent(), "ar");
   return (
@@ -84,39 +110,48 @@ export default async function AppStoreDevelopment() {
               إنشاء متجر إلكتروني وتطبيق جوال <span className="hl">باشتراك من 700 ريال شهرياً</span> مع المطور حسن
             </h1>
             <p className="lead" style={{ maxWidth: 780, marginInline: "auto" }}>
-              أنا <strong>المطور حسن</strong>. أبني لك المتجر ولوحة التحكم وتطبيق iOS و Android. التجهيز 2,000 ريال مرة واحدة، والمتجر من 300 ريال شهرياً، ومع التطبيق من 700، أو الشراء من 12,000 ريال. في المتجر زر واتساب يفتح محادثة مع صاحب المتجر.
+              أنا <strong>المطور حسن</strong>. أبني لك المتجر ولوحة التحكم وتطبيق iOS و Android. تدفع بالاشتراك من 700 ريال شهرياً بعد تجهيز من 2,000 ريال، أو تشتري المتجر مع التطبيقين من 20,000 ريال ويصير ملكك.
             </p>
             <div className="cta-row" style={{ justifyContent: "center" }}>
-              <a className="btn" href={WA} target="_blank" rel="noopener">اطلب الباقة على واتساب</a>
-              <a className="btn btn-ghost" href="#packages">تفاصيل الباقة</a>
+              <a className="btn" href={WA} target="_blank" rel="noopener">اطلب متجرك على واتساب</a>
+              <a className="btn btn-ghost" href="#packages">قارن الاشتراك والشراء</a>
             </div>
           </div>
         </section>
 
         <section id="packages" className="sec">
           <div className="wrap">
-            <h2>باقة المتجر الكبير شامل التطبيق</h2>
-            <p className="sub">التجهيز من 2,000 ريال، والمتجر من 300 ريال شهرياً، ومع التطبيق من 700، أو الشراء من 12,000 ريال.</p>
+            <h2>اختر طريقة الدفع</h2>
+            <p className="sub">المتجر والتطبيق نفسهما في الطريقتين. الفرق في طريقة الدفع فقط.</p>
             <div className="pk-grid">
-              <article id="big-store" className="pk pk-featured">
-                <div className="pk-head"><div><h3>{OFFER.name}</h3></div></div>
-                <p className="pk-price">
-                  <strong>{OFFER.price}</strong>
-                  <span>{OFFER.unit}</span>
-                </p>
-                <p className="pk-desc">{OFFER.desc}</p>
-                <PackagePoints features={OFFER.items} lang="ar" />
-                <StoreShowcase data={packageShowcase(OFFER)} lang="ar" />
-                <a className="btn" href={WA} target="_blank" rel="noopener">اطلب هذه الباقة</a>
-              </article>
+              {PLANS.map((p, i) => (
+                <article key={p.id} id={p.id} className={i === 0 ? "pk pk-featured" : "pk"}>
+                  <div className="pk-head"><div><h3>{p.name}</h3></div></div>
+                  <p className="pk-price">
+                    <strong>{p.price}</strong>
+                    <span>{p.unit}</span>
+                  </p>
+                  <PackagePoints features={p.points} lang="ar" />
+                  <a className="btn" href={p.wa} target="_blank" rel="noopener">{p.cta}</a>
+                </article>
+              ))}
             </div>
           </div>
         </section>
 
-        <section id="addons" className="sec sec-alt">
+        <section id="big-store" className="sec sec-alt">
           <div className="wrap narrow">
-            <h2>إضافات داخلة مجاناً</h2>
-            <p className="sub">هذه البنود جزء من التجهيز من 2,000 ريال، وليست فاتورة بعدها.</p>
+            <h2>ماذا يشمل المتجر</h2>
+            <p className="sub">نفس المتجر في الاشتراك وفي الشراء.</p>
+            <PackagePoints features={OFFER.items} lang="ar" />
+            <StoreShowcase data={packageShowcase(OFFER)} lang="ar" />
+          </div>
+        </section>
+
+        <section id="addons" className="sec">
+          <div className="wrap narrow">
+            <h2>داخلة في السعر مجاناً</h2>
+            <p className="sub">في الاشتراك وفي الشراء، بدون فاتورة إضافية.</p>
             <div className="addons">
               {FREE.map((item) => (
                 <div key={item} className="addon">
@@ -127,6 +162,8 @@ export default async function AppStoreDevelopment() {
             </div>
           </div>
         </section>
+
+        <PriceAddendum lang="ar" />
 
         <section id="faq" className="sec">
           <div className="wrap narrow">
@@ -141,7 +178,6 @@ export default async function AppStoreDevelopment() {
             </div>
           </div>
         </section>
-        <PriceAddendum lang="ar" />
         <StoreCare lang="ar" />
       </main>
       <SiteFooter c={c} />
