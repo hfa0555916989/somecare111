@@ -3,7 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { uploadPresigned } from "@vercel/blob/client";
 import { uniqueName } from "./upload";
 import { defaultContent, BRAND_THEME, BRAND_ASSETS, FONTS, LATIN_FONTS, isFont, fontsHref, SITE_URL, SIZE_FIELDS, RATIOS, RATIO_FIELDS, DEFAULT_SIZES, sizeVars, docTotals, validIban, siteUrl, latinDigits, normalizeIban } from "@/lib/defaults";
-import { quotePackageSections } from "@/lib/quote-defaults";
+import { sourceLabel, fromGoogleAds } from "@/lib/attribution";
+import { packageOptions, quoteFromPackage, supportPoints, maintenanceTier, paymentPlan, withPaymentTerm } from "@/lib/quote-defaults";
 import { ICONS, SOCIALS, Icon } from "../Icons";
 import { BrandLogo, BrandText, FooterBrand } from "../SiteChrome";
 import { AIcon } from "./AdminIcons";
@@ -598,6 +599,7 @@ function Inquiries({ form, setForm, onCount }) {
             <div>
               <strong>{i.name}</strong>
               {i.service && <span className="adm-hint"> · {i.service}</span>}
+              {sourceLabel(i.src) && <span className={"adm-pill" + (fromGoogleAds(i.src) ? " accepted" : "")} style={{ marginInlineStart: 8 }}>{sourceLabel(i.src)}</span>}
             </div>
             <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
               {i.phone && <a href={`tel:${i.phone}`} dir="ltr" style={{ color: "#d4a84b" }}>{i.phone}</a>}
@@ -669,8 +671,7 @@ const readB64 = (f) =>
     r.readAsDataURL(f);
   });
 
-function blankDoc(type, k, catalog = []) {
-  const sections = type === "quote" ? catalog.map((s) => ({ ...s, features: [...(s.features || [])], tags: [...(s.tags || [])] })) : [];
+function blankDoc(type, k) {
   return {
     type,
     number: "",
@@ -678,12 +679,14 @@ function blankDoc(type, k, catalog = []) {
     validDays: type === "quote" ? Number(k.validDays) || 15 : 0,
     title: "",
     subtitle: "",
-    intro: type === "quote" ? "الأسعار أدناه بداية النطاقات المنشورة. الاشتراك هو الخيار الذي نوصي به. إصلاح الأعطال داخل الدعم، والميزات الجديدة تتسعّر بشكل منفصل. احذف الباقة التي لا يريدها العميل قبل الإرسال." : "",
+    intro: "",
     client: { name: "", company: "", idNumber: "", phone: "", email: "", city: "" },
-    sections,
+    sections: [],
     discount: 0,
     vatRate: type === "invoice" ? 0 : Number(k.vatRate) || 0,
-    recurring: type === "quote" ? ["بعد الشراء: صيانة 500 أو 800 ريال شهرياً بعد شهر إلى شهرين من إصلاح الأعطال. الاشتراك السنوي بشهرين مجاناً، والدفع مقدّم."] : [],
+    recurring: [],
+    support: [],
+    payments: [],
     duration: "",
     terms: type === "invoice" ? [...INVOICE_TERMS] : [...((type === "contract" ? k.contractTerms : k.quoteTerms) || [])],
     annex: [],
@@ -779,7 +782,220 @@ function PriceAdvisor({ doc, setDoc }) {
   );
 }
 
-function DocEditor({ doc, setDoc, k, items, catalog = [], onSave, onCancel, saving }) {
+// يضيف إلى العرض بنود فكرة العميل وملحقها من الذكاء الاصطناعي (فوق الباقة إن وُجدت)
+async function ideaToQuote(doc, idea) {
+  const r = await fetch("/api/docs/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ idea, client: doc.client?.company || doc.client?.name, sections: doc.sections }) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || "تعذر التوليد");
+  const o = j.out || {};
+  const next = {
+    ...doc,
+    title: o.title || doc.title,
+    subtitle: o.subtitle || doc.subtitle,
+    intro: o.intro || doc.intro,
+    sections: [...(doc.sections || []), ...(o.sections || []).map((x) => ({ ...x, qty: Math.max(1, Math.round(x.qty) || 1), tags: x.tags || [] }))],
+    annex: [...(doc.annex || []), ...(o.annex || [])],
+  };
+  // البنود الجديدة تغيّر الإجمالي، فيُعاد اقتراح الدفعات
+  return doc.payments?.length ? { ...next, payments: paymentPlan(next) } : next;
+}
+
+function Payments({ doc, setDoc }) {
+  const list = doc.payments || [];
+  const total = docTotals(doc).total;
+  const sum = list.reduce((n, p) => n + (Number(p.amount) || 0), 0);
+  const set = (v) => setDoc({ ...doc, payments: v, terms: v.length ? withPaymentTerm(doc.terms) : doc.terms });
+  return (
+    <div className="adm-card">
+      <div className="adm-card-h">
+        <b>جدول الدفعات</b>
+        <button type="button" className="mini" disabled={!total} onClick={() => set(paymentPlan(doc))}>اقترح الدفعات حسب الإجمالي</button>
+      </div>
+      <span className="adm-hint">يظهر للعميل كجدول: كل دفعة ومتى تُدفع ومبلغها. بعد تغيير الأسعار اضغط «اقترح الدفعات» أو عدّل المبالغ.</span>
+      <List
+        items={list}
+        onChange={set}
+        addLabel="إضافة دفعة"
+        title={(p, i) => `${i + 1}. ${p.title || "دفعة"} · ${money(p.amount)} ريال`}
+        newItem={() => ({ title: "", when: "", amount: 0 })}
+        render={(p, setP) => (
+          <>
+            <Text label="اسم الدفعة (مثل: الدفعة الأولى 50%)" value={p.title} onChange={(v) => setP("title", v)} />
+            <Text label="متى تُدفع (مثل: عند التعاقد)" value={p.when} onChange={(v) => setP("when", v)} />
+            <label>
+              المبلغ (ريال)
+              <input type="number" min="0" value={p.amount} onChange={(e) => setP("amount", Number(e.target.value))} />
+            </label>
+          </>
+        )}
+      />
+      {list.length > 0 &&
+        (Math.round(sum) === Math.round(total) ? (
+          <span className="ok">مجموع الدفعات يساوي الإجمالي ✓</span>
+        ) : (
+          <span className="err">مجموع الدفعات {money(sum)} لا يساوي الإجمالي {money(total)}. اضغط «اقترح الدفعات» أو عدّل المبالغ.</span>
+        ))}
+    </div>
+  );
+}
+
+function IdeaCard({ doc, setDoc, ai }) {
+  const [idea, setIdea] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  async function run() {
+    setBusy(true);
+    setErr("");
+    try {
+      setDoc(await ideaToQuote(doc, idea));
+      setIdea("");
+    } catch (x) {
+      setErr(x.message);
+    }
+    setBusy(false);
+  }
+  return (
+    <div className="adm-card">
+      <b>فكرة العميل بالذكاء الاصطناعي</b>
+      <span className="adm-hint">اكتب فكرة العميل أو ما يختلف فيه عن الباقة، فتُضاف بنودها ومزاياها وأسعارها وملحقها إلى العرض لتراجعها.</span>
+      <Text label="فكرة العميل" area rows={4} value={idea} onChange={setIdea} />
+      {err && <span className="err">{err}</span>}
+      <button type="button" className="gold" style={{ justifySelf: "start" }} disabled={!ai || busy || !idea.trim()} onClick={run} title={ai ? "" : "يتطلب ANTHROPIC_API_KEY في Vercel"}>
+        {busy ? "جارٍ التوليد... (حتى دقيقة)" : "ولّد البنود من الفكرة"}
+      </button>
+    </div>
+  );
+}
+
+// بداية عرض السعر: العميل، ثم باقة واحدة بمستواها أو مشروع خاص، وفكرة العميل اختيارياً
+function QuoteStarter({ k, packages = [], addons, siteFeatures, ai, onDone, onCancel }) {
+  const offers = packages.map((p) => ({ p, o: packageOptions(p) })).filter((x) => x.o.name && (x.o.once.length || x.o.monthly.length));
+  const [c, setC] = useState({ name: "", phone: "", pkg: offers.length ? 0 : -1, once: 0, oncePrice: "", monthly: 0, monthlyPrice: "", billing: "monthly", freeMonths: 1, idea: "" });
+  const [busy, setBusy] = useState(false);
+  const set = (key, v) => setC({ ...c, [key]: v });
+  const cur = offers[c.pkg];
+  const o = cur?.o;
+  const once = o?.once[c.once];
+  const mon = o && !o.purchase && c.monthly >= 0 ? o.monthly[c.monthly] : null;
+  const built = cur ? quoteFromPackage(cur.p, c, { addons, siteFeatures }) : null;
+  const range = (t) => `${t.price} ${t.unit}`.trim();
+  const pickPkg = (i) => setC({ ...c, pkg: i, once: 0, oncePrice: "", monthly: 0, monthlyPrice: "", billing: "monthly" });
+
+  async function create() {
+    setBusy(true);
+    const base = blankDoc("quote", k);
+    let doc = { ...base, client: { ...base.client, name: c.name.trim(), phone: c.phone.trim() } };
+    doc = built
+      ? { ...doc, title: built.title, sections: built.sections, recurring: built.recurring, support: built.support }
+      : { ...doc, support: supportPoints({ purchase: true, freeMonths: c.freeMonths, maintenance: maintenanceTier(packages) }) };
+    let note = "";
+    if (c.idea.trim()) {
+      try {
+        doc = await ideaToQuote(doc, c.idea.trim());
+      } catch (x) {
+        note = `أُنشئ العرض بدون فكرة العميل: ${x.message}`;
+      }
+    }
+    doc = { ...doc, payments: paymentPlan(doc), terms: withPaymentTerm(doc.terms) };
+    setBusy(false);
+    onDone(doc, note);
+  }
+
+  return (
+    <div className="adm-card" style={{ borderColor: "#d4a84b88" }}>
+      <div className="adm-card-h">
+        <b>عرض سعر جديد</b>
+        <button type="button" className="mini" onClick={onCancel}>إلغاء</button>
+      </div>
+      <div className="row">
+        <Text label="اسم العميل" value={c.name} onChange={(v) => set("name", v)} />
+        <Text label="الجوال (لإرسال الرابط واتساب)" ltr value={c.phone} onChange={(v) => set("phone", v)} />
+      </div>
+
+      <span className="acc-lbl">الباقة</span>
+      <div className="acc-chips small">
+        {offers.map((x, i) => (
+          <button key={i} type="button" className={c.pkg === i ? "on" : ""} onClick={() => pickPkg(i)}>{x.o.name}</button>
+        ))}
+        <button type="button" className={c.pkg === -1 ? "on" : ""} onClick={() => pickPkg(-1)}>مشروع خاص (من فكرة العميل)</button>
+      </div>
+
+      {o && o.once.length > 0 && (
+        <>
+          {o.once.length > 1 && (
+            <div className="acc-chips small">
+              {o.once.map((t, i) => (
+                <button key={i} type="button" className={c.once === i ? "on" : ""} onClick={() => setC({ ...c, once: i, oncePrice: "" })}>{t.label} · {range(t)}</button>
+              ))}
+            </div>
+          )}
+          <label>
+            {once.label} (يُدفع مرة واحدة) · النطاق المنشور {range(once)}
+            <input type="number" min="0" placeholder={String(once.min)} value={c.oncePrice} onChange={(e) => set("oncePrice", e.target.value)} />
+          </label>
+        </>
+      )}
+
+      {o && !o.purchase && o.monthly.length > 0 && (
+        <>
+          <span className="acc-lbl">الاشتراك</span>
+          <div className="acc-chips small">
+            {o.monthly.map((t, i) => (
+              <button key={i} type="button" className={c.monthly === i ? "on" : ""} onClick={() => setC({ ...c, monthly: i, monthlyPrice: "" })}>{t.label} · {range(t)}</button>
+            ))}
+            <button type="button" className={c.monthly === -1 ? "on" : ""} onClick={() => set("monthly", -1)}>بدون اشتراك</button>
+          </div>
+          {mon && (
+            <>
+              <label>
+                الرسم الشهري · النطاق المنشور {range(mon)}
+                <input type="number" min="0" placeholder={String(mon.min)} value={c.monthlyPrice} onChange={(e) => set("monthlyPrice", e.target.value)} />
+              </label>
+              {o.annual && (
+                <div className="acc-chips small">
+                  <button type="button" className={c.billing === "monthly" ? "on" : ""} onClick={() => set("billing", "monthly")}>دفع شهري</button>
+                  <button type="button" className={c.billing === "annual" ? "on" : ""} onClick={() => set("billing", "annual")}>دفع سنوي (شهران مجاناً)</button>
+                </div>
+              )}
+            </>
+          )}
+        </>
+      )}
+
+      {(!o || o.purchase) && (
+        <>
+          <span className="acc-lbl">دعم إصلاح الأعطال المجاني بعد التسليم</span>
+          <div className="acc-chips small">
+            {[[1, "شهر"], [2, "شهرين"]].map(([v, l]) => (
+              <button key={v} type="button" className={c.freeMonths === v ? "on" : ""} onClick={() => set("freeMonths", v)}>{l}</button>
+            ))}
+          </div>
+        </>
+      )}
+
+      <Text
+        label={o ? "فكرة العميل أو ما يختلف فيه عن الباقة (اختياري)" : "فكرة العميل"}
+        area
+        rows={4}
+        value={c.idea}
+        onChange={(v) => set("idea", v)}
+        hint={ai ? "يولّد الذكاء الاصطناعي البنود والمزايا والأسعار الخاصة بالفكرة ويضيفها للعرض، وتراجعها قبل الحفظ." : "لتوليد البنود من الفكرة أضف ANTHROPIC_API_KEY في Vercel. يمكنك الآن إنشاء العرض وكتابة البنود يدوياً."}
+      />
+
+      {built && (
+        <div className="note info">
+          {built.sections.map((s) => `${s.title}: ${money(s.price * s.qty)}`).join(" + ")} = <b style={{ color: "#d4a84b" }}>{money(built.sections.reduce((n, s) => n + s.price * s.qty, 0))} ريال عند البدء</b>
+          {built.recurring.map((r, i) => <div key={i}>{r}</div>)}
+        </div>
+      )}
+      <button type="button" className="primary" style={{ justifySelf: "start" }} disabled={busy} onClick={create}>
+        {busy ? "جارٍ التوليد... (حتى دقيقة)" : "إنشاء العرض"}
+      </button>
+    </div>
+  );
+}
+
+function DocEditor({ doc, setDoc, k, items, ai, onSave, onCancel, saving }) {
   const set = (key, v) => setDoc({ ...doc, [key]: v });
   const setClient = (key, v) => setDoc({ ...doc, client: { ...doc.client, [key]: v } });
   const t = docTotals(doc);
@@ -875,34 +1091,7 @@ function DocEditor({ doc, setDoc, k, items, catalog = [], onSave, onCancel, savi
         </div>
       </div>
 
-      {doc.type === "quote" && catalog.length > 0 && (
-        <div className="adm-card">
-          <b>باقات الموقع</b>
-          <span className="adm-hint">الأرقام بداية النطاق المنشور (الاشتراك هو الخيار الذي نوصي به). احذف الباقة التي لا يريدها العميل قبل الإرسال لأن الإجمالي يجمع كل البنود، وعدّل الرقم داخل النطاق. إصلاح الأعطال داخل الدعم، والميزات الجديدة تتسعّر بشكل منفصل.</span>
-          <div className="acc-chips small">
-            {catalog.map((s) => {
-              const on = (doc.sections || []).some((x) => x.title === s.title);
-              return (
-                <button
-                  key={s.title}
-                  type="button"
-                  className={on ? "on" : ""}
-                  onClick={() =>
-                    set(
-                      "sections",
-                      on
-                        ? doc.sections.filter((x) => x.title !== s.title)
-                        : [...(doc.sections || []), { ...s, features: [...s.features], tags: [...(s.tags || [])] }]
-                    )
-                  }
-                >
-                  {s.title} · {money(s.price)} ريال
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      {doc.type === "quote" && <IdeaCard doc={doc} setDoc={setDoc} ai={ai} />}
       <b>البنود والأسعار</b>
       <List
         items={doc.sections}
@@ -943,8 +1132,12 @@ function DocEditor({ doc, setDoc, k, items, catalog = [], onSave, onCancel, savi
       <div className="note info">
         المجموع {money(t.subtotal)}{t.discount > 0 && ` − خصم ${money(t.discount)}`}{t.vat > 0 && ` + ضريبة ${money(t.vat)}`} = <b style={{ color: "#d4a84b" }}>الإجمالي {money(t.total)} ريال</b>
       </div>
+      {(doc.type === "quote" || doc.type === "contract") && <Payments doc={doc} setDoc={setDoc} />}
       {doc.type !== "proposal" && doc.type !== "invoice" && <PriceAdvisor doc={doc} setDoc={setDoc} />}
       <Text label="رسوم متكررة / تجديد (كل سطر منفصل)" area rows={2} value={toLines(doc.recurring)} onChange={(v) => set("recurring", fromLines(v))} />
+      {doc.type !== "invoice" && (
+        <Text label="الدعم الفني (كل نقطة في سطر، تظهر للعميل في قسم مستقل)" area rows={5} value={toLines(doc.support)} onChange={(v) => set("support", fromLines(v))} />
+      )}
       <Text label="مدة التنفيذ" value={doc.duration} onChange={(v) => set("duration", v)} hint="مثال: التسليم سريع ويتوقف على تسليم المحتوى في وقته، بدون عدد أيام ثابت" />
       <Text label={doc.type === "contract" ? "بنود العقد (كل بند في سطر)" : "الشروط والملاحظات (كل شرط في سطر)"} area rows={8} value={toLines(doc.terms)} onChange={(v) => set("terms", fromLines(v))} hint={doc.type === "contract" ? "بند «حساب السداد المعتمد» بالآيبان يُضاف تلقائياً في آخر بنود العقد. ولو تبيه داخل بند معيّن اكتب {الآيبان} و{البنك} و{المستفيد} في نص البند." : "تقدر تكتب {الآيبان} و{البنك} و{المستفيد} داخل أي شرط فتُستبدل ببيانات حسابك."} />
       <button type="button" className="mini" style={{ justifySelf: "start" }} onClick={() => confirm("استبدال البنود الحالية بالبنود الافتراضية من الإعدادات؟") && set("terms", [...((doc.type === "contract" ? k.contractTerms : k.quoteTerms) || [])])}>
@@ -991,8 +1184,8 @@ function DocEditor({ doc, setDoc, k, items, catalog = [], onSave, onCancel, savi
 }
 
 function Docs({ k, saved = {}, setK, about, site, packages, addons, siteFeatures }) {
-  const catalog = quotePackageSections({ packages, addons, siteFeatures });
   const [items, setItems] = useState(null);
+  const [starting, setStarting] = useState(false);
   const [info, setInfo] = useState({ db: true, ai: false });
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -1016,6 +1209,8 @@ function Docs({ k, saved = {}, setK, about, site, packages, addons, siteFeatures
 
   async function save() {
     if (editing.type !== "proposal" && !editing.sections.length && !confirm("لا توجد بنود أسعار. حفظ الوثيقة مع ذلك؟")) return;
+    const paid = (editing.payments || []).reduce((n, p) => n + (Number(p.amount) || 0), 0);
+    if (editing.payments?.length && editing.type !== "invoice" && Math.round(paid) !== Math.round(docTotals(editing).total) && !confirm("مجموع الدفعات لا يساوي الإجمالي. حفظ الوثيقة مع ذلك؟")) return;
     setSaving(true);
     setMsg("");
     const r = await fetch("/api/docs", { method: editing.id ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(editing) });
@@ -1079,8 +1274,8 @@ function Docs({ k, saved = {}, setK, about, site, packages, addons, siteFeatures
       date: today(),
       status: "draft",
       validDays: type === "quote" ? d.validDays || base.validDays : 0,
-      ...(type !== d.type ? { ref: d.number, terms: base.terms } : {}),
-      ...(type === "invoice" ? { dueDate: base.dueDate, vatRate: 0, annex: [] } : {}),
+      ...(type !== d.type ? { ref: d.number, terms: d.payments?.length && type !== "invoice" ? withPaymentTerm(base.terms) : base.terms } : {}),
+      ...(type === "invoice" ? { dueDate: base.dueDate, vatRate: 0, annex: [], support: [], payments: [] } : {}),
     };
   };
 
@@ -1132,11 +1327,25 @@ function Docs({ k, saved = {}, setK, about, site, packages, addons, siteFeatures
       {msg && <div className="note info">{msg}</div>}
 
       {editing ? (
-        <DocEditor doc={editing} setDoc={setEditing} k={k} items={items} catalog={catalog} onSave={save} onCancel={() => setEditing(null)} saving={saving} />
+        <DocEditor doc={editing} setDoc={setEditing} k={k} items={items} ai={info.ai} onSave={save} onCancel={() => setEditing(null)} saving={saving} />
+      ) : starting ? (
+        <QuoteStarter
+          k={k}
+          packages={packages}
+          addons={addons}
+          siteFeatures={siteFeatures}
+          ai={info.ai}
+          onCancel={() => setStarting(false)}
+          onDone={(doc, note) => {
+            setStarting(false);
+            setEditing(doc);
+            setMsg(note || "راجع العرض ثم احفظه.");
+          }}
+        />
       ) : (
         <>
           <div className="adm-docs-h">
-            <button type="button" className="gold" onClick={() => setEditing(blankDoc("quote", k, catalog))}>+ عرض سعر جديد</button>
+            <button type="button" className="gold" onClick={() => setStarting(true)}>+ عرض سعر جديد</button>
             <button type="button" className="gold" onClick={() => setEditing(blankDoc("contract", k))}>+ عقد جديد</button>
             <button type="button" className="gold" onClick={() => setEditing(blankDoc("invoice", k))}>+ فاتورة جديدة</button>
           </div>
@@ -2164,13 +2373,16 @@ export default function Admin() {
         {tab === "tracking" && (
           <>
             <div className="note info">
-              الصق المعرّفات فقط (وليس الكود كامل). اترك الحقل فارغاً لتعطيل الأداة. بعد الحفظ تُفعَّل الأدوات على الموقع، وتُسجَّل نقرات واتساب كحدث تحويل.
+              الصق المعرّفات فقط (وليس الكود كامل). اترك الحقل فارغاً لتعطيل الأداة. بعد الحفظ تُفعَّل الأدوات على الموقع، ويُسجَّل إرسال نموذج الاستفسار ونقرات واتساب والاتصال كتحويلات.
             </div>
             <Text label="Google Analytics 4 (Measurement ID مثل G-XXXXXXXXXX)" ltr value={d.tracking.ga4} onChange={u(["tracking", "ga4"])} />
-            <div className="row">
-              <Text label="Google Ads (Conversion ID مثل AW-1234567890)" ltr value={d.tracking.googleAds} onChange={u(["tracking", "googleAds"])} />
-              <Text label="Google Ads Conversion Label (اختياري)" ltr value={d.tracking.googleAdsLabel} onChange={u(["tracking", "googleAdsLabel"])} hint="لتحويل نقرة واتساب" />
+            <Text label="Google Ads (Conversion ID مثل AW-1234567890)" ltr value={d.tracking.googleAds} onChange={u(["tracking", "googleAds"])} />
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
+              <Text label="تصنيف تحويل: نموذج الاستفسار" ltr value={d.tracking.googleAdsFormLabel} onChange={u(["tracking", "googleAdsFormLabel"])} hint="الأهم. فعّل له «التحويلات المحسّنة» في Google Ads." />
+              <Text label="تصنيف تحويل: نقرة واتساب" ltr value={d.tracking.googleAdsLabel} onChange={u(["tracking", "googleAdsLabel"])} />
+              <Text label="تصنيف تحويل: نقرة اتصال" ltr value={d.tracking.googleAdsCallLabel} onChange={u(["tracking", "googleAdsCallLabel"])} />
             </div>
+            <span className="adm-hint">التصنيف (Label) هو الجزء بعد الشرطة المائلة في send_to، مثل AW-1234567890/<b>AbC-D_efG</b>. أنشئ في Google Ads إجراء تحويل مستقلاً لكل واحد من نوع «موقع إلكتروني» ثم انسخ تصنيفه هنا.</span>
             <Text label="Google Search Console (قيمة content من وسم التحقق فقط)" ltr value={d.tracking.searchConsole} onChange={u(["tracking", "searchConsole"])} hint="إذا تحققت عبر سجل DNS فلا تحتاجه." />
             <Text label="Snapchat Pixel ID" ltr value={d.tracking.snap} onChange={u(["tracking", "snap"])} />
             <Text label="TikTok Pixel ID" ltr value={d.tracking.tiktok} onChange={u(["tracking", "tiktok"])} />

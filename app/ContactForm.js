@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Script from "next/script";
 import { ui } from "@/lib/i18n";
+import { getAttribution } from "@/lib/attribution";
 
 export default function ContactForm({ title, services = [], siteKey, lang = "ar" }) {
   const t = ui(lang).form;
@@ -18,11 +19,13 @@ export default function ContactForm({ title, services = [], siteKey, lang = "ar"
       const r = await fetch("/api/inquiry", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...body, lang }),
+        body: JSON.stringify({ ...body, lang, src: getAttribution() }),
       });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j.error || t.failed);
       setMsg(j.message || t.sent);
+      // أدوات التتبع تسجّله تحويلاً (app/Tracking.js)
+      window.dispatchEvent(new CustomEvent("hd:lead", { detail: { id: j.id, email: body.email, phone: body.phone } }));
       setState("done");
     } catch (x) {
       setErr(x.message);

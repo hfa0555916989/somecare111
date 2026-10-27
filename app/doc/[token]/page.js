@@ -188,6 +188,29 @@ export default async function DocPage({ params }) {
           </section>
         )}
 
+        {doc.payments?.length > 0 && (
+          <section className="sum">
+            <h3 className="paper-h">جدول الدفعات</h3>
+            <table>
+              <tbody>
+                {doc.payments.map((x, i) => (
+                  <tr key={i}>
+                    <td><b>{x.title}</b>{x.when && <div className="muted small">{x.when}</div>}</td>
+                    <td><span dir="ltr">{money(x.amount)}</span> ريال</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        )}
+
+        {doc.support?.length > 0 && (
+          <section>
+            <h3 className="paper-h">الدعم الفني</h3>
+            <ul className="feats">{doc.support.map((x, i) => <li key={i}>{x}</li>)}</ul>
+          </section>
+        )}
+
         {(hasBank || p.bankName) && doc.type !== "proposal" && (
           <section className="bank">
             <h3 className="paper-h">طريقة الدفع: تحويل بنكي</h3>
