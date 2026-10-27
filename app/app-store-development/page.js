@@ -1,7 +1,7 @@
 import { SiteHeader, SiteFooter } from "../SiteChrome";
 import { getContent } from "@/lib/content";
 import { localize } from "@/lib/i18n";
-import { BIG_STORE_DESC, BIG_STORE_NAME, BIG_STORE_PRODUCT, STORE_PAGE_FREE } from "@/lib/big-store";
+import { BIG_STORE_NAME, BIG_STORE_PRODUCT, STORE_PAGE_FREE } from "@/lib/big-store";
 import { PackagePoints, StoreShowcase, packageShowcase } from "../PackagePoints";
 import PriceAddendum from "../PriceAddendum";
 import StoreCare from "../StoreCare";
@@ -55,7 +55,7 @@ const PLANS = [
   },
 ];
 
-const OFFER = { name: BIG_STORE_NAME, desc: BIG_STORE_DESC, items: BIG_STORE_PRODUCT };
+const OFFER = { name: BIG_STORE_NAME, items: BIG_STORE_PRODUCT };
 
 const FREE = STORE_PAGE_FREE;
 
@@ -142,7 +142,7 @@ export default async function AppStoreDevelopment() {
         <section id="big-store" className="sec sec-alt">
           <div className="wrap narrow">
             <h2>ماذا يشمل المتجر</h2>
-            <p className="sub">{OFFER.desc}.</p>
+            <p className="sub">نفس المتجر في الاشتراك وفي الشراء.</p>
             <PackagePoints features={OFFER.items} lang="ar" />
             <StoreShowcase data={packageShowcase(OFFER)} lang="ar" />
           </div>
