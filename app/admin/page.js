@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { uploadPresigned } from "@vercel/blob/client";
 import { uniqueName } from "./upload";
 import { defaultContent, BRAND_THEME, BRAND_ASSETS, FONTS, LATIN_FONTS, isFont, fontsHref, SITE_URL, SIZE_FIELDS, RATIOS, RATIO_FIELDS, DEFAULT_SIZES, sizeVars, docTotals, validIban, siteUrl, latinDigits, normalizeIban } from "@/lib/defaults";
-import { packageOptions, quoteFromPackage, supportPoints, maintenanceTier } from "@/lib/quote-defaults";
+import { packageOptions, quoteFromPackage, supportPoints, maintenanceTier, paymentPlan, withPaymentTerm } from "@/lib/quote-defaults";
 import { ICONS, SOCIALS, Icon } from "../Icons";
 import { BrandLogo, BrandText, FooterBrand } from "../SiteChrome";
 import { AIcon } from "./AdminIcons";
@@ -684,6 +684,7 @@ function blankDoc(type, k) {
     vatRate: type === "invoice" ? 0 : Number(k.vatRate) || 0,
     recurring: [],
     support: [],
+    payments: [],
     duration: "",
     terms: type === "invoice" ? [...INVOICE_TERMS] : [...((type === "contract" ? k.contractTerms : k.quoteTerms) || [])],
     annex: [],
@@ -785,7 +786,7 @@ async function ideaToQuote(doc, idea) {
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(j.error || "تعذر التوليد");
   const o = j.out || {};
-  return {
+  const next = {
     ...doc,
     title: o.title || doc.title,
     subtitle: o.subtitle || doc.subtitle,
@@ -793,6 +794,47 @@ async function ideaToQuote(doc, idea) {
     sections: [...(doc.sections || []), ...(o.sections || []).map((x) => ({ ...x, qty: Math.max(1, Math.round(x.qty) || 1), tags: x.tags || [] }))],
     annex: [...(doc.annex || []), ...(o.annex || [])],
   };
+  // البنود الجديدة تغيّر الإجمالي، فيُعاد اقتراح الدفعات
+  return doc.payments?.length ? { ...next, payments: paymentPlan(next) } : next;
+}
+
+function Payments({ doc, setDoc }) {
+  const list = doc.payments || [];
+  const total = docTotals(doc).total;
+  const sum = list.reduce((n, p) => n + (Number(p.amount) || 0), 0);
+  const set = (v) => setDoc({ ...doc, payments: v, terms: v.length ? withPaymentTerm(doc.terms) : doc.terms });
+  return (
+    <div className="adm-card">
+      <div className="adm-card-h">
+        <b>جدول الدفعات</b>
+        <button type="button" className="mini" disabled={!total} onClick={() => set(paymentPlan(doc))}>اقترح الدفعات حسب الإجمالي</button>
+      </div>
+      <span className="adm-hint">يظهر للعميل كجدول: كل دفعة ومتى تُدفع ومبلغها. بعد تغيير الأسعار اضغط «اقترح الدفعات» أو عدّل المبالغ.</span>
+      <List
+        items={list}
+        onChange={set}
+        addLabel="إضافة دفعة"
+        title={(p, i) => `${i + 1}. ${p.title || "دفعة"} · ${money(p.amount)} ريال`}
+        newItem={() => ({ title: "", when: "", amount: 0 })}
+        render={(p, setP) => (
+          <>
+            <Text label="اسم الدفعة (مثل: الدفعة الأولى 50%)" value={p.title} onChange={(v) => setP("title", v)} />
+            <Text label="متى تُدفع (مثل: عند التعاقد)" value={p.when} onChange={(v) => setP("when", v)} />
+            <label>
+              المبلغ (ريال)
+              <input type="number" min="0" value={p.amount} onChange={(e) => setP("amount", Number(e.target.value))} />
+            </label>
+          </>
+        )}
+      />
+      {list.length > 0 &&
+        (Math.round(sum) === Math.round(total) ? (
+          <span className="ok">مجموع الدفعات يساوي الإجمالي ✓</span>
+        ) : (
+          <span className="err">مجموع الدفعات {money(sum)} لا يساوي الإجمالي {money(total)}. اضغط «اقترح الدفعات» أو عدّل المبالغ.</span>
+        ))}
+    </div>
+  );
 }
 
 function IdeaCard({ doc, setDoc, ai }) {
@@ -852,6 +894,7 @@ function QuoteStarter({ k, packages = [], addons, siteFeatures, ai, onDone, onCa
         note = `أُنشئ العرض بدون فكرة العميل: ${x.message}`;
       }
     }
+    doc = { ...doc, payments: paymentPlan(doc), terms: withPaymentTerm(doc.terms) };
     setBusy(false);
     onDone(doc, note);
   }
@@ -1087,6 +1130,7 @@ function DocEditor({ doc, setDoc, k, items, ai, onSave, onCancel, saving }) {
       <div className="note info">
         المجموع {money(t.subtotal)}{t.discount > 0 && ` − خصم ${money(t.discount)}`}{t.vat > 0 && ` + ضريبة ${money(t.vat)}`} = <b style={{ color: "#d4a84b" }}>الإجمالي {money(t.total)} ريال</b>
       </div>
+      {(doc.type === "quote" || doc.type === "contract") && <Payments doc={doc} setDoc={setDoc} />}
       {doc.type !== "proposal" && doc.type !== "invoice" && <PriceAdvisor doc={doc} setDoc={setDoc} />}
       <Text label="رسوم متكررة / تجديد (كل سطر منفصل)" area rows={2} value={toLines(doc.recurring)} onChange={(v) => set("recurring", fromLines(v))} />
       {doc.type !== "invoice" && (
@@ -1163,6 +1207,8 @@ function Docs({ k, saved = {}, setK, about, site, packages, addons, siteFeatures
 
   async function save() {
     if (editing.type !== "proposal" && !editing.sections.length && !confirm("لا توجد بنود أسعار. حفظ الوثيقة مع ذلك؟")) return;
+    const paid = (editing.payments || []).reduce((n, p) => n + (Number(p.amount) || 0), 0);
+    if (editing.payments?.length && editing.type !== "invoice" && Math.round(paid) !== Math.round(docTotals(editing).total) && !confirm("مجموع الدفعات لا يساوي الإجمالي. حفظ الوثيقة مع ذلك؟")) return;
     setSaving(true);
     setMsg("");
     const r = await fetch("/api/docs", { method: editing.id ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(editing) });
@@ -1226,8 +1272,8 @@ function Docs({ k, saved = {}, setK, about, site, packages, addons, siteFeatures
       date: today(),
       status: "draft",
       validDays: type === "quote" ? d.validDays || base.validDays : 0,
-      ...(type !== d.type ? { ref: d.number, terms: base.terms } : {}),
-      ...(type === "invoice" ? { dueDate: base.dueDate, vatRate: 0, annex: [], support: [] } : {}),
+      ...(type !== d.type ? { ref: d.number, terms: d.payments?.length && type !== "invoice" ? withPaymentTerm(base.terms) : base.terms } : {}),
+      ...(type === "invoice" ? { dueDate: base.dueDate, vatRate: 0, annex: [], support: [], payments: [] } : {}),
     };
   };
 

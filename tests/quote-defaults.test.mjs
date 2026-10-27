@@ -2,8 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { DEMO_SHOTS } from "../lib/demo-media.js";
-import { PACKAGES_AR, SUBSCRIPTION_FEATURES_AR } from "../lib/platform-offer.js";
-import { quotePackageSections, sameFeature, packageAmount, FREE_SUPPORT_LINE, SECOND_YEAR_SUPPORT_LINE, packageOptions, quoteFromPackage, supportPoints, maintenanceTier } from "../lib/quote-defaults.js";
+import { PACKAGES_AR, SUBSCRIPTION_FEATURES_AR, QUOTE_TERMS_AR, alignCommercialContent } from "../lib/platform-offer.js";
+import { quotePackageSections, sameFeature, packageAmount, FREE_SUPPORT_LINE, SECOND_YEAR_SUPPORT_LINE, packageOptions, quoteFromPackage, supportPoints, maintenanceTier, paymentPlan, withPaymentTerm, PAYMENT_TERM } from "../lib/quote-defaults.js";
 
 const livePackages = PACKAGES_AR;
 
@@ -147,4 +147,55 @@ test("documents save the support points and the public page shows them", () => {
   const page = readFileSync(new URL("../app/doc/[token]/page.js", import.meta.url), "utf8");
   assert.match(docs, /support: lines\(b\.support/);
   assert.match(page, /الدعم الفني[\s\S]*doc\.support\.map/);
+});
+
+const sum = (plan) => plan.reduce((n, p) => n + p.amount, 0);
+
+test("a subscription pays the setup at signing and the first period at launch", () => {
+  const monthly = paymentPlan(quoteFromPackage(subscription, {}));
+  assert.deepEqual(monthly.map((p) => [p.when.split("،")[0], p.amount]), [["عند التعاقد", 2000], ["عند إطلاق المتجر", 300]]);
+  const annual = paymentPlan(quoteFromPackage(subscription, { monthly: 1, billing: "annual" }));
+  assert.equal(annual[1].amount, 7000);
+  assert.match(annual[1].title, /السنة الأولى/);
+});
+
+test("large one-time work inside a subscription is split in half", () => {
+  const q = quoteFromPackage(subscription, {});
+  q.sections.push({ title: "ميزة خاصة", price: 6000, qty: 1 });
+  assert.deepEqual(paymentPlan(q).map((p) => p.amount), [4000, 4300]);
+});
+
+test("a purchase pays 50/30/20 and the apps payment does not wait for store review", () => {
+  const plan = paymentPlan(quoteFromPackage(purchase, { once: 1 }));
+  assert.deepEqual(plan.map((p) => p.amount), [10000, 6000, 4000]);
+  assert.match(plan[2].when, /رفع التطبيقين للمراجعة/);
+  assert.doesNotMatch(paymentPlan(quoteFromPackage(purchase, {}))[2].when, /التطبيقين/);
+});
+
+test("payments always add up to the total after discount and VAT, and small projects pay in two", () => {
+  const d = { ...quoteFromPackage(purchase, { oncePrice: 12345 }), discount: 345, vatRate: 15 };
+  assert.equal(sum(paymentPlan(d)), Math.round(12000 * 1.15));
+  const small = paymentPlan({ sections: [{ title: "موقع", price: 3001, qty: 1 }] });
+  assert.deepEqual(small.map((p) => p.amount), [1501, 1500]);
+  assert.deepEqual(paymentPlan({ sections: [] }), []);
+});
+
+test("a fixed 50/50 term gives way to the payment schedule", () => {
+  const terms = withPaymentTerm(["مدة التنفيذ", "الدفع: 50% عند توقيع العقد، و50% عند التسليم والإطلاق، بالتحويل البنكي."]);
+  assert.deepEqual(terms, ["مدة التنفيذ", PAYMENT_TERM]);
+  assert.equal(withPaymentTerm(["أ"])[0], PAYMENT_TERM);
+  assert.equal(QUOTE_TERMS_AR[0], PAYMENT_TERM);
+});
+
+test("saved quote terms drop the old payment line and the owner-only note", () => {
+  const old = ["الدفع في الاشتراك: رسوم التجهيز عند التعاقد، ثم الاشتراك الشهري. في الشراء: 50% عند التعاقد و50% عند التسليم.", "الأرقام في البنود بداية النطاق المنشور، وتُعدَّل داخل النطاق قبل إرسال العرض."];
+  const terms = alignCommercialContent({ contracts: { quoteTerms: old } }).contracts.quoteTerms;
+  assert.deepEqual(terms, QUOTE_TERMS_AR);
+});
+
+test("documents save the payment schedule and the public page shows it", () => {
+  const docs = readFileSync(new URL("../lib/docs.js", import.meta.url), "utf8");
+  const page = readFileSync(new URL("../app/doc/[token]/page.js", import.meta.url), "utf8");
+  assert.match(docs, /payments: \(Array\.isArray\(b\.payments\)/);
+  assert.match(page, /جدول الدفعات[\s\S]*doc\.payments\.map/);
 });
