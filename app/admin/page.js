@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { uploadPresigned } from "@vercel/blob/client";
 import { uniqueName } from "./upload";
 import { defaultContent, BRAND_THEME, BRAND_ASSETS, FONTS, LATIN_FONTS, isFont, fontsHref, SITE_URL, SIZE_FIELDS, RATIOS, RATIO_FIELDS, DEFAULT_SIZES, sizeVars, docTotals, validIban, siteUrl, latinDigits, normalizeIban } from "@/lib/defaults";
+import { sourceLabel, fromGoogleAds } from "@/lib/attribution";
 import { packageOptions, quoteFromPackage, supportPoints, maintenanceTier, paymentPlan, withPaymentTerm } from "@/lib/quote-defaults";
 import { ICONS, SOCIALS, Icon } from "../Icons";
 import { BrandLogo, BrandText, FooterBrand } from "../SiteChrome";
@@ -598,6 +599,7 @@ function Inquiries({ form, setForm, onCount }) {
             <div>
               <strong>{i.name}</strong>
               {i.service && <span className="adm-hint"> · {i.service}</span>}
+              {sourceLabel(i.src) && <span className={"adm-pill" + (fromGoogleAds(i.src) ? " accepted" : "")} style={{ marginInlineStart: 8 }}>{sourceLabel(i.src)}</span>}
             </div>
             <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
               {i.phone && <a href={`tel:${i.phone}`} dir="ltr" style={{ color: "#d4a84b" }}>{i.phone}</a>}
@@ -2371,13 +2373,16 @@ export default function Admin() {
         {tab === "tracking" && (
           <>
             <div className="note info">
-              الصق المعرّفات فقط (وليس الكود كامل). اترك الحقل فارغاً لتعطيل الأداة. بعد الحفظ تُفعَّل الأدوات على الموقع، وتُسجَّل نقرات واتساب كحدث تحويل.
+              الصق المعرّفات فقط (وليس الكود كامل). اترك الحقل فارغاً لتعطيل الأداة. بعد الحفظ تُفعَّل الأدوات على الموقع، ويُسجَّل إرسال نموذج الاستفسار ونقرات واتساب والاتصال كتحويلات.
             </div>
             <Text label="Google Analytics 4 (Measurement ID مثل G-XXXXXXXXXX)" ltr value={d.tracking.ga4} onChange={u(["tracking", "ga4"])} />
-            <div className="row">
-              <Text label="Google Ads (Conversion ID مثل AW-1234567890)" ltr value={d.tracking.googleAds} onChange={u(["tracking", "googleAds"])} />
-              <Text label="Google Ads Conversion Label (اختياري)" ltr value={d.tracking.googleAdsLabel} onChange={u(["tracking", "googleAdsLabel"])} hint="لتحويل نقرة واتساب" />
+            <Text label="Google Ads (Conversion ID مثل AW-1234567890)" ltr value={d.tracking.googleAds} onChange={u(["tracking", "googleAds"])} />
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
+              <Text label="تصنيف تحويل: نموذج الاستفسار" ltr value={d.tracking.googleAdsFormLabel} onChange={u(["tracking", "googleAdsFormLabel"])} hint="الأهم. فعّل له «التحويلات المحسّنة» في Google Ads." />
+              <Text label="تصنيف تحويل: نقرة واتساب" ltr value={d.tracking.googleAdsLabel} onChange={u(["tracking", "googleAdsLabel"])} />
+              <Text label="تصنيف تحويل: نقرة اتصال" ltr value={d.tracking.googleAdsCallLabel} onChange={u(["tracking", "googleAdsCallLabel"])} />
             </div>
+            <span className="adm-hint">التصنيف (Label) هو الجزء بعد الشرطة المائلة في send_to، مثل AW-1234567890/<b>AbC-D_efG</b>. أنشئ في Google Ads إجراء تحويل مستقلاً لكل واحد من نوع «موقع إلكتروني» ثم انسخ تصنيفه هنا.</span>
             <Text label="Google Search Console (قيمة content من وسم التحقق فقط)" ltr value={d.tracking.searchConsole} onChange={u(["tracking", "searchConsole"])} hint="إذا تحققت عبر سجل DNS فلا تحتاجه." />
             <Text label="Snapchat Pixel ID" ltr value={d.tracking.snap} onChange={u(["tracking", "snap"])} />
             <Text label="TikTok Pixel ID" ltr value={d.tracking.tiktok} onChange={u(["tracking", "tiktok"])} />

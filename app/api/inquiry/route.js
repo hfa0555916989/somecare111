@@ -4,6 +4,7 @@ import { localize } from "@/lib/i18n";
 import { createInquiry, rateLimit, clientIp } from "@/lib/inquiries";
 import { verifyTurnstile } from "@/lib/turnstile";
 import { notify } from "@/lib/mail";
+import { cleanSrc, sourceLabel } from "@/lib/attribution";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +55,9 @@ export async function POST(req) {
     service: str(b.service, 120),
     message: str(b.message, 2000),
   };
+  // من أين جاء الزائر (إعلان Google أو وسوم utm)
+  const src = cleanSrc(b.src);
+  if (Object.keys(src).length) data.src = src;
   if (data.name.length < 2) return NextResponse.json({ error: m.name }, { status: 400 });
   if (data.email && !EMAIL.test(data.email)) return NextResponse.json({ error: m.email }, { status: 400 });
   if (!data.email && data.phone.replace(/\D/g, "").length < 9)
@@ -81,6 +85,7 @@ export async function POST(req) {
     ["البريد", data.email],
     ["الخدمة", data.service],
     ["الرسالة", data.message],
+    ["المصدر", sourceLabel(data.src)],
   ], { replyTo: data.email });
 
   const msg = String(f.success || "تم استلام استفسارك برقم {number}").replace("{number}", item.id);

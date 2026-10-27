@@ -2,6 +2,7 @@
 import Script from "next/script";
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { saveAttribution, e164 } from "@/lib/attribution";
 
 // يسمح فقط بالحروف والأرقام والشرطات لمنع حقن أكواد
 const clean = (v) => String(v || "").trim().replace(/[^A-Za-z0-9_\-]/g, "");
@@ -10,30 +11,57 @@ export default function Tracking({ t = {} }) {
   const ga4 = clean(t.ga4);
   const ads = clean(t.googleAds);
   const label = clean(t.googleAdsLabel);
+  const formLabel = clean(t.googleAdsFormLabel);
+  const callLabel = clean(t.googleAdsCallLabel);
   const snap = clean(t.snap);
   const tiktok = clean(t.tiktok);
   const x = clean(t.xPixel);
   const xEvent = clean(t.xEventId);
   const gtagId = ga4 || ads;
 
-  // تسجيل نقرات واتساب كتحويل في كل الأدوات المفعّلة
+  // تحويل Google Ads بتصنيفه (كل إجراء له تصنيف مستقل في Google Ads)
+  const adsConversion = (lbl, extra = {}) => {
+    if (window.gtag && ads && lbl) window.gtag("event", "conversion", { send_to: `${ads}/${lbl}`, ...extra });
+  };
+
+  // تسجيل نقرات واتساب والاتصال كتحويل في كل الأدوات المفعّلة
   useEffect(() => {
+    saveAttribution(window.location.href);
     const onClick = (e) => {
-      const a = e.target.closest && e.target.closest('a[href*="wa.me"]');
+      const a = e.target.closest && e.target.closest('a[href*="wa.me"], a[href^="tel:"]');
       if (!a) return;
+      const call = a.getAttribute("href").startsWith("tel:");
       try {
-        if (window.gtag) {
-          if (ga4) window.gtag("event", "whatsapp_click", { method: "whatsapp" });
-          if (ads && label) window.gtag("event", "conversion", { send_to: `${ads}/${label}` });
-        }
+        if (window.gtag && ga4) window.gtag("event", call ? "phone_click" : "whatsapp_click", { method: call ? "phone" : "whatsapp" });
+        adsConversion(call ? callLabel : label);
         if (window.snaptr) window.snaptr("track", "SIGN_UP");
         if (window.ttq) window.ttq.track("Contact");
         if (window.twq && xEvent) window.twq("event", xEvent, {});
       } catch (_) {}
     };
+    // إرسال نموذج الاستفسار بنجاح (يطلقه ContactForm): أهم تحويل
+    const onLead = (e) => {
+      const { id, email, phone } = e.detail || {};
+      try {
+        if (window.gtag) {
+          if (ga4) window.gtag("event", "generate_lead", { method: "form" });
+          // التحويلات المحسّنة: Google يشفّر البريد والجوال قبل إرسالها
+          const user = { ...(email ? { email } : {}), ...(e164(phone) ? { phone_number: e164(phone) } : {}) };
+          if (ads && formLabel && Object.keys(user).length) window.gtag("set", "user_data", user);
+          adsConversion(formLabel, id ? { transaction_id: id } : {});
+        }
+        if (window.snaptr) window.snaptr("track", "SIGN_UP");
+        if (window.ttq) window.ttq.track("SubmitForm");
+        if (window.twq && xEvent) window.twq("event", xEvent, {});
+      } catch (_) {}
+    };
     document.addEventListener("click", onClick);
-    return () => document.removeEventListener("click", onClick);
-  }, [ga4, ads, label, xEvent]);
+    window.addEventListener("hd:lead", onLead);
+    return () => {
+      document.removeEventListener("click", onClick);
+      window.removeEventListener("hd:lead", onLead);
+    };
+  }, [ga4, ads, label, formLabel, callLabel, xEvent]);
 
   // روابط العقود وعروض الأسعار خاصة بالعميل، فلا نرسلها لأدوات التتبع والإعلانات
   if (usePathname()?.startsWith("/doc/")) return null;
