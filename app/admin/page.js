@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { uploadPresigned } from "@vercel/blob/client";
 import { uniqueName } from "./upload";
-import { BRAND_THEME, BRAND_ASSETS, FONTS, LATIN_FONTS, isFont, fontsHref, SITE_URL, SIZE_FIELDS, RATIOS, RATIO_FIELDS, DEFAULT_SIZES, sizeVars, docTotals, validIban, siteUrl, latinDigits, normalizeIban } from "@/lib/defaults";
+import { BRAND_THEME, BRAND_ASSETS, FONTS, LATIN_FONTS, isFont, fontsHref, SITE_URL, SIZE_FIELDS, RATIOS, RATIO_FIELDS, DEFAULT_SIZES, sizeVars, docTotals, validIban, siteUrl, latinDigits, normalizeIban, defaultContent } from "@/lib/defaults";
 import { ICONS, SOCIALS, Icon } from "../Icons";
 import { BrandLogo, BrandText, FooterBrand } from "../SiteChrome";
 import { AIcon } from "./AdminIcons";
@@ -10,6 +10,7 @@ import Accounting from "./Accounting";
 import Archive from "./Archive";
 import Projects from "./Projects";
 import Assistant from "./Assistant";
+import QuoteChat from "./QuoteChat";
 import Ideas from "./Ideas";
 import Guide from "./Guide";
 
@@ -550,6 +551,7 @@ function blankDoc(type, k) {
     client: { name: "", company: "", idNumber: "", phone: "", email: "", city: "" },
     sections: [],
     discount: 0,
+    discountType: "amount",
     vatRate: type === "invoice" ? 0 : Number(k.vatRate) || 0,
     recurring: [],
     duration: "",
@@ -772,8 +774,14 @@ function DocEditor({ doc, setDoc, k, items, onSave, onCancel, saving }) {
       />
       <div className="row">
         <label>
-          خصم (ريال)
-          <input type="number" min="0" value={doc.discount} onChange={(e) => set("discount", Number(e.target.value))} />
+          خصم (إذا طلب العميل)
+          <span style={{ display: "flex", gap: 6 }}>
+            <input type="number" min="0" max={doc.discountType === "percent" ? 100 : undefined} value={doc.discount} onChange={(e) => set("discount", Number(e.target.value))} style={{ flex: 1 }} />
+            <select value={doc.discountType || "amount"} onChange={(e) => set("discountType", e.target.value)} style={{ width: "auto" }}>
+              <option value="amount">ريال</option>
+              <option value="percent">%</option>
+            </select>
+          </span>
         </label>
         <label>
           ضريبة القيمة المضافة % (0 إذا غير مسجّل)
@@ -781,7 +789,7 @@ function DocEditor({ doc, setDoc, k, items, onSave, onCancel, saving }) {
         </label>
       </div>
       <div className="note info">
-        المجموع {money(t.subtotal)}{t.discount > 0 && ` − خصم ${money(t.discount)}`}{t.vat > 0 && ` + ضريبة ${money(t.vat)}`} = <b style={{ color: "#d4a84b" }}>الإجمالي {money(t.total)} ريال</b>
+        المجموع {money(t.subtotal)}{t.discount > 0 && ` − خصم ${doc.discountType === "percent" ? `${doc.discount}% ` : ""}${money(t.discount)}`}{t.vat > 0 && ` + ضريبة ${money(t.vat)}`} = <b style={{ color: "#d4a84b" }}>الإجمالي {money(t.total)} ريال</b>
       </div>
       {doc.type !== "proposal" && doc.type !== "invoice" && <PriceAdvisor doc={doc} setDoc={setDoc} />}
       <Text label="رسوم متكررة / تجديد (كل سطر منفصل)" area rows={2} value={toLines(doc.recurring)} onChange={(v) => set("recurring", fromLines(v))} />
@@ -908,6 +916,14 @@ function Docs({ k, saved = {}, setK, about, site }) {
     setImporting(false);
   }
 
+  // عرض سعر من محادثة الذكاء الاصطناعي: البنود بأسعار الباقات، والشروط والصلاحية من الإعدادات، والدعم الفني بسعره الشهري
+  function openAiQuote(res) {
+    let doc = { ...blankDoc("quote", k), ...res.doc, status: "draft" };
+    if (res.support) doc = withSupport(doc, { start: today(), months: res.support.months, price: res.support.months * res.support.monthly });
+    setEditing(doc);
+    setMsg(`عرض السعر جاهز في المحرر. راجعه ثم احفظه${res.gaps?.length ? "، وسعّر الطلبات التي خارج الباقات بنفسك" : ""}.`);
+  }
+
   const copyOf = (d, type) => {
     const { id, token, createdAt, updatedAt, acceptance, provider, ...rest } = d;
     const base = blankDoc(type, k);
@@ -979,6 +995,7 @@ function Docs({ k, saved = {}, setK, about, site }) {
             <button type="button" className="gold" onClick={() => setEditing(blankDoc("contract", k))}>+ عقد جديد</button>
             <button type="button" className="gold" onClick={() => setEditing(blankDoc("invoice", k))}>+ فاتورة جديدة</button>
           </div>
+          <QuoteChat ai={info.ai} onOpen={openAiQuote} />
           <div className="adm-card">
             <b>استيراد من PDF بالذكاء الاصطناعي</b>
             <span className="acc-lbl">حوّل الملف إلى:</span>
@@ -1493,6 +1510,22 @@ export default function Admin() {
         )}
 
         {tab === "packages" && (
+          <>
+          <div className="note info">
+            عروض الأسعار بالذكاء الاصطناعي تأخذ أسعار هذه الباقات والإضافات كما هي (أول رقم في خانة السعر).
+            <div style={{ marginTop: 8 }}>
+              <button
+                type="button"
+                className="mini"
+                onClick={() =>
+                  confirm("استبدال كل الباقات والإضافات بسلّم الأسعار الجديد (تعريفي 1,499 · خدمي 7,900 · تطبيق خدمي 13,500 · خدمي + تطبيق 17,900 · مع تطبيقين 20,000 · تطبيق متجر 14,500 · متاجر 16,000 / 20,000 / 28,000)؟ لن يُنشر حتى تضغط «حفظ التغييرات».") &&
+                  setData((d) => ({ ...d, packages: structuredClone(defaultContent.packages), addons: structuredClone(defaultContent.addons) }))
+                }
+              >
+                تطبيق سلّم الأسعار الجديد
+              </button>
+            </div>
+          </div>
           <List
             items={d.packages}
             onChange={u(["packages"])}
@@ -1521,6 +1554,7 @@ export default function Admin() {
               </>
             )}
           />
+          </>
         )}
 
         {tab === "addons" && (

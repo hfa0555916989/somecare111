@@ -175,7 +175,7 @@ export default async function DocPage({ params }) {
                   <tr key={i}><td>{s.title}</td><td dir="ltr">{money(s.price * (s.qty || 1))}</td></tr>
                 ))}
                 {(t.discount > 0 || t.vat > 0) && <tr className="sub"><td>المجموع</td><td dir="ltr">{money(t.subtotal)}</td></tr>}
-                {t.discount > 0 && <tr><td>الخصم</td><td dir="ltr">- {money(t.discount)}</td></tr>}
+                {t.discount > 0 && <tr><td>الخصم{doc.discountType === "percent" ? ` (${doc.discount}%)` : ""}</td><td dir="ltr">- {money(t.discount)}</td></tr>}
                 {t.vat > 0 && <tr><td>ضريبة القيمة المضافة ({doc.vatRate}%)</td><td dir="ltr">{money(t.vat)}</td></tr>}
                 <tr className="total"><td>الإجمالي</td><td><span dir="ltr">{money(t.total)}</span> ريال</td></tr>
               </tbody>
