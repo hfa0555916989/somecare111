@@ -2,8 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { DEMO_SHOTS } from "../lib/demo-media.js";
-import { PACKAGES_AR, SUBSCRIPTION_FEATURES_AR, QUOTE_TERMS_AR, alignCommercialContent } from "../lib/platform-offer.js";
-import { quotePackageSections, sameFeature, packageAmount, FREE_SUPPORT_LINE, SECOND_YEAR_SUPPORT_LINE, packageOptions, quoteFromPackage, supportPoints, maintenanceTier, paymentPlan, withPaymentTerm, PAYMENT_TERM } from "../lib/quote-defaults.js";
+import { PACKAGES_AR, PROJECT_PACKAGES_AR, STORE_PACKAGES_AR, SUBSCRIPTION_FEATURES_AR, QUOTE_TERMS_AR, alignCommercialContent } from "../lib/platform-offer.js";
+import { quotePackageSections, sameFeature, packageAmount, FREE_SUPPORT_LINE, SECOND_YEAR_SUPPORT_LINE, packageOptions, quoteFromPackage, supportPoints, maintenanceTier, paymentPlan, withPaymentTerm, PAYMENT_TERM, discountAmount } from "../lib/quote-defaults.js";
 
 const livePackages = PACKAGES_AR;
 
@@ -19,7 +19,7 @@ test("package amounts keep the first published number in a range", () => {
 });
 
 test("a new quote uses the subscription and purchase floors, not the retired 1,500", () => {
-  const sections = quotePackageSections({ packages: livePackages, addons: [], siteFeatures: [] });
+  const sections = quotePackageSections({ packages: STORE_PACKAGES_AR, addons: [], siteFeatures: [] });
   assert.deepEqual(
     sections.map((s) => [s.title, s.price]),
     [
@@ -198,4 +198,37 @@ test("documents save the payment schedule and the public page shows it", () => {
   const page = readFileSync(new URL("../app/doc/[token]/page.js", import.meta.url), "utf8");
   assert.match(docs, /payments: \(Array\.isArray\(b\.payments\)/);
   assert.match(page, /جدول الدفعات[\s\S]*doc\.payments\.map/);
+});
+
+test("a website or service app quote is one fixed line, then the free period and its fixed maintenance", () => {
+  const site = PROJECT_PACKAGES_AR.find((p) => p.name === "موقع تعريفي احترافي");
+  const o = packageOptions(site);
+  assert.equal(o.purchase, true);
+  assert.deepEqual(o.once.map((t) => t.min), [1499]);
+  assert.deepEqual(o.monthly.map((t) => t.min), [230]);
+  const q = quoteFromPackage(site, { freeMonths: 2 });
+  assert.deepEqual(q.sections.map((s) => [s.title, s.price, s.qty]), [["موقع تعريفي احترافي", 1499, 1]]);
+  assert.deepEqual(q.recurring, []);
+  assert.ok(q.support.some((l) => l.includes("شهرين")) && q.support.some((l) => l.includes("230 ريال شهرياً")));
+  assert.ok(q.sections[0].features.every((f) => !/صيانة/.test(f)));
+  const apps = quoteFromPackage(PROJECT_PACKAGES_AR.find((p) => p.name === "موقع خدمي + تطبيق عميل وتطبيق مقدّم خدمة"));
+  assert.equal(apps.sections[0].price, 20000);
+  assert.ok(apps.support.some((l) => l.includes("500 ريال شهرياً")));
+});
+
+test("a percent discount comes off the subtotal and the payments still add up", () => {
+  assert.equal(discountAmount({ discount: 10, discountType: "percent" }, 17900), 1790);
+  assert.equal(discountAmount({ discount: 150, discountType: "percent" }, 17900), 17900);
+  assert.equal(discountAmount({ discount: 500 }, 17900), 500);
+  const doc = { sections: [{ title: "موقع خدمي + تطبيق", desc: "", price: 17900, qty: 1 }], discount: 10, discountType: "percent", vatRate: 0 };
+  const plan = paymentPlan(doc);
+  assert.equal(plan.reduce((n, p) => n + p.amount, 0), 16110);
+  assert.ok(plan.every((p) => !/المتجر/.test(p.when)));
+  assert.match(plan[1].when, /المشروع/);
+});
+
+test("the AI idea route never writes prices", () => {
+  const route = readFileSync(new URL("../app/api/docs/generate/route.js", import.meta.url), "utf8");
+  assert.doesNotMatch(route, /price: N|sections: arr/);
+  assert.match(route, /extras/);
 });

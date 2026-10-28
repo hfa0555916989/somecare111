@@ -14,7 +14,18 @@ test("stored legacy packages are replaced on read", () => {
     addons: [{ title: "بوابة دفع", price: "مجاناً", desc: "داخل باقة المتجر الكبير شامل التطبيق" }],
     features: [{ icon: "shield", title: "أمان وتحديثات مستمرة", desc: "ثم 200 ريال للسنة الثانية." }],
   });
-  assert.deepEqual(merged.packages.map((p) => p.name), ["اشتراك المتجر", "شراء المتجر"]);
+  assert.deepEqual(merged.packages.map((p) => p.name), [
+    "اشتراك المتجر",
+    "شراء المتجر",
+    "موقع تعريفي احترافي",
+    "موقع تعريفي متقدم",
+    "موقع خدمي",
+    "تطبيق خدمي",
+    "موقع خدمي + تطبيق",
+    "موقع خدمي + تطبيق عميل وتطبيق مقدّم خدمة",
+  ]);
+  assert.deepEqual(merged.packages.slice(2).map((p) => p.price), ["1,499", "2,999", "7,900", "13,500", "17,900", "20,000"]);
+  assert.ok(merged.packages.slice(2).every((p) => p.oneTime && !p.featured));
   assert.equal(merged.packages[0].featured, true);
   assert.equal(merged.packages[1].featured, false);
   assert.equal(merged.packages[0].tiers[1].price, "300 – 500");

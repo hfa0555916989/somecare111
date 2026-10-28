@@ -19,7 +19,7 @@ const COPY = {
   ar: {
     servicesLead: "أبني من الرياض أربعة مسارات واضحة: موقع يعرّف بنشاطك، تطبيق جوال، متجر إلكتروني مع تطبيق، وخدمات أمن سيبراني للشركات.",
     worksLead: "هذه نماذج حقيقية من المتجر التجريبي ولوحة التحكم، لترى الواجهة والطلب والإدارة قبل أن تطلب التنفيذ.",
-    packagesLead: "الأسعار الظاهرة هي أسعار الباقات الحالية. التجهيز 2,000 ريال مرة واحدة. الاشتراك: أساسية 300 ريال شهرياً، أو متقدمة 500، ومع التطبيقات 700 أو 1,000، وسنوياً بشهرين مجاناً. الشراء من 12,000 ريال للمتجر، أو من 20,000 مع التطبيقين، ثم صيانة 500 أو 800 ريال شهرياً بعد شهر إلى شهرين من إصلاح الأعطال. الدفع مقدّم.",
+    packagesLead: "الأسعار الظاهرة هي أسعار الباقات الحالية. التجهيز 2,000 ريال مرة واحدة. الاشتراك: أساسية 300 ريال شهرياً، أو متقدمة 500، ومع التطبيقات 700 أو 1,000، وسنوياً بشهرين مجاناً. الشراء من 12,000 ريال للمتجر، أو من 20,000 مع التطبيقين، ثم صيانة 500 أو 800 ريال شهرياً بعد شهر إلى شهرين من إصلاح الأعطال. الدفع مقدّم. المواقع والتطبيقات الخدمية بسعر ثابت: موقع تعريفي 1,499 ريال، وموقع خدمي من 7,900، وتطبيق خدمي 13,500، وموقع خدمي مع تطبيق 17,900، ومع تطبيق لمقدّم الخدمة 20,000.",
     blogLead: "مقالات عن انشاء المتاجر والتطبيقات وأسعارها. المتجر من 300 ريال شهرياً، وعنوان المتجر مع التطبيق يذكر باشتراك من 700 ريال شهرياً.",
     guides: "صفحات الشرح",
     posts: "المقالات",
@@ -39,7 +39,7 @@ const COPY = {
   en: {
     servicesLead: "Four clear paths from Riyadh: a business website, a mobile app, an online store with an app, and enterprise cybersecurity.",
     worksLead: "Real screenshots of the demo store and its admin panel, so you can see the shop, the cart and the dashboard before you order.",
-    packagesLead: "These are the current packages. Setup is 2,000 SAR once. Subscription: Basic 300 SAR per month, Advanced 500, or 700 and 1,000 with the apps, with two months free on the annual plan. Purchase is from 12,000 SAR for the store, or from 20,000 with both apps, then maintenance is 500 or 800 SAR per month after one to two months of bug fixes. Payment is prepaid.",
+    packagesLead: "These are the current packages. Setup is 2,000 SAR once. Subscription: Basic 300 SAR per month, Advanced 500, or 700 and 1,000 with the apps, with two months free on the annual plan. Purchase is from 12,000 SAR for the store, or from 20,000 with both apps, then maintenance is 500 or 800 SAR per month after one to two months of bug fixes. Payment is prepaid. Websites and service apps have fixed prices: a business website is 1,499 SAR, a service website from 7,900, a service app 13,500, a service website with an app 17,900, and with a provider app 20,000.",
     blogLead: "The articles are written in Arabic. A store alone is from 300 SAR/month. A title about the store with the app states a subscription from 700 SAR/month.",
     guides: "Guides",
     posts: "Articles",
