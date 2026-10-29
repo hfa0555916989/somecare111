@@ -103,7 +103,8 @@ export default async function StorePage({ lang }) {
             <h2>{copy.packages}</h2>
             <p className="sub">{copy.packagesSub}</p>
             <div className="pk-grid">
-              {(c.packages || []).map((p) => (
+              {/* صفحة المتاجر تعرض باقات المتجر فقط، والمواقع والتطبيقات الخدمية في الرئيسية وصفحة الباقات */}
+              {(c.packages || []).filter((p) => !p.oneTime).map((p) => (
                 <article key={p.name} id={isBigStorePackage(p) ? "big-store" : undefined} className={"pk" + (p.featured ? " pk-featured" : "")}>
                   <div className="pk-head">
                     {p.icon && <span className="ic-ring"><Icon name={p.icon} size={26} /></span>}

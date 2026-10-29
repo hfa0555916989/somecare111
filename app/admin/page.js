@@ -683,6 +683,7 @@ function blankDoc(type, k) {
     client: { name: "", company: "", idNumber: "", phone: "", email: "", city: "" },
     sections: [],
     discount: 0,
+    discountType: "amount",
     vatRate: type === "invoice" ? 0 : Number(k.vatRate) || 0,
     recurring: [],
     support: [],
@@ -782,23 +783,33 @@ function PriceAdvisor({ doc, setDoc }) {
   );
 }
 
-// يضيف إلى العرض بنود فكرة العميل وملحقها من الذكاء الاصطناعي (فوق الباقة إن وُجدت)
-async function ideaToQuote(doc, idea) {
+// فكرة العميل بالذكاء الاصطناعي: يكتب وصف المشروع وملحقه فقط. الأسعار من الباقة المنشورة كما هي،
+// وإن لم تُختر باقة يختارها الذكاء الاصطناعي وتُبنى بأسعارها. ما يخرج عن الباقة يرجع في extras ليسعّره المالك.
+async function ideaToQuote(doc, idea, { packages = [], addons, siteFeatures, freeMonths } = {}) {
   const r = await fetch("/api/docs/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ idea, client: doc.client?.company || doc.client?.name, sections: doc.sections }) });
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(j.error || "تعذر التوليد");
   const o = j.out || {};
-  const next = {
-    ...doc,
-    title: o.title || doc.title,
-    subtitle: o.subtitle || doc.subtitle,
-    intro: o.intro || doc.intro,
-    sections: [...(doc.sections || []), ...(o.sections || []).map((x) => ({ ...x, qty: Math.max(1, Math.round(x.qty) || 1), tags: x.tags || [] }))],
-    annex: [...(doc.annex || []), ...(o.annex || [])],
+  let next = { ...doc };
+  const pkg = !doc.sections?.length && o.pkg ? packages.find((p) => String(p.name).trim() === o.pkg) : null;
+  if (pkg) {
+    const built = quoteFromPackage(pkg, { freeMonths }, { addons, siteFeatures });
+    next = { ...next, title: built.title, sections: built.sections, recurring: built.recurring, support: built.support };
+  }
+  next = {
+    ...next,
+    title: o.title || next.title,
+    subtitle: o.subtitle || next.subtitle,
+    intro: o.intro || next.intro,
+    annex: [...(next.annex || []), ...(o.annex || [])],
   };
-  // البنود الجديدة تغيّر الإجمالي، فيُعاد اقتراح الدفعات
-  return doc.payments?.length ? { ...next, payments: paymentPlan(next) } : next;
+  // الباقة المختارة تغيّر الإجمالي، فيُعاد اقتراح الدفعات
+  if (pkg && doc.payments?.length) next = { ...next, payments: paymentPlan(next) };
+  return { doc: next, pkg: pkg?.name || "", extras: (o.extras || []).filter(Boolean) };
 }
+
+// ملاحظة للمالك بما يخرج عن الباقة (لا تُضاف للعرض)
+const extrasNote = (x) => (x.extras.length ? ` طلبات خارج الباقة، سعّرها بنفسك إن أردت إضافتها: ${x.extras.join("، ")}.` : "");
 
 function Payments({ doc, setDoc }) {
   const list = doc.payments || [];
@@ -839,15 +850,18 @@ function Payments({ doc, setDoc }) {
   );
 }
 
-function IdeaCard({ doc, setDoc, ai }) {
+function IdeaCard({ doc, setDoc, ai, packages, addons, siteFeatures }) {
   const [idea, setIdea] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const [extras, setExtras] = useState([]);
   async function run() {
     setBusy(true);
     setErr("");
     try {
-      setDoc(await ideaToQuote(doc, idea));
+      const x = await ideaToQuote(doc, idea, { packages, addons, siteFeatures });
+      setDoc(x.doc);
+      setExtras(x.extras);
       setIdea("");
     } catch (x) {
       setErr(x.message);
@@ -857,9 +871,15 @@ function IdeaCard({ doc, setDoc, ai }) {
   return (
     <div className="adm-card">
       <b>فكرة العميل بالذكاء الاصطناعي</b>
-      <span className="adm-hint">اكتب فكرة العميل أو ما يختلف فيه عن الباقة، فتُضاف بنودها ومزاياها وأسعارها وملحقها إلى العرض لتراجعها.</span>
+      <span className="adm-hint">اكتب فكرة العميل، فيكتب الذكاء الاصطناعي وصف المشروع وملحقه. الأسعار والدعم من الباقة كما هي، وما يخرج عن الباقة يظهر هنا لتسعّره بنفسك.</span>
       <Text label="فكرة العميل" area rows={4} value={idea} onChange={setIdea} />
       {err && <span className="err">{err}</span>}
+      {extras.length > 0 && (
+        <div className="note">
+          طلبات خارج الباقة (لم تُضف للعرض، سعّرها وأضفها كبند إن أردت):
+          <ul>{extras.map((x, i) => <li key={i}>{x}</li>)}</ul>
+        </div>
+      )}
       <button type="button" className="gold" style={{ justifySelf: "start" }} disabled={!ai || busy || !idea.trim()} onClick={run} title={ai ? "" : "يتطلب ANTHROPIC_API_KEY في Vercel"}>
         {busy ? "جارٍ التوليد... (حتى دقيقة)" : "ولّد البنود من الفكرة"}
       </button>
@@ -891,7 +911,9 @@ function QuoteStarter({ k, packages = [], addons, siteFeatures, ai, onDone, onCa
     let note = "";
     if (c.idea.trim()) {
       try {
-        doc = await ideaToQuote(doc, c.idea.trim());
+        const x = await ideaToQuote(doc, c.idea.trim(), { packages, addons, siteFeatures, freeMonths: c.freeMonths });
+        doc = x.doc;
+        note = `${!built && x.pkg ? `اختار الذكاء الاصطناعي باقة «${x.pkg}» بسعرها المنشور.` : !built ? "لم تناسب الفكرة أي باقة، فأضف البنود وأسعارها بنفسك." : ""}${extrasNote(x)} راجع العرض ثم احفظه.`.trim();
       } catch (x) {
         note = `أُنشئ العرض بدون فكرة العميل: ${x.message}`;
       }
@@ -917,7 +939,7 @@ function QuoteStarter({ k, packages = [], addons, siteFeatures, ai, onDone, onCa
         {offers.map((x, i) => (
           <button key={i} type="button" className={c.pkg === i ? "on" : ""} onClick={() => pickPkg(i)}>{x.o.name}</button>
         ))}
-        <button type="button" className={c.pkg === -1 ? "on" : ""} onClick={() => pickPkg(-1)}>مشروع خاص (من فكرة العميل)</button>
+        <button type="button" className={c.pkg === -1 ? "on" : ""} onClick={() => pickPkg(-1)}>اختيار الباقة من فكرة العميل</button>
       </div>
 
       {o && o.once.length > 0 && (
@@ -979,7 +1001,7 @@ function QuoteStarter({ k, packages = [], addons, siteFeatures, ai, onDone, onCa
         rows={4}
         value={c.idea}
         onChange={(v) => set("idea", v)}
-        hint={ai ? "يولّد الذكاء الاصطناعي البنود والمزايا والأسعار الخاصة بالفكرة ويضيفها للعرض، وتراجعها قبل الحفظ." : "لتوليد البنود من الفكرة أضف ANTHROPIC_API_KEY في Vercel. يمكنك الآن إنشاء العرض وكتابة البنود يدوياً."}
+        hint={ai ? "يكتب الذكاء الاصطناعي وصف المشروع وملحقه، ويختار الباقة إن لم تخترها. الأسعار والدعم من الباقات كما هي، وما يخرج عن الباقة يظهر لك لتسعّره بنفسك." : "لاستخدام فكرة العميل أضف ANTHROPIC_API_KEY في Vercel. يمكنك الآن إنشاء العرض وكتابة البنود يدوياً."}
       />
 
       {built && (
@@ -995,7 +1017,7 @@ function QuoteStarter({ k, packages = [], addons, siteFeatures, ai, onDone, onCa
   );
 }
 
-function DocEditor({ doc, setDoc, k, items, ai, onSave, onCancel, saving }) {
+function DocEditor({ doc, setDoc, k, items, ai, packages, addons, siteFeatures, onSave, onCancel, saving }) {
   const set = (key, v) => setDoc({ ...doc, [key]: v });
   const setClient = (key, v) => setDoc({ ...doc, client: { ...doc.client, [key]: v } });
   const t = docTotals(doc);
@@ -1091,7 +1113,7 @@ function DocEditor({ doc, setDoc, k, items, ai, onSave, onCancel, saving }) {
         </div>
       </div>
 
-      {doc.type === "quote" && <IdeaCard doc={doc} setDoc={setDoc} ai={ai} />}
+      {doc.type === "quote" && <IdeaCard doc={doc} setDoc={setDoc} ai={ai} packages={packages} addons={addons} siteFeatures={siteFeatures} />}
       <b>البنود والأسعار</b>
       <List
         items={doc.sections}
@@ -1121,8 +1143,14 @@ function DocEditor({ doc, setDoc, k, items, ai, onSave, onCancel, saving }) {
       />
       <div className="row">
         <label>
-          خصم (ريال)
-          <input type="number" min="0" value={doc.discount} onChange={(e) => set("discount", Number(e.target.value))} />
+          خصم (إذا طلب العميل)
+          <span style={{ display: "flex", gap: 6 }}>
+            <input type="number" min="0" max={doc.discountType === "percent" ? 100 : undefined} value={doc.discount} onChange={(e) => set("discount", Number(e.target.value))} style={{ flex: 1 }} />
+            <select value={doc.discountType || "amount"} onChange={(e) => set("discountType", e.target.value)} style={{ width: "auto" }}>
+              <option value="amount">ريال</option>
+              <option value="percent">%</option>
+            </select>
+          </span>
         </label>
         <label>
           ضريبة القيمة المضافة % (0 إذا غير مسجّل)
@@ -1130,7 +1158,7 @@ function DocEditor({ doc, setDoc, k, items, ai, onSave, onCancel, saving }) {
         </label>
       </div>
       <div className="note info">
-        المجموع {money(t.subtotal)}{t.discount > 0 && ` − خصم ${money(t.discount)}`}{t.vat > 0 && ` + ضريبة ${money(t.vat)}`} = <b style={{ color: "#d4a84b" }}>الإجمالي {money(t.total)} ريال</b>
+        المجموع {money(t.subtotal)}{t.discount > 0 && ` − خصم ${doc.discountType === "percent" ? `${doc.discount}% ` : ""}${money(t.discount)}`}{t.vat > 0 && ` + ضريبة ${money(t.vat)}`} = <b style={{ color: "#d4a84b" }}>الإجمالي {money(t.total)} ريال</b>
       </div>
       {(doc.type === "quote" || doc.type === "contract") && <Payments doc={doc} setDoc={setDoc} />}
       {doc.type !== "proposal" && doc.type !== "invoice" && <PriceAdvisor doc={doc} setDoc={setDoc} />}
@@ -1327,7 +1355,7 @@ function Docs({ k, saved = {}, setK, about, site, packages, addons, siteFeatures
       {msg && <div className="note info">{msg}</div>}
 
       {editing ? (
-        <DocEditor doc={editing} setDoc={setEditing} k={k} items={items} ai={info.ai} onSave={save} onCancel={() => setEditing(null)} saving={saving} />
+        <DocEditor doc={editing} setDoc={setEditing} k={k} items={items} ai={info.ai} packages={packages} addons={addons} siteFeatures={siteFeatures} onSave={save} onCancel={() => setEditing(null)} saving={saving} />
       ) : starting ? (
         <QuoteStarter
           k={k}

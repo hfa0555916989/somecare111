@@ -1,33 +1,42 @@
 import { NextResponse } from "next/server";
 import { isAuthed } from "@/lib/auth";
-import { pricingReference, PRICING_RULES } from "@/lib/pricing";
-import { askJson, aiError, aiEnabled, obj, arr, S, N } from "@/lib/ai";
+import { getContent } from "@/lib/content";
+import { askJson, aiError, aiEnabled, obj, arr, S, oneOf } from "@/lib/ai";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
-const SCHEMA = obj({
-  title: S,
-  subtitle: S,
-  intro: S,
-  sections: arr(obj({ title: S, desc: S, qty: N, price: N, note: S, features: arr(S), tags: arr(S) })),
-  annex: arr(obj({ title: S, intro: S, points: arr(S) })),
-});
+// الذكاء الاصطناعي لا يكتب أسعاراً: يصف فكرة العميل، ويختار الباقة إن لم تُختر، ويذكر ما يخرج عن الباقة ليسعّره المالك
+const schema = (names) =>
+  obj({
+    pkg: oneOf(["", ...names]),
+    title: S,
+    subtitle: S,
+    intro: S,
+    annex: arr(obj({ title: S, intro: S, points: arr(S) })),
+    extras: arr(S),
+  });
 
-const SYSTEM = `You help a Saudi freelance web/app developer write a price quote (عرض سعر) from the client's idea. The idea may be written in Saudi dialect. Everything you write is shown to the client, in formal, clear Arabic.
+const SYSTEM = `You help a Saudi freelance web/app developer turn a client's idea into a price quote (عرض سعر). The idea may be written in Saudi dialect.
 
-${PRICING_RULES}
+Prices are FIXED and come from the developer's published packages. You never write, suggest or change a price.
+
+Fields shown to the client (formal, clear Arabic):
+- title: a short title for this client's project. subtitle: one line describing the idea. intro: 1-2 sentences for the client.
+- annex: sections that explain the client's idea in detail (screens, roles, flows), points written as "العنوان: الوصف".
+
+Fields for the developer only:
+- pkg: see the task below.
+- extras: features the idea asks for that the package does not cover, one short Arabic line each, so the developer can price them himself. [] if none.
 
 Rules:
 - Only describe what the idea implies. Do not invent client details or promise things the idea does not ask for. Keep it realistic for a solo developer.
-- Never write instructions to the developer (like "احذف" or "عدّل قبل الإرسال") in any field.
-- Do not write support or maintenance terms; the quote has its own support section.
-- features: one short line each. annex points: written as "العنوان: الوصف".
-- Prices are plain numbers in SAR. note is a short qualifier for the client (e.g. "يُدفع مرة واحدة").`;
+- Never write instructions to the developer (like "احذف" or "عدّل قبل الإرسال") in the client fields.
+- Do not write prices, payment, support or maintenance terms; the quote has its own sections for them.`;
 
-const WITH_BASE = `The quote already contains the package below. Add ONLY the extra priced line items the idea needs beyond it (custom features, integrations, special pages). Do not repeat anything the package already covers, and return no sections if nothing extra is needed. New features are priced separately, so price each extra item on its own. title: a short title for this client's project. subtitle: one line describing the idea. intro: 1-2 sentences for the client. annex: 1-4 sections that explain the client's custom features in detail.`;
+const WITH_BASE = `The quote already contains the package below. Set pkg to "". Describe the client's project on top of it, annex: 1-4 sections about the client's own features, and list in extras only what the package does not already cover.`;
 
-const CUSTOM = `There is no package; this is a custom project. Split the work into priced line items with their features. Use the pricing reference so the total is not far from similar packages and past deals. title, subtitle and intro describe the project for the client. annex: 2-5 sections that describe the features in detail.`;
+const PICK = `No package is chosen yet. Set pkg to the ONE published package that best fits the idea (website only, app only, website + app, website + customer app + provider app, store subscription or store purchase...). Use "" only if none fits at all. annex: 2-5 sections describing the features in detail. extras: what the chosen package does not cover.`;
 
 export async function POST(req) {
   if (!(await isAuthed())) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -35,16 +44,19 @@ export async function POST(req) {
   const b = await req.json().catch(() => ({}));
   const idea = String(b.idea || "").trim().slice(0, 6000);
   if (!idea) return NextResponse.json({ error: "اكتب فكرة العميل أولاً" }, { status: 400 });
-  const base = (Array.isArray(b.sections) ? b.sections : []).slice(0, 30).map((s) => ({ title: String(s?.title || ""), price: Number(s?.price) || 0, features: (Array.isArray(s?.features) ? s.features : []).slice(0, 60) }));
+  const base = (Array.isArray(b.sections) ? b.sections : []).slice(0, 30).map((s) => ({ title: String(s?.title || ""), features: (Array.isArray(s?.features) ? s.features : []).slice(0, 60) }));
   try {
-    const ref = await pricingReference();
+    const content = await getContent();
+    const packages = (content.packages || [])
+      .filter((p) => p?.name)
+      .map((p) => ({ name: String(p.name).trim(), group: p.label || "", price: `${p.pricePrefix || ""} ${p.price} ${p.unit || ""}`.trim(), desc: p.desc || "", features: p.features || [] }));
     const out = await askJson({
       system: SYSTEM,
-      content: `Pricing reference:\n${JSON.stringify(ref)}\n\n${base.length ? `${WITH_BASE}\n\nPackage in the quote:\n${JSON.stringify(base)}` : CUSTOM}\n\nClient: ${String(b.client || "").slice(0, 120) || "(not stated)"}\nIdea:\n${idea}`,
-      schema: SCHEMA,
+      content: `Published packages:\n${JSON.stringify(packages)}\n\n${base.length ? `${WITH_BASE}\n\nPackage in the quote:\n${JSON.stringify(base)}` : PICK}\n\nClient: ${String(b.client || "").slice(0, 120) || "(not stated)"}\nIdea:\n${idea}`,
+      schema: schema(packages.map((p) => p.name)),
       effort: "high",
     });
-    return NextResponse.json({ out });
+    return NextResponse.json({ out: { ...out, pkg: base.length ? "" : out.pkg } });
   } catch (e) {
     const { msg, status } = aiError(e);
     return NextResponse.json({ error: msg }, { status });
