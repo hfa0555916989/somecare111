@@ -1,55 +1,47 @@
-// بطاقة السعر الحالي. تُعرض تحت النص الأصلي ولا تستبدله.
-import { ANNUAL_AR, ANNUAL_EN, POLICY_AR, POLICY_EN, publicPlans } from "@/lib/subscription-plans";
+// بطاقة السعر الحالي: بدون اشتراكات. المتجر 1,500 ريال مرة واحدة، والموقع التعريفي 350 ريال.
 import { CARE_LINE_AR, CARE_LINE_EN } from "@/lib/store-care";
 
 const ROWS = {
   ar: [
     {
-      label: "التجهيز",
-      price: "2,000 ريال مرة واحدة",
-      note: "من 2,000 إلى 3,000 ريال لتهيئة المتجر: الهوية، وربط الدفع والشحن، واستيراد المنتجات.",
+      label: "المتجر الإلكتروني",
+      price: "1,500 ريال مرة واحدة",
+      note: "شراء بدون اشتراكات، بكل المزايا الحالية، مع ربط بوابات الدفع وشركات الشحن.",
     },
     {
-      label: "الاشتراك",
-      price: "من 300 ريال شهرياً",
-      note: "أساسية 300، أو متقدمة 500، ومع التطبيقات 700 أو 1,000. التفاصيل تحت البطاقة.",
+      label: "مجاناً مع المتجر",
+      price: "استضافة ودعم فني لسنة + دومين",
+      note: "استضافة مجانية لمدة سنة، ودعم فني مجاني لمدة سنة، ودومين مجاني.",
     },
     {
-      label: "الشراء",
-      price: "من 12,000 ريال",
-      note: "من 12,000 إلى 18,000 للمتجر، أو من 20,000 إلى 30,000 مع التطبيقين. بعد التسليم إصلاح أعطال مجاني من شهر إلى شهرين، ثم صيانة 500 أو 800 ريال شهرياً.",
+      label: "الموقع التعريفي",
+      price: "350 ريال",
+      note: "موقع تعريفي احترافي لنشاطك بسعر ثابت يُدفع مرة واحدة.",
     },
   ],
   en: [
     {
-      label: "Setup",
-      price: "2,000 SAR once",
-      note: "2,000–3,000 SAR to prepare the store: branding, payment and shipping setup, and product import.",
+      label: "Online store",
+      price: "1,500 SAR one-time",
+      note: "A purchase with no subscriptions, with every current feature and payment and shipping integration.",
     },
     {
-      label: "Subscription",
-      price: "from 300 SAR/month",
-      note: "Basic 300, Advanced 500, or 700 and 1,000 with the apps. The plans are listed below.",
+      label: "Free with the store",
+      price: "1 year hosting and support + domain",
+      note: "Free hosting for one year, free technical support for one year, and a free domain.",
     },
     {
-      label: "Purchase",
-      price: "from 12,000 SAR",
-      note: "12,000–18,000 for the store, or 20,000–30,000 with both apps. After delivery, bug fixes are free for one to two months, then maintenance is 500 or 800 SAR per month.",
+      label: "Business website",
+      price: "350 SAR",
+      note: "A professional business website at a fixed one-time price.",
     },
   ],
-};
-
-const GROUP = {
-  ar: { subscription: "باقات الاشتراك", maintenance: "الصيانة بعد الشراء" },
-  en: { subscription: "Subscription plans", maintenance: "Maintenance after purchase" },
 };
 
 export default function PriceAddendum({ lang = "ar" }) {
   const en = lang === "en";
   const rows = en ? ROWS.en : ROWS.ar;
-  const title = en ? "Current price ranges" : "النطاق السعري الحالي";
-  const groups = en ? GROUP.en : GROUP.ar;
-  const plans = publicPlans();
+  const title = en ? "Current prices" : "الأسعار الحالية";
   return (
     <section className="offer-band" id="current-offer" aria-labelledby="current-offer-title">
       <div className="offer-card">
@@ -63,25 +55,7 @@ export default function PriceAddendum({ lang = "ar" }) {
             </li>
           ))}
         </ul>
-        {["subscription", "maintenance"].map((group) => (
-          <div key={group}>
-            <h3 className="offer-group">{groups[group]}</h3>
-            <ul className="offer-plans">
-              {plans.filter((p) => p.group === group).map((plan) => (
-                <li key={plan.id}>
-                  <div className="offer-plan-h">
-                    <strong>{en ? plan.nameEn : plan.nameAr}</strong>
-                    <span>{en ? `${plan.monthly.toLocaleString("en-US")} SAR/month` : `${plan.monthly.toLocaleString("en-US")} ريال شهرياً`}</span>
-                  </div>
-                  <p>{en ? plan.blurbEn : plan.blurbAr}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-        <p className="offer-policy">{en ? ANNUAL_EN : ANNUAL_AR}</p>
         <p className="offer-policy">{en ? CARE_LINE_EN : CARE_LINE_AR}</p>
-        <p className="offer-policy">{en ? POLICY_EN : POLICY_AR}</p>
       </div>
     </section>
   );
