@@ -19,7 +19,7 @@ const COPY = {
   ar: {
     servicesLead: "أبني من الرياض أربعة مسارات واضحة: موقع يعرّف بنشاطك، تطبيق جوال، متجر إلكتروني مع تطبيق، وخدمات أمن سيبراني للشركات.",
     worksLead: "هذه نماذج حقيقية من المتجر التجريبي ولوحة التحكم، لترى الواجهة والطلب والإدارة قبل أن تطلب التنفيذ.",
-    packagesLead: "بدون اشتراكات: المتجر الإلكتروني بـ 1,500 ريال شراءً لمرة واحدة بكل المزايا الحالية، مع ربط الدفع والشحن، واستضافة مجانية لمدة سنة، ودعم فني مجاني لمدة سنة، ودومين مجاني. والموقع التعريفي بـ 350 ريال. المواقع والتطبيقات الخدمية بسعر ثابت يُدفع مرة واحدة.",
+    packagesLead: "بدون اشتراكات: المتجر الإلكتروني بـ 1,500 ريال شراءً لمرة واحدة بكل المزايا الحالية، مع ربط الدفع والشحن، واستضافة مجانية لمدة سنة، ودعم فني مجاني لمدة سنة، ودومين مجاني. والموقع التعريفي بـ 350 ريال. والموقع الخدمي مع تطبيق iOS وAndroid بـ 2,000 ريال مرة واحدة.",
     blogLead: "مقالات عن انشاء المتاجر والمواقع وأسعارها. المتجر الإلكتروني بـ 1,500 ريال بدون اشتراكات، والموقع التعريفي بـ 350 ريال.",
     guides: "صفحات الشرح",
     posts: "المقالات",
@@ -31,7 +31,7 @@ const COPY = {
     ask: "اطلب هذه الخدمة",
     services: [
       { href: "/packages", title: "مواقع تعريفية", text: "موقع يعرض خدمتك ورقم التواصل ونموذج الطلب بـ 350 ريال، مناسب إن لم تكن تبيع منتجات بسلة شراء." },
-      { href: "/app-design-saudi", title: "تطبيقات الجوال", text: "تطبيقات جوال وخدمية بسعر ثابت يُدفع مرة واحدة، والتفاصيل في صفحة الأسعار." },
+      { href: "/app-design-saudi", title: "تطبيقات الجوال", text: "موقع خدمي مع تطبيق iOS وAndroid ولوحة تحكم بـ 2,000 ريال مرة واحدة." },
       { href: "/create-online-store", title: "متجر إلكتروني مع تطبيق", text: "منتجات غير محدودة، سلة، ولوحة تحكم بـ 1,500 ريال مرة واحدة بدون اشتراكات، مع ربط الدفع والشحن، واستضافة ودعم فني لسنة ودومين مجاناً." },
       { href: "/security", title: "الأمن السيبراني", text: "خدمات الأمن للشركات بالشراكة مع فريق متخصص، في صفحة مستقلة بتفاصيلها وعرضها." },
     ],
@@ -39,7 +39,7 @@ const COPY = {
   en: {
     servicesLead: "Four clear paths from Riyadh: a business website, a mobile app, an online store with an app, and enterprise cybersecurity.",
     worksLead: "Real screenshots of the demo store and its admin panel, so you can see the shop, the cart and the dashboard before you order.",
-    packagesLead: "No subscriptions: the online store is 1,500 SAR as a one-time purchase with every current feature, payment and shipping integration, free hosting for one year, free technical support for one year, and a free domain. A business website is 350 SAR. Service websites and apps have a fixed one-time price.",
+    packagesLead: "No subscriptions: the online store is 1,500 SAR as a one-time purchase with every current feature, payment and shipping integration, free hosting for one year, free technical support for one year, and a free domain. A business website is 350 SAR. A service website with an iOS and Android app is 2,000 SAR once.",
     blogLead: "The articles are written in Arabic. The online store is 1,500 SAR with no subscriptions, and a business website is 350 SAR.",
     guides: "Guides",
     posts: "Articles",
@@ -51,7 +51,7 @@ const COPY = {
     ask: "Ask about this service",
     services: [
       { href: "/en/packages", title: "Business websites", text: "A 350 SAR site that presents your service, phone number and inquiry form when you are not selling through a cart." },
-      { href: "/app-design-saudi", title: "Mobile apps", text: "Mobile and service apps at a fixed one-time price. Details are on the pricing page." },
+      { href: "/app-design-saudi", title: "Mobile apps", text: "A service website with an iOS and Android app and a dashboard for 2,000 SAR once." },
       { href: "/create-online-store", title: "Online store with an app", text: "Unlimited products, cart and admin panel for 1,500 SAR once with no subscriptions, with payment and shipping integration, a free year of hosting and support, and a free domain." },
       { href: "/en/security", title: "Cybersecurity", text: "Enterprise security services with a specialist partner, on their own page with the offer details." },
     ],

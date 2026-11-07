@@ -55,6 +55,15 @@ const PLANS = [
     cta: "اطلب الموقع",
     wa: wa("السلام عليكم، أبغى موقع تعريفي بـ 350 ريال"),
   },
+  {
+    id: "service",
+    name: "موقع خدمي + تطبيق",
+    price: "2,000",
+    unit: "ريال مرة واحدة",
+    points: ["موقع خدمي لاستقبال الطلبات أو الحجوزات", "تطبيق iOS وAndroid للعملاء", "لوحة تحكم واحدة", "سعر ثابت بدون اشتراك"],
+    cta: "اطلب الموقع الخدمي",
+    wa: wa("السلام عليكم، أبغى موقع خدمي مع تطبيق بـ 2000 ريال"),
+  },
 ];
 
 const OFFER = { name: BIG_STORE_NAME, items: BIG_STORE_PRODUCT };
@@ -91,6 +100,7 @@ const LD = {
       offers: [
         { "@type": "Offer", name: "متجر إلكتروني (شراء لمرة واحدة)", price: "1500", priceCurrency: "SAR", availability: "https://schema.org/InStock", url: "https://www.hassandev.sa/app-store-development" },
         { "@type": "Offer", name: "موقع تعريفي", price: "350", priceCurrency: "SAR", availability: "https://schema.org/InStock", url: "https://www.hassandev.sa/app-store-development" },
+        { "@type": "Offer", name: "موقع خدمي + تطبيق iOS وAndroid", price: "2000", priceCurrency: "SAR", availability: "https://schema.org/InStock", url: "https://www.hassandev.sa/app-store-development" },
       ],
     },
     {

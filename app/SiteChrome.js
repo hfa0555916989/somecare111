@@ -5,6 +5,7 @@ import { SITE_NAV, navHref, RESERVED_SLUGS } from "@/lib/sitelinks";
 import { MobileNav } from "./MobileNav";
 
 const digits = (s) => String(s || "").replace(/\D/g, "");
+const PROMO_WA_SITE = `https://wa.me/966530779934?text=${encodeURIComponent("السلام عليكم، أبغى عرض الموقع التعريفي بـ 350 ريال")}`;
 const PROMO_WA = `https://wa.me/966530779934?text=${encodeURIComponent("السلام عليكم، أبغى عرض المتجر بـ 1500 ريال")}`;
 const live = (c, key) => (c.pages || []).filter((p) => p.published !== false && p[key] && p.slug);
 
@@ -43,11 +44,17 @@ export function SiteHeader({ c, icon, altPath = "/" }) {
           </a>
         </div>
       </header>
-      <div className="wrap promo-banner-wrap">
+      <div className="wrap promo-banner-wrap promo-two">
         <a className="promo-banner" href={PROMO_WA} target="_blank" rel="noopener" aria-label="تواصل واتساب لعرض المتجر بـ 1500 ريال">
           <picture>
             <source srcSet="/images/promo/store-1500.webp" type="image/webp" />
             <img src="/images/promo/store-1500.jpg" width="1280" height="720" loading="eager" alt="متجرك الإلكتروني جاهز بـ 1500 ريال فقط، شراء بدون اشتراكات: ربط مع شركات الدفع والشحن، استضافة مجانية سنة، دومين مجاني، ودعم فني سنة مجاناً. ومواقع تعريفية بـ 350 ريال" />
+          </picture>
+        </a>
+        <a className="promo-banner" href={PROMO_WA_SITE} target="_blank" rel="noopener" aria-label="تواصل واتساب لعرض الموقع التعريفي بـ 350 ريال">
+          <picture>
+            <source srcSet="/images/promo/website-350.webp" type="image/webp" />
+            <img src="/images/promo/website-350.jpg" width="1280" height="720" loading="eager" alt="موقعك التعريفي الاحترافي بـ 350 ريال فقط، بسعر ثابت يُدفع مرة واحدة بدون اشتراكات، تواصل معنا على واتساب" />
           </picture>
         </a>
       </div>
