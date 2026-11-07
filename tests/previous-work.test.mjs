@@ -8,6 +8,8 @@ const EXPECTED = [
   ["https://www.transportrose.com/", "روز للنقل الجامعي"],
   ["https://thebrightbath.com/", "الطريق المشرق للتدريب والتطوير"],
   ["https://bunyanraslan.com/", "مؤسسة بنيان رسلان الهندسية"],
+  ["https://golden-edition-mining.vercel.app", "الإصدار الذهبي للتعدين والمقاولات"],
+  ["https://alrowad-events.vercel.app", "الرواد للحفلات والضيافة"],
 ];
 
 test("previous work lists the live sites with screenshots and no invented metrics", () => {
