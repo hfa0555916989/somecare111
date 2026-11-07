@@ -13,7 +13,7 @@ import { STORE_CARE } from "@/lib/store-care";
 
 const FAQ = {
   ar: [
-    ["كم تكلفة إنشاء المتجر؟", "1,500 ريال شراءً لمرة واحدة بدون اشتراكات، بكل المزايا الحالية، ويشمل ربط بوابات الدفع وشركات الشحن، واستضافة مجانية لمدة سنة، ودعماً فنياً مجانياً لمدة سنة، ودوميناً مجانياً. والموقع التعريفي بـ 350 ريال."],
+    ["كم تكلفة إنشاء المتجر؟", "1,500 ريال شراءً لمرة واحدة بدون اشتراكات، بكل المزايا الحالية، ويشمل ربط بوابات الدفع وشركات الشحن، واستضافة مجانية لمدة سنة، ودعماً فنياً مجانياً لمدة سنة، ودوميناً مجانياً. والموقع التعريفي بـ 299 ريال."],
     ["هل فيه اشتراك شهري؟", "لا. تدفع 1,500 ريال مرة واحدة فقط، والاستضافة والدعم الفني مجاناً لمدة سنة كاملة، والدومين مجاني."],
     ["هل بوابات الدفع والشحن متاحة؟", "نعم. ميسر وتابي وتمارا والراجحي والدفع عند الاستلام، وأرامكس وسمسا وأوتو وطرود والبريد السعودي، جزء من المنصة وربطها داخل السعر. فاتورة زاتكا مع رمز QR كذلك."],
     ["ما الفرق بين إصلاح العطل والميزة الجديدة؟", "إصلاح العطل خلل في ما تم تسليمه، ويشمله الدعم الفني المجاني لمدة سنة. الميزات الجديدة تتسعّر بشكل منفصل."],
@@ -21,7 +21,7 @@ const FAQ = {
     [STORE_CARE.ar.faqQ, STORE_CARE.ar.faqA],
   ],
   en: [
-    ["What does the store cost?", "1,500 SAR as a one-time purchase with no subscriptions, with every current feature, payment gateway and shipping carrier integration, free hosting for one year, free technical support for one year, and a free domain. A business website is 350 SAR."],
+    ["What does the store cost?", "1,500 SAR as a one-time purchase with no subscriptions, with every current feature, payment gateway and shipping carrier integration, free hosting for one year, free technical support for one year, and a free domain. A business website is 299 SAR."],
     ["Is there a monthly fee?", "No. You pay 1,500 SAR once. Hosting and technical support are free for a full year, and the domain is free."],
     ["Are payment and shipping available?", "Yes. Moyasar, Tabby, Tamara, Al Rajhi and cash on delivery, and Aramex, SMSA, OTO, Torod and Saudi Post, are part of the platform and connected within the price. The ZATCA QR invoice is included too."],
     ["What is a bug fix versus a new feature?", "A bug fix is a defect in what was delivered, and it is covered by the free year of technical support. A new feature is quoted separately."],

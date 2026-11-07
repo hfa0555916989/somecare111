@@ -1,4 +1,4 @@
-// بطاقة السعر الحالي: بدون اشتراكات. المتجر 1,500 ريال مرة واحدة، والموقع التعريفي 350 ريال.
+// بطاقة السعر الحالي: بدون اشتراكات. المتجر 1,500 ريال مرة واحدة، والموقع التعريفي 299 ريال.
 import { CARE_LINE_AR, CARE_LINE_EN } from "@/lib/store-care";
 
 const ROWS = {
@@ -15,8 +15,8 @@ const ROWS = {
     },
     {
       label: "الموقع التعريفي",
-      price: "350 ريال",
-      note: "موقع تعريفي احترافي لنشاطك بسعر ثابت يُدفع مرة واحدة.",
+      price: "299 ريال",
+      note: "موقع تعريفي احترافي بسعر ثابت مرة واحدة، يشمل لوحة تحكم مع إحصائيات الزوار، واستضافة ودعم فني لسنة، ودومين مجاني.",
     },
   ],
   en: [
@@ -32,8 +32,8 @@ const ROWS = {
     },
     {
       label: "Business website",
-      price: "350 SAR",
-      note: "A professional business website at a fixed one-time price.",
+      price: "299 SAR",
+      note: "A professional business website at a fixed one-time price, including a control panel with visitor statistics, a year of hosting and support, and a free domain.",
     },
   ],
 };
