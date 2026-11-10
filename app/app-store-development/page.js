@@ -9,13 +9,13 @@ import { STORE_CARE } from "@/lib/store-care";
 
 export const dynamic = "force-dynamic";
 
-const TITLE = "إنشاء متجر إلكتروني بـ 1,500 ريال شراء بدون اشتراكات | المطور حسن";
-const DESC = "متجر إلكتروني جاهز بـ 1,500 ريال مرة واحدة بدون اشتراكات: كل المزايا الحالية، وربط الدفع والشحن، واستضافة ودعم فني مجاناً لسنة، ودومين مجاني. والمواقع التعريفية بـ 299 ريال.";
+const TITLE = "إنشاء متجر إلكتروني بـ 8,500 ريال شراء بدون اشتراكات | المطور حسن";
+const DESC = "متجر إلكتروني جاهز بـ 8,500 ريال مرة واحدة بدون اشتراكات: كل المزايا الحالية، وربط الدفع والشحن، واستضافة ودعم فني مجاناً لسنة، ودومين مجاني. والمواقع التعريفية بـ 2,300 ريال.";
 
 export const metadata = {
   title: { absolute: TITLE },
   description: DESC,
-  keywords: "انشاء متجر الكتروني, انشاء متجر الكتروني في السعودية, متجر الكتروني مع تطبيق, تكلفة تطبيق متجر الكتروني, متجر 1500 ريال, المطور حسن",
+  keywords: "انشاء متجر الكتروني, انشاء متجر الكتروني في السعودية, متجر الكتروني مع تطبيق, تكلفة تطبيق متجر الكتروني, متجر 8500 ريال, المطور حسن",
   alternates: { canonical: "/app-store-development" },
   robots: { index: true, follow: true },
   openGraph: { type: "website", locale: "ar_SA", url: "/app-store-development", title: TITLE, description: DESC, images: ["/images/brand-og.png"] },
@@ -23,14 +23,14 @@ export const metadata = {
 };
 
 const wa = (text) => "https://wa.me/966530779934?text=" + encodeURIComponent(text);
-const WA = wa("السلام عليكم، أبغى عرض المتجر بـ 1500 ريال");
+const WA = wa("السلام عليكم، أبغى عرض المتجر بـ 8500 ريال");
 
 // شراء لمرة واحدة بدون اشتراكات
 const PLANS = [
   {
     id: "purchase",
     name: "المتجر الإلكتروني",
-    price: "1,500",
+    price: "8,500",
     unit: "ريال مرة واحدة",
     points: [
       "شراء بدون اشتراكات، بكل المزايا الحالية",
@@ -45,7 +45,7 @@ const PLANS = [
   {
     id: "website",
     name: "موقع تعريفي",
-    price: "299",
+    price: "2300",
     unit: "ريال",
     points: [
       "موقع تعريفي احترافي لنشاطك",
@@ -55,16 +55,16 @@ const PLANS = [
       "سعر ثابت مرة واحدة",
     ],
     cta: "اطلب الموقع",
-    wa: wa("السلام عليكم، أبغى موقع تعريفي بـ 299 ريال"),
+    wa: wa("السلام عليكم، أبغى موقع تعريفي بـ 2,300 ريال"),
   },
   {
     id: "service",
     name: "موقع خدمي + تطبيق",
-    price: "2,000",
+    price: "11,000",
     unit: "ريال مرة واحدة",
     points: ["موقع خدمي لاستقبال الطلبات أو الحجوزات", "تطبيق iOS وAndroid للعملاء", "لوحة تحكم واحدة", "سعر ثابت بدون اشتراك"],
     cta: "اطلب الموقع الخدمي",
-    wa: wa("السلام عليكم، أبغى موقع خدمي مع تطبيق بـ 2000 ريال"),
+    wa: wa("السلام عليكم، أبغى موقع خدمي مع تطبيق بـ 11000 ريال"),
   },
 ];
 
@@ -73,7 +73,7 @@ const OFFER = { name: BIG_STORE_NAME, items: BIG_STORE_PRODUCT };
 const FREE = STORE_PAGE_FREE;
 
 const FAQ = [
-  ["كم تكلفة إنشاء متجر إلكتروني؟", "1,500 ريال شراءً لمرة واحدة بدون اشتراكات، ويشمل كل المزايا الحالية وربط الدفع والشحن، واستضافة مجانية لسنة، ودعماً فنياً مجانياً لسنة، ودوميناً مجانياً. والموقع التعريفي بـ 299 ريال."],
+  ["كم تكلفة إنشاء متجر إلكتروني؟", "8,500 ريال شراءً لمرة واحدة بدون اشتراكات، ويشمل كل المزايا الحالية وربط الدفع والشحن، واستضافة مجانية لسنة، ودعماً فنياً مجانياً لسنة، ودوميناً مجانياً. والموقع التعريفي بـ 2,300 ريال."],
   ["هل فيه اشتراك شهري؟", "لا. تدفع مرة واحدة فقط، ويصير المتجر لك."],
   ["هل بوابة الدفع والشحن داخلة في السعر؟", "نعم، وليست فاتورة بعدها: بوابة الدفع مع التقسيط عبر تابي وتمارا، وربط جميع شركات الشحن، والدومين وشهادة SSL، وزر واتساب يتواصل به عملاؤك معك، وتنبيهات الطلب داخل لوحة التحكم، وتحليلات جوجل."],
   ["كم الدعم الفني؟", "الدعم الفني مجاني لمدة سنة كاملة، ومعه استضافة مجانية لسنة. إصلاح العطل خلل في ما تم تسليمه، والميزات الجديدة تتسعّر بشكل منفصل."],
@@ -100,9 +100,9 @@ const LD = {
       description: DESC,
       brand: { "@type": "Brand", name: "المطور حسن" },
       offers: [
-        { "@type": "Offer", name: "متجر إلكتروني (شراء لمرة واحدة)", price: "1500", priceCurrency: "SAR", availability: "https://schema.org/InStock", url: "https://www.hassandev.sa/app-store-development" },
-        { "@type": "Offer", name: "موقع تعريفي", price: "299", priceCurrency: "SAR", availability: "https://schema.org/InStock", url: "https://www.hassandev.sa/app-store-development" },
-        { "@type": "Offer", name: "موقع خدمي + تطبيق iOS وAndroid", price: "2000", priceCurrency: "SAR", availability: "https://schema.org/InStock", url: "https://www.hassandev.sa/app-store-development" },
+        { "@type": "Offer", name: "متجر إلكتروني (شراء لمرة واحدة)", price: "8500", priceCurrency: "SAR", availability: "https://schema.org/InStock", url: "https://www.hassandev.sa/app-store-development" },
+        { "@type": "Offer", name: "موقع تعريفي", price: "2300", priceCurrency: "SAR", availability: "https://schema.org/InStock", url: "https://www.hassandev.sa/app-store-development" },
+        { "@type": "Offer", name: "موقع خدمي + تطبيق iOS وAndroid", price: "11000", priceCurrency: "SAR", availability: "https://schema.org/InStock", url: "https://www.hassandev.sa/app-store-development" },
       ],
     },
     {
@@ -123,10 +123,10 @@ export default async function AppStoreDevelopment() {
           <div className="wrap">
             <p className="hero-badge">شراء بدون اشتراكات · استضافة ودعم فني سنة مجاناً</p>
             <h1 style={{ maxWidth: 900, marginInline: "auto" }}>
-              إنشاء متجر إلكتروني <span className="hl">بـ 1,500 ريال فقط</span> مع المطور حسن
+              إنشاء متجر إلكتروني <span className="hl">بـ 8,500 ريال فقط</span> مع المطور حسن
             </h1>
             <p className="lead" style={{ maxWidth: 780, marginInline: "auto" }}>
-              أنا <strong>المطور حسن</strong>. أبني لك المتجر ولوحة التحكم بكل المزايا الحالية، مع ربط الدفع والشحن. تدفع 1,500 ريال مرة واحدة بدون اشتراكات، والاستضافة والدعم الفني مجاناً لسنة، والدومين مجاني.
+              أنا <strong>المطور حسن</strong>. أبني لك المتجر ولوحة التحكم بكل المزايا الحالية، مع ربط الدفع والشحن. تدفع 8,500 ريال مرة واحدة بدون اشتراكات، والاستضافة والدعم الفني مجاناً لسنة، والدومين مجاني.
             </p>
             <div className="cta-row" style={{ justifyContent: "center" }}>
               <a className="btn" href={WA} target="_blank" rel="noopener">اطلب متجرك على واتساب</a>
@@ -158,7 +158,7 @@ export default async function AppStoreDevelopment() {
         <section id="big-store" className="sec sec-alt">
           <div className="wrap narrow">
             <h2>ماذا يشمل المتجر</h2>
-            <p className="sub">كل المزايا الحالية ضمن سعر 1,500 ريال.</p>
+            <p className="sub">كل المزايا الحالية ضمن سعر 8,500 ريال.</p>
             <PackagePoints features={OFFER.items} lang="ar" />
             <StoreShowcase data={packageShowcase(OFFER)} lang="ar" />
           </div>

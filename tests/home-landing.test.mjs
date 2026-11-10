@@ -3,10 +3,10 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { HOME_DESC_EN, HOME_LANDING, HOME_TITLE_AR } from "../lib/home-landing.js";
 
-test("homepage metadata matches main and the two paths stay linked", () => {
+test("the homepage targets website design, stores and apps, and cybersecurity keeps its own page", () => {
   const defaults = readFileSync(new URL("../lib/defaults.js", import.meta.url), "utf8");
-  assert.match(defaults, /خدمات الأمن السيبراني في السعودية \| اختبار اختراق \| المطوّر حسن/);
-  assert.match(defaults, /Cybersecurity Services in Saudi Arabia \| Penetration Testing \| Hassan Developer/);
+  assert.match(defaults, /title: "تصميم مواقع وإنشاء متاجر إلكترونية وتطبيقات بأسعار تنافسية/);
+  assert.match(defaults, /title: "Website Design, Online Stores and Apps at Competitive Prices/);
   const home = readFileSync(new URL("../app/page.js", import.meta.url), "utf8");
   assert.doesNotMatch(home, /HOME_TITLE/);
   assert.match(home, /homeAlternates\("ar"\)/);
@@ -14,8 +14,11 @@ test("homepage metadata matches main and the two paths stay linked", () => {
   assert.match(page, /<h1><Hl text=\{c\.hero\.title\} \/><\/h1>/);
   assert.deepEqual(HOME_LANDING.ar.doors.map((d) => d.href), ["/security", "/app-store-development"]);
   assert.deepEqual(HOME_LANDING.en.doors.map((d) => d.href), ["/security", "/app-store-development"]);
-  assert.match(HOME_TITLE_AR, /المطور حسن/);
-  assert.match(HOME_DESC_EN, /penetration testing/);
+  assert.match(HOME_TITLE_AR, /تصميم مواقع/);
+  assert.match(HOME_DESC_EN, /online store/);
+  const security = readFileSync(new URL("../app/SecurityPage.js", import.meta.url), "utf8");
+  assert.match(security, /SECURITY_KEYWORDS_AR/);
+  assert.doesNotMatch(page, /<Security s=\{sec\}/);
 });
 
 test("ranked urls stay in the nav and sitemap and are not redirected", () => {

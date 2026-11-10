@@ -13,16 +13,16 @@ import { STORE_CARE } from "@/lib/store-care";
 
 const FAQ = {
   ar: [
-    ["كم تكلفة إنشاء المتجر؟", "1,500 ريال شراءً لمرة واحدة بدون اشتراكات، بكل المزايا الحالية، ويشمل ربط بوابات الدفع وشركات الشحن، واستضافة مجانية لمدة سنة، ودعماً فنياً مجانياً لمدة سنة، ودوميناً مجانياً. والموقع التعريفي بـ 299 ريال."],
-    ["هل فيه اشتراك شهري؟", "لا. تدفع 1,500 ريال مرة واحدة فقط، والاستضافة والدعم الفني مجاناً لمدة سنة كاملة، والدومين مجاني."],
+    ["كم تكلفة إنشاء المتجر؟", "8,500 ريال شراءً لمرة واحدة بدون اشتراكات، بكل المزايا الحالية، ويشمل ربط بوابات الدفع وشركات الشحن، واستضافة مجانية لمدة سنة، ودعماً فنياً مجانياً لمدة سنة، ودوميناً مجانياً. والموقع التعريفي بـ 2,300 ريال."],
+    ["هل فيه اشتراك شهري؟", "لا. تدفع 8,500 ريال مرة واحدة فقط، والاستضافة والدعم الفني مجاناً لمدة سنة كاملة، والدومين مجاني."],
     ["هل بوابات الدفع والشحن متاحة؟", "نعم. ميسر وتابي وتمارا والراجحي والدفع عند الاستلام، وأرامكس وسمسا وأوتو وطرود والبريد السعودي، جزء من المنصة وربطها داخل السعر. فاتورة زاتكا مع رمز QR كذلك."],
     ["ما الفرق بين إصلاح العطل والميزة الجديدة؟", "إصلاح العطل خلل في ما تم تسليمه، ويشمله الدعم الفني المجاني لمدة سنة. الميزات الجديدة تتسعّر بشكل منفصل."],
     ["كم يستغرق التسليم؟", "التسليم سريع ويتوقف على تسليمك للمحتوى في وقته. لا نعد بعدد أيام ثابت."],
     [STORE_CARE.ar.faqQ, STORE_CARE.ar.faqA],
   ],
   en: [
-    ["What does the store cost?", "1,500 SAR as a one-time purchase with no subscriptions, with every current feature, payment gateway and shipping carrier integration, free hosting for one year, free technical support for one year, and a free domain. A business website is 299 SAR."],
-    ["Is there a monthly fee?", "No. You pay 1,500 SAR once. Hosting and technical support are free for a full year, and the domain is free."],
+    ["What does the store cost?", "8,500 SAR as a one-time purchase with no subscriptions, with every current feature, payment gateway and shipping carrier integration, free hosting for one year, free technical support for one year, and a free domain. A business website is 2,300 SAR."],
+    ["Is there a monthly fee?", "No. You pay 8,500 SAR once. Hosting and technical support are free for a full year, and the domain is free."],
     ["Are payment and shipping available?", "Yes. Moyasar, Tabby, Tamara, Al Rajhi and cash on delivery, and Aramex, SMSA, OTO, Torod and Saudi Post, are part of the platform and connected within the price. The ZATCA QR invoice is included too."],
     ["What is a bug fix versus a new feature?", "A bug fix is a defect in what was delivered, and it is covered by the free year of technical support. A new feature is quoted separately."],
     ["How long does delivery take?", "Delivery is fast and depends on you providing the content on time. We do not promise a fixed number of days."],
@@ -34,7 +34,7 @@ const HERO = {
   ar: {
     badge: "شراء بدون اشتراكات",
     h1Before: "متجرك الإلكتروني الجاهز ",
-    h1Mark: "بـ 1,500 ريال فقط",
+    h1Mark: "بـ 8,500 ريال فقط",
     lead: OFFER_DESC_AR,
     primary: "اطلب المتجر على واتساب",
     secondary: "تفاصيل السعر",
@@ -47,7 +47,7 @@ const HERO = {
   en: {
     badge: "One-time purchase, no subscriptions",
     h1Before: "Your ready online store ",
-    h1Mark: "for only 1,500 SAR",
+    h1Mark: "for only 8,500 SAR",
     lead: OFFER_DESC_EN,
     primary: "Order the store on WhatsApp",
     secondary: "Pricing",
@@ -92,7 +92,7 @@ export default async function StorePage({ lang }) {
             </h1>
             <p className="lead" style={{ maxWidth: 780, marginInline: "auto" }}>{copy.lead}</p>
             <div className="cta-row" style={{ justifyContent: "center" }}>
-              <a className="btn" href={waLink(en ? "Online store for 1,500 SAR" : "المتجر بـ 1500 ريال")} target="_blank" rel="noopener">{copy.primary}</a>
+              <a className="btn" href={waLink(en ? "Online store for 8,500 SAR" : "المتجر بـ 8500 ريال")} target="_blank" rel="noopener">{copy.primary}</a>
               <a className="btn btn-ghost" href="#packages">{copy.secondary}</a>
             </div>
           </div>
@@ -164,7 +164,7 @@ export default async function StorePage({ lang }) {
               ))}
             </div>
             <div className="cta-row" style={{ justifyContent: "center", marginTop: 24 }}>
-              <a className="btn" href={waLink(en ? "Online store for 1,500 SAR" : "المتجر بـ 1500 ريال")} target="_blank" rel="noopener">{copy.faqCta}</a>
+              <a className="btn" href={waLink(en ? "Online store for 8,500 SAR" : "المتجر بـ 8500 ريال")} target="_blank" rel="noopener">{copy.faqCta}</a>
             </div>
           </div>
         </section>

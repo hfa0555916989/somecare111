@@ -35,8 +35,6 @@ export function WaIcon({ size = 22 }) {
 export default async function HomePage({ lang }) {
   const c = localize(await getContent(), lang);
   const t = ui(c.lang);
-  const sec = c.security || {};
-  const showSecurity = sec.show !== false && !!sec.title;
   const waLink = makeWaLink(c);
   const yt = youtubeId(c.video.url);
 
@@ -52,10 +50,10 @@ export default async function HomePage({ lang }) {
               <h1><Hl text={c.hero.title} /></h1>
               <p className="lead">{c.hero.subtitle}</p>
               <div className="cta-row">
-                <a className="btn" href={waLink(showSecurity ? plain(sec.navLabel || sec.title) : undefined)} target="_blank" rel="noopener">
+                <a className="btn" href={waLink()} target="_blank" rel="noopener">
                   <WaIcon /> {c.hero.primaryButton}
                 </a>
-                <a className="btn btn-ghost" href={showSecurity ? "#security" : "#packages"}>
+                <a className="btn btn-ghost" href="#packages">
                   {c.hero.secondaryButton}
                 </a>
               </div>
@@ -67,7 +65,7 @@ export default async function HomePage({ lang }) {
           </div>
         </section>
 
-        {showSecurity && <Security s={sec} t={t} waLink={waLink} />}
+        {/* الأمن السيبراني صفحة مستقلة (/security)، ويُربط إليها من القائمة */}
 
         <section id="packages" className="sec">
           <div className="wrap">

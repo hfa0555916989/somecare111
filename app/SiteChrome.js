@@ -5,8 +5,6 @@ import { SITE_NAV, navHref, RESERVED_SLUGS } from "@/lib/sitelinks";
 import { MobileNav } from "./MobileNav";
 
 const digits = (s) => String(s || "").replace(/\D/g, "");
-const PROMO_WA_SITE = `https://wa.me/966530779934?text=${encodeURIComponent("السلام عليكم، أبغى عرض الموقع التعريفي بـ 299 ريال")}`;
-const PROMO_WA = `https://wa.me/966530779934?text=${encodeURIComponent("السلام عليكم، أبغى عرض المتجر بـ 1500 ريال")}`;
 const live = (c, key) => (c.pages || []).filter((p) => p.published !== false && p[key] && p.slug);
 
 // data-nosnippet: يمنع جوجل من أخذ نص القائمة والفوتر في وصف نتيجة البحث، لأن روابط القائمة تلتصق ببعضها فيه
@@ -44,20 +42,6 @@ export function SiteHeader({ c, icon, altPath = "/" }) {
           </a>
         </div>
       </header>
-      <div className="wrap promo-banner-wrap promo-two">
-        <a className="promo-banner" href={PROMO_WA} target="_blank" rel="noopener" aria-label="تواصل واتساب لعرض المتجر بـ 1500 ريال">
-          <picture>
-            <source srcSet="/images/promo/store-1500.webp" type="image/webp" />
-            <img src="/images/promo/store-1500.jpg" width="1280" height="720" loading="eager" alt="متجرك الإلكتروني جاهز بـ 1500 ريال فقط، شراء بدون اشتراكات: ربط مع شركات الدفع والشحن، استضافة مجانية سنة، دومين مجاني، ودعم فني سنة مجاناً. ومواقع تعريفية بـ 299 ريال" />
-          </picture>
-        </a>
-        <a className="promo-banner" href={PROMO_WA_SITE} target="_blank" rel="noopener" aria-label="تواصل واتساب لعرض الموقع التعريفي بـ 299 ريال">
-          <picture>
-            <source srcSet="/images/promo/website-299.webp" type="image/webp" />
-            <img src="/images/promo/website-299.jpg" width="1280" height="720" loading="eager" alt="موقعك التعريفي الاحترافي بـ 299 ريال فقط، يشمل لوحة تحكم مع إحصائيات الزوار، واستضافة ودعم فني لسنة، ودومين مجاني، بدون اشتراكات، تواصل معنا على واتساب" />
-          </picture>
-        </a>
-      </div>
       {extra.length > 0 && (
         <style>{`@media(max-width:760px){.nav-in{flex-wrap:wrap;gap:6px 14px}.links-wrap{display:flex;order:3;width:100%;overflow-x:auto;gap:18px;margin:0;padding-bottom:4px;font-size:.92rem;white-space:nowrap}}`}</style>
       )}

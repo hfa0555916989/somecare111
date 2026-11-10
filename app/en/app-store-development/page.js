@@ -2,8 +2,8 @@ import StorePage from "../../StorePage";
 
 export const dynamic = "force-dynamic";
 
-const TITLE = "Create an online store for 1,500 SAR, no subscriptions | Hassan Developer";
-const DESC = "A ready online store for 1,500 SAR, a one-time purchase with no subscriptions: every current feature, payment and shipping integration, a free year of hosting and support, and a free domain. Business websites are 299 SAR.";
+const TITLE = "Create an online store for 8,500 SAR, no subscriptions | Hassan Developer";
+const DESC = "A ready online store for 8,500 SAR, a one-time purchase with no subscriptions: every current feature, payment and shipping integration, a free year of hosting and support, and a free domain. Business websites are 2,300 SAR.";
 
 export const metadata = {
   title: { absolute: TITLE },
