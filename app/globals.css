@@ -924,12 +924,3 @@ p{margin:0}
 .foot-nav a{color:var(--text);text-decoration:none;font-weight:700}
 .foot-nav a:hover{color:var(--primary)}
 @media(prefers-reduced-motion:reduce){.demo-carousel img{transition:none}}
-
-.promo-banner-wrap{margin-top:14px;margin-bottom:6px}
-.promo-banner{display:block;border-radius:18px;overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,.18);transition:transform .2s}
-.promo-banner:hover{transform:translateY(-2px)}
-.promo-banner img{display:block;width:100%;height:auto}
-@media(max-width:600px){.promo-banner{border-radius:12px}}
-
-.promo-two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-@media(max-width:760px){.promo-two{grid-template-columns:1fr;gap:10px}}

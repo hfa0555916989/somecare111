@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getContent } from "@/lib/content";
 import { localize, ui, prefix } from "@/lib/i18n";
-import { siteUrl } from "@/lib/defaults";
+import { siteUrl, SECURITY_KEYWORDS_AR, SECURITY_KEYWORDS_EN } from "@/lib/defaults";
 import { SiteHeader, SiteFooter } from "./SiteChrome";
 import { plain, xHandle } from "./Icons";
 import { Security, Contact, WaIcon, makeWaLink } from "./HomePage";
@@ -27,6 +27,8 @@ export async function securityMetadata(lang) {
   return {
     title,
     description,
+    // كلمات بحث خاصة بالأمن السيبراني بدل كلمات الصفحة الرئيسية (تصميم المواقع والمتاجر)
+    keywords: c.lang === "en" ? SECURITY_KEYWORDS_EN : SECURITY_KEYWORDS_AR,
     alternates: { canonical: path, languages: { "ar-SA": "/security", en: "/en/security", "x-default": "/security" } },
     openGraph: { type: "website", locale: ui(c.lang).locale, siteName: c.brand.name, url: path, title, description, images },
     twitter: { card: "summary_large_image", title, description, images, ...(handle ? { site: handle, creator: handle } : {}) },
