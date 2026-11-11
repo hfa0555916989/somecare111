@@ -4,11 +4,16 @@ import { SiteHeader, SiteFooter, SocialRow } from "./SiteChrome";
 import { Icon, Hl, plain } from "./Icons";
 import ContactForm from "./ContactForm";
 import { turnstileSiteKey } from "@/lib/turnstile";
-import PreviousWork from "./PreviousWork";
+import { WorkWall } from "./PreviousWork";
 import { HOME_LANDING } from "@/lib/home-landing";
+import { homeSections } from "@/lib/home-sections";
+import { PREVIOUS_WORK, PREVIOUS_WORK_COPY } from "@/lib/previous-work";
+import { DEMO_URL, DEMO_ADMIN_URL } from "@/lib/demo-media";
 import PriceAddendum from "./PriceAddendum";
 import { isBigStorePackage } from "@/lib/big-store";
-import { PackagePoints, StoreShowcase, packageShowcase } from "./PackagePoints";
+import { PackagePoints, packageShowcase } from "./PackagePoints";
+import { DemoCarousel } from "./StoreShowcase";
+import { SecTag, Terminal, CodeCard, Frame, PackageVisual } from "./CodeParts";
 
 // روابط النسختين لجوجل (hreflang)
 export const homeAlternates = (lang) => ({
@@ -35,15 +40,24 @@ export function WaIcon({ size = 22 }) {
 export default async function HomePage({ lang }) {
   const c = localize(await getContent(), lang);
   const t = ui(c.lang);
+  const copy = homeSections(c.lang);
+  const work = c.lang === "en" ? PREVIOUS_WORK_COPY.en : PREVIOUS_WORK_COPY.ar;
   const waLink = makeWaLink(c);
   const yt = youtubeId(c.video.url);
+  const store = (c.packages || []).find(isBigStorePackage);
+  const post = store ? packageShowcase(store)?.post : null;
+  // ترقيم الأقسام بالترتيب الذي تظهر به
+  let no = 0;
+  const tag = (path) => <SecTag n={++no} path={path} />;
 
   return (
     <>
       <SiteHeader c={c} icon={<WaIcon size={18} />} />
 
       <main id="top">
-        <section className="hero">
+        <section className="hero hero-code">
+          {c.hero.image && <img className="hero-bg" src={c.hero.image} alt="" fetchPriority="high" />}
+          <div className="hero-scrim" aria-hidden="true" />
           <div className="wrap hero-in">
             <div className="hero-text">
               <p className="hero-badge">{c.hero.badge}</p>
@@ -53,55 +67,77 @@ export default async function HomePage({ lang }) {
                 <a className="btn" href={waLink()} target="_blank" rel="noopener">
                   <WaIcon /> {c.hero.primaryButton}
                 </a>
-                <a className="btn btn-ghost" href="#packages">
+                <a className="btn btn-ghost" href="#previous-work">
                   {c.hero.secondaryButton}
                 </a>
               </div>
-              <p className="avail">{c.contact.availability}</p>
+              <ul className="hero-proof">
+                {copy.proof(PREVIOUS_WORK.length).map((x) => (
+                  <li key={x}>{x}</li>
+                ))}
+              </ul>
             </div>
-            <div className="hero-media">
-              {c.hero.image && <img src={c.hero.image} alt="" />}
-            </div>
+            <Terminal lines={copy.terminal} />
           </div>
         </section>
+
+        {/* شريط الأسعار فوق حافة صورة الواجهة: أسعار الباقات كما هي، وبدون اشتراكات */}
+        <div className="wrap stat-wrap">
+          <div className="stats">
+            {(c.packages || []).slice(0, 3).map((p) => (
+              <div key={p.name} className="stat">
+                <span className="stat-l">{p.name}</span>
+                <p className="stat-v"><strong>{p.price}</strong><span>{p.unit}</span></p>
+              </div>
+            ))}
+            <div className="stat">
+              <span className="stat-l">{copy.noSubs.label}</span>
+              <p className="stat-v"><strong className="hl">0</strong><span>{copy.noSubs.note}</span></p>
+            </div>
+          </div>
+        </div>
 
         {/* الأمن السيبراني صفحة مستقلة (/security)، ويُربط إليها من القائمة */}
 
         <section id="packages" className="sec">
           <div className="wrap">
-            <h2><Hl text={c.titles.packages} /></h2>
-            <p className="sub">{c.titles.packagesSub}</p>
+            {tag("packages")}
+            <div className="sec-head">
+              <h2><Hl text={c.titles.packages} /></h2>
+              <p className="sub">{c.titles.packagesSub}</p>
+            </div>
             <div className="pk-grid">
               {c.packages.map((p, i) => (
-                <article key={i} id={isBigStorePackage(p) ? "big-store" : undefined} className={"pk" + (p.featured ? " pk-featured" : "")}>
-                  {p.image && <img className="pk-img" src={p.image} alt="" />}
-                  <div className="pk-head">
-                    {p.icon && <span className="ic-ring"><Icon name={p.icon} size={26} /></span>}
+                <article key={i} id={isBigStorePackage(p) ? "big-store" : undefined} className="pk pk-shot">
+                  <PackageVisual p={p} lang={c.lang} />
+                  {p.icon && <span className="ic-ring"><Icon name={p.icon} size={24} /></span>}
+                  <div className="pk-body">
                     <div>
                       {p.label && <p className="pk-label">{p.label}</p>}
                       <h3>{p.name}</h3>
                     </div>
+                    {p.desc && <p className="pk-desc">{p.desc}</p>}
+                    <PackagePoints features={p.features} lang={c.lang} />
+                    <div className="pk-foot">
+                      <p className="pk-price">
+                        {p.pricePrefix && <small>{p.pricePrefix}</small>}
+                        <strong>{p.price}</strong>
+                        <span>{p.unit}</span>
+                      </p>
+                      <a className="btn btn-sm" href={waLink(p.name)} target="_blank" rel="noopener">
+                        {t.orderPackage}
+                      </a>
+                    </div>
                   </div>
-                  <p className="pk-price">
-                    {p.pricePrefix && <small>{p.pricePrefix}</small>}
-                    <strong>{p.price}</strong>
-                    <span>{p.unit}</span>
-                  </p>
-                  {p.desc && <p className="pk-desc">{p.desc}</p>}
-                  <PackagePoints features={p.features} lang={c.lang} />
-                  <StoreShowcase data={packageShowcase(p)} lang={c.lang} />
-                  <a className={"btn" + (p.featured ? "" : " btn-ghost")} href={waLink(p.name)} target="_blank" rel="noopener">
-                    {t.orderPackage}
-                  </a>
                 </article>
               ))}
             </div>
           </div>
         </section>
 
-
-        <section id="addons" className="sec sec-alt">
+        <section id="addons" className="sec">
           <div className="wrap narrow">
+            {tag("addons")}
             <h2><Hl text={c.titles.addons} /></h2>
             {c.titles.addonsSub && <p className="sub">{c.titles.addonsSub}</p>}
             {(c.packages || []).some(isBigStorePackage) && (
@@ -126,13 +162,74 @@ export default async function HomePage({ lang }) {
           </div>
         </section>
 
-        <section className="sec">
+        {/* تجربة المتجر: صور المتجر التجريبي ولوحة التحكم داخل إطار متصفح */}
+        {store && (
+          <section id="store-demo" className="sec">
+            <div className="wrap">
+              {tag("demo")}
+              <div className="demo">
+                <div className="demo-txt">
+                  <h2><Hl text={copy.demo.title} /></h2>
+                  <p className="sub">{copy.demo.text}</p>
+                  <div className="cta-row">
+                    <a className="btn" href={DEMO_URL} target="_blank" rel="noopener">{copy.demo.open}</a>
+                    <a className="btn btn-ghost" href={DEMO_ADMIN_URL} target="_blank" rel="noopener">{copy.demo.admin}</a>
+                  </div>
+                  {post?.href && post?.title && (
+                    <a className="more-link" href={post.href}>{copy.demo.blog}: {post.title}</a>
+                  )}
+                </div>
+                <div className="demo-vis">
+                  <Frame url={DEMO_URL}>
+                    <DemoCarousel lang={c.lang} />
+                  </Frame>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        <section id="previous-work" className="sec">
           <div className="wrap">
+            {tag("work")}
+            <div className="sec-head">
+              <h2><Hl text={copy.work} /></h2>
+              <p className="sub">{work.lead}</p>
+            </div>
+            <WorkWall lang={c.lang} />
+          </div>
+        </section>
+
+        <section id="process" className="sec">
+          <div className="wrap">
+            {tag("process")}
+            <h2><Hl text={copy.process.title} /></h2>
+            <div className="proc">
+              <ol>
+                {copy.process.steps.map((s, i) => (
+                  <li key={s.fn}>
+                    <span aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
+                    <div>
+                      <code dir="ltr">{s.fn}</code>
+                      <h3>{s.title}</h3>
+                      <p>{s.text}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+              <CodeCard code={copy.code} />
+            </div>
+          </div>
+        </section>
+
+        <section id="features" className="sec">
+          <div className="wrap">
+            {tag("features")}
             <h2><Hl text={c.titles.features} /></h2>
             <div className="ft-grid">
               {c.features.map((f, i) => (
                 <div key={i} className="ft">
-                  <span className="ic-ring" aria-hidden="true"><Icon name={f.icon} size={24} /></span>
+                  <span className="ic-ring" aria-hidden="true"><Icon name={f.icon} size={22} /></span>
                   <div>
                     <h3>{f.title}</h3>
                     <p>{f.desc}</p>
@@ -144,14 +241,17 @@ export default async function HomePage({ lang }) {
         </section>
 
         {c.trust?.show !== false && c.trust?.title && (
-          <section id="trust" className="sec sec-alt">
+          <section id="trust" className="sec">
             <div className="wrap">
-              <h2><Hl text={c.trust.title} /></h2>
-              {c.trust.subtitle && <p className="sub">{c.trust.subtitle}</p>}
+              {tag("trust")}
+              <div className="sec-head">
+                <h2><Hl text={c.trust.title} /></h2>
+                {c.trust.subtitle && <p className="sub">{c.trust.subtitle}</p>}
+              </div>
               <div className="trust-grid">
                 {(c.trust.points || []).map((p, i) => (
                   <div key={i} className="trust-card">
-                    {p.icon && <span className="ic-ring" aria-hidden="true"><Icon name={p.icon} size={24} /></span>}
+                    {p.icon && <span className="ic-ring" aria-hidden="true"><Icon name={p.icon} size={22} /></span>}
                     <div>
                       <h3>{p.title}</h3>
                       {p.desc && <p>{p.desc}</p>}
@@ -173,11 +273,12 @@ export default async function HomePage({ lang }) {
           </section>
         )}
 
-        {c.about?.show !== false && c.about?.name && <About a={c.about} t={t} />}
+        {c.about?.show !== false && c.about?.name && <About a={c.about} t={t} tag={tag("about")} />}
 
         {c.gallery.length > 0 && (
-          <section id="gallery" className="sec sec-alt">
+          <section id="gallery" className="sec">
             <div className="wrap">
+              {tag("gallery")}
               <h2><Hl text={c.titles.gallery} /></h2>
               <div className="gal">
                 {c.gallery.map((g, i) => (
@@ -196,6 +297,7 @@ export default async function HomePage({ lang }) {
         {c.video.url && (
           <section className="sec">
             <div className="wrap narrow">
+              {tag("video")}
               <h2><Hl text={c.titles.video} /></h2>
               <div className="video">
                 {yt ? (
@@ -218,17 +320,16 @@ export default async function HomePage({ lang }) {
             <div className="door-grid">
               {(lang === "en" ? HOME_LANDING.en : HOME_LANDING.ar).doors.map((door) => (
                 <article key={door.href} className="door">
+                  <span className="door-path" dir="ltr" aria-hidden="true">{door.href}</span>
                   <h2>{door.title}</h2>
                   <p>{door.text}</p>
-                  <a className="btn" href={`${prefix(lang)}${door.href}`}>{door.cta}</a>
+                  <a className="btn btn-ghost btn-sm" href={`${prefix(lang)}${door.href}`}>{door.cta}</a>
                 </article>
               ))}
             </div>
+            <PriceAddendum lang={c.lang} />
           </div>
         </section>
-
-        <PreviousWork lang={c.lang} />
-        <div className="wrap"><PriceAddendum lang={c.lang} /></div>
 
         <Contact c={c} t={t} waLink={waLink} />
       </main>
@@ -279,17 +380,25 @@ export function Contact({ c, t, waLink, service, heading = "h2", title }) {
   );
 }
 
-export function About({ a, t, heading = "h2", title }) {
+export function About({ a, t, heading = "h2", title, tag }) {
   const lines = String(a.bio || "").split("\n").filter((l) => l.trim());
   const H = heading;
   return (
     <section id="about" className="sec">
       <div className="wrap">
+        {tag}
         <H><Hl text={title || a.title} /></H>
         <div className="about">
           {a.photo && (
             <div className="about-photo">
               <img src={a.photo} alt={a.name} loading="lazy" />
+              {a.certNumber && (
+                <p className="about-badge">
+                  <span>{a.certTitle}</span>
+                  <b dir="ltr">{a.certNumber}</b>
+                  {a.certExpiry && <span>{t.certExpiry} {a.certExpiry}</span>}
+                </p>
+              )}
             </div>
           )}
           <div className="about-txt">
