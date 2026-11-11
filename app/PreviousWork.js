@@ -42,3 +42,23 @@ export default function PreviousWork({ lang, showHeading = true }) {
     </section>
   );
 }
+
+// جدار الأعمال في الرئيسية: كل موقع داخل إطار جوال، مع اسمه ونطاقه
+export function WorkWall({ lang }) {
+  return (
+    <div className="work-wall">
+      {PREVIOUS_WORK.map((item) => {
+        const name = lang === "en" ? item.nameEn : item.nameAr;
+        return (
+          <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer">
+            <span className="phone">
+              <img src={item.image} alt={name} width={390} height={844} loading="lazy" decoding="async" />
+            </span>
+            <b>{name}</b>
+            <small dir="ltr">{hostOf(item.url)}</small>
+          </a>
+        );
+      })}
+    </div>
+  );
+}

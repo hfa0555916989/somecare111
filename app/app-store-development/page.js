@@ -45,7 +45,7 @@ const PLANS = [
   {
     id: "website",
     name: "موقع تعريفي",
-    price: "2300",
+    price: "2,300",
     unit: "ريال",
     points: [
       "موقع تعريفي احترافي لنشاطك",

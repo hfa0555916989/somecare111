@@ -23,8 +23,10 @@ export const ICONS = {
   star: ["تميّز", <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />],
 };
 
+const EMOJI_ICONS = { "⚡": "bolt", "📱": "phone", "🎛️": "gear", "🎛": "gear", "🔎": "search", "🔍": "search", "📊": "chart", "🛡️": "shield", "🛡": "shield" };
+
 export function Icon({ name, size = 24 }) {
-  const ic = ICONS[name];
+  const ic = ICONS[name] || ICONS[EMOJI_ICONS[name]];
   if (!ic) return name ? <span style={{ fontSize: size * 0.9, lineHeight: 1 }}>{name}</span> : null;
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
