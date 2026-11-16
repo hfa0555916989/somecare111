@@ -81,10 +81,7 @@ export default async function SecurityPage({ lang }) {
         <Security s={s} t={t} waLink={waLink} heading="h1" />
         <Contact c={c} t={t} waLink={waLink} service={service} />
       </main>
-      <SiteFooter c={c} />
-      <a className="wa-float" href={waLink(service)} target="_blank" rel="noopener" aria-label={t.whatsapp}>
-        <WaIcon size={30} />
-      </a>
+      <SiteFooter c={c} waExtra={service} />
       {[ld, faqLd].filter(Boolean).map((x, i) => (
         <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(x).replace(/</g, "\\u003c") }} />
       ))}

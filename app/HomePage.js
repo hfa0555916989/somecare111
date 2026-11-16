@@ -4,6 +4,7 @@ import { SiteHeader, SiteFooter, SocialRow } from "./SiteChrome";
 import { Icon, Hl, plain } from "./Icons";
 import ContactForm from "./ContactForm";
 import { turnstileSiteKey } from "@/lib/turnstile";
+import { e164 } from "@/lib/attribution";
 import { WorkWall } from "./PreviousWork";
 import { HOME_LANDING } from "@/lib/home-landing";
 import { homeSections } from "@/lib/home-sections";
@@ -336,9 +337,6 @@ export default async function HomePage({ lang }) {
 
       <SiteFooter c={c} />
 
-      <a className="wa-float" href={waLink()} target="_blank" rel="noopener" aria-label={t.whatsapp}>
-        <WaIcon size={30} />
-      </a>
     </>
   );
 }
@@ -364,7 +362,7 @@ export function Contact({ c, t, waLink, service, heading = "h2", title }) {
           <WaIcon size={26} /> {t.whatsapp} <span dir="ltr">{c.contact.phone}</span>
         </a>
         <p className="or">
-          {t.callDirect} <a href={`tel:${digits(c.contact.phone)}`} dir="ltr">{c.contact.phone}</a>
+          {t.callDirect} <a href={`tel:${e164(c.contact.phone) || "+966555916989"}`} dir="ltr">{c.contact.phone}</a>
         </p>
         {c.form?.show !== false && (
           <ContactForm

@@ -450,9 +450,12 @@ main>.sec:last-child{padding-bottom:var(--gap-sec)}
 .cf-done{text-align:center;font-size:1.1rem;border-color:color-mix(in srgb,var(--price) 55%,transparent)}
 .cf-done p{color:var(--text)}
 
-/* floating whatsapp */
-.wa-float{position:fixed;inset-inline-start:20px;bottom:20px;z-index:30;width:60px;height:60px;border-radius:50%;background:#25d366;color:#fff;display:grid;place-items:center;box-shadow:0 6px 22px rgba(0,0,0,.4);transition:transform .15s}
-.wa-float:hover{transform:scale(1.08)}
+/* floating call + whatsapp */
+.float-btns{position:fixed;inset-inline-start:20px;bottom:max(20px,env(safe-area-inset-bottom));z-index:30;display:flex;flex-direction:column;gap:12px}
+.float-btn{width:60px;height:60px;border-radius:50%;display:grid;place-items:center;box-shadow:0 6px 22px rgba(0,0,0,.4);transition:transform .15s}
+.float-btn:hover{transform:scale(1.08)}
+.wa-float{background:#25d366;color:#fff}
+.call-float{background:var(--primary);color:var(--buttonText)}
 
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
 
