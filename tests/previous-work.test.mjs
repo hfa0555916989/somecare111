@@ -10,6 +10,7 @@ const EXPECTED = [
   ["https://bunyanraslan.com/", "مؤسسة بنيان رسلان الهندسية"],
   ["https://goldeneditionmining.com", "الإصدار الذهبي للتعدين والمقاولات"],
   ["https://alrowadevent.com", "الرواد للحفلات والضيافة"],
+  ["https://shamalqurtuba.com", "مكتب شمال قرطبة للعقارات"],
 ];
 
 test("previous work lists the live sites with screenshots and no invented metrics", () => {
