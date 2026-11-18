@@ -11,6 +11,7 @@ const EXPECTED = [
   ["https://goldeneditionmining.com", "الإصدار الذهبي للتعدين والمقاولات"],
   ["https://alrowadevent.com", "الرواد للحفلات والضيافة"],
   ["https://shamalqurtuba.com", "مكتب شمال قرطبة للعقارات"],
+  ["https://adelattareng.com", "مكتب عادل محمد عطار للاستشارات الهندسية"],
 ];
 
 test("previous work lists the live sites with screenshots and no invented metrics", () => {
