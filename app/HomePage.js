@@ -9,7 +9,7 @@ import { WorkWall } from "./PreviousWork";
 import { HOME_LANDING } from "@/lib/home-landing";
 import { homeSections } from "@/lib/home-sections";
 import { PREVIOUS_WORK, PREVIOUS_WORK_COPY } from "@/lib/previous-work";
-import { DEMO_URL, DEMO_ADMIN_URL } from "@/lib/demo-media";
+import { DEMO_URL } from "@/lib/demo-media";
 import PriceAddendum from "./PriceAddendum";
 import { isBigStorePackage } from "@/lib/big-store";
 import { PackagePoints, packageShowcase } from "./PackagePoints";
@@ -174,7 +174,6 @@ export default async function HomePage({ lang }) {
                   <p className="sub">{copy.demo.text}</p>
                   <div className="cta-row">
                     <a className="btn" href={DEMO_URL} target="_blank" rel="noopener">{copy.demo.open}</a>
-                    <a className="btn btn-ghost" href={DEMO_ADMIN_URL} target="_blank" rel="noopener">{copy.demo.admin}</a>
                   </div>
                   {post?.href && post?.title && (
                     <a className="more-link" href={post.href}>{copy.demo.blog}: {post.title}</a>
