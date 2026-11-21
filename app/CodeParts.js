@@ -108,6 +108,8 @@ export function PackageVisual({ p, lang }) {
       </div>
     );
   }
+  const own = p.workId && PREVIOUS_WORK.find((w) => w.id === p.workId);
+  if (own) return <div className="pk-vis">{phone(own)}</div>;
   const [a, b, c] = PREVIOUS_WORK;
   return (
     <div className="pk-vis">
