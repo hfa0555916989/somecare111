@@ -13,11 +13,14 @@ const EXPECTED = [
   ["https://shamalqurtuba.com", "مكتب شمال قرطبة للعقارات"],
   ["https://adelattareng.com", "مكتب عادل محمد عطار للاستشارات الهندسية"],
   ["https://almohasebpro.com", "المحاسب المحترف"],
+  ["https://hrajna.com", "حراجنا"],
+  ["https://hassanide.com", "علوم حسن"],
+  ["https://hassantask.online", "مهام حسن"],
 ];
 
 test("previous work lists the live sites with screenshots and no invented metrics", () => {
   assert.deepEqual(PREVIOUS_WORK.map((item) => [item.url, item.nameAr]), EXPECTED);
-  assert.doesNotMatch(JSON.stringify(PREVIOUS_WORK), /consultmovia|hrajna|حراجنا|قريباً|عميل سعيد|%\s|شهادة/);
+  assert.doesNotMatch(JSON.stringify(PREVIOUS_WORK), /consultmovia|قريباً|عميل سعيد|%\s|شهادة/);
   assert.match(PREVIOUS_WORK_COPY.ar.lead, /سريعة وآمنة ومهيّأة لمحركات البحث/);
   assert.equal((PREVIOUS_WORK_COPY.ar.lead.match(/سريعة/g) || []).length, 1);
   const view = readFileSync(new URL("../app/PreviousWork.js", import.meta.url), "utf8");
