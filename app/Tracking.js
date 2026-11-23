@@ -2,10 +2,20 @@
 import Script from "next/script";
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { saveAttribution, e164 } from "@/lib/attribution";
+import { saveAttribution, getAttribution, e164 } from "@/lib/attribution";
 
 // يسمح فقط بالحروف والأرقام والشرطات لمنع حقن أكواد
 const clean = (v) => String(v || "").trim().replace(/[^A-Za-z0-9_\-]/g, "");
+const newId = () => (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`);
+
+// نقرة واتساب/اتصال: نسجّلها في X من الخادم أيضاً (Conversion API) بنفس رقم التحويل
+const sendXServer = (id) => {
+  try {
+    const body = JSON.stringify({ id, twclid: getAttribution().twclid || "" });
+    if (navigator.sendBeacon) navigator.sendBeacon("/api/x-event", new Blob([body], { type: "application/json" }));
+    else fetch("/api/x-event", { method: "POST", headers: { "Content-Type": "application/json" }, body, keepalive: true });
+  } catch (_) {}
+};
 
 export default function Tracking({ t = {} }) {
   const ga4 = clean(t.ga4);
@@ -36,7 +46,11 @@ export default function Tracking({ t = {} }) {
         adsConversion(call ? callLabel : label);
         if (window.snaptr) window.snaptr("track", "SIGN_UP");
         if (window.ttq) window.ttq.track("Contact");
-        if (window.twq && xEvent) window.twq("event", xEvent, {});
+        if (x && xEvent) {
+          const id = newId();
+          if (window.twq) window.twq("event", xEvent, { conversion_id: id });
+          sendXServer(id);
+        }
       } catch (_) {}
     };
     // إرسال نموذج الاستفسار بنجاح (يطلقه ContactForm): أهم تحويل
@@ -52,7 +66,13 @@ export default function Tracking({ t = {} }) {
         }
         if (window.snaptr) window.snaptr("track", "SIGN_UP");
         if (window.ttq) window.ttq.track("SubmitForm");
-        if (window.twq && xEvent) window.twq("event", xEvent, {});
+        // الخادم أرسل التحويل نفسه برقم الاستفسار، فيتطابقان ولا يُحسب مرتين
+        if (window.twq && xEvent)
+          window.twq("event", xEvent, {
+            ...(id ? { conversion_id: id } : {}),
+            ...(email ? { email_address: email } : {}),
+            ...(e164(phone) ? { phone_number: e164(phone) } : {}),
+          });
       } catch (_) {}
     };
     document.addEventListener("click", onClick);
@@ -61,7 +81,7 @@ export default function Tracking({ t = {} }) {
       document.removeEventListener("click", onClick);
       window.removeEventListener("hd:lead", onLead);
     };
-  }, [ga4, ads, label, formLabel, callLabel, xEvent]);
+  }, [ga4, ads, label, formLabel, callLabel, x, xEvent]);
 
   // روابط العقود وعروض الأسعار خاصة بالعميل، فلا نرسلها لأدوات التتبع والإعلانات
   if (usePathname()?.startsWith("/doc/")) return null;

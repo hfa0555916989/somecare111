@@ -8,6 +8,7 @@ import { turnstileEnabled } from "@/lib/turnstile";
 import { mailEnabled } from "@/lib/mail";
 import { voiceEnabled } from "@/lib/voice";
 import { aiEnabled } from "@/lib/ai";
+import { xCapiEnabled } from "@/lib/x-capi";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,7 @@ export async function GET() {
     mailTo: !!c.form?.notifyEmail,
     voice: voiceEnabled(),
     turnstile: turnstileEnabled(),
+    xCapi: xCapiEnabled(),
     vaultKey: !!process.env.VAULT_KEY,
     vaultKeySource: vaultKeySource(),
   };
