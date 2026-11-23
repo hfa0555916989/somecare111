@@ -6,7 +6,7 @@ import { SITE_NAV, navHref, RESERVED_SLUGS } from "@/lib/sitelinks";
 import { MobileNav } from "./MobileNav";
 
 const digits = (s) => String(s || "").replace(/\D/g, "");
-const telHref = (phone) => `tel:${e164(phone) || "+966555916989"}`;
+const telHref = (phone) => `tel:${e164(phone) || "+966530779934"}`;
 const waHref = (c, extra) => {
   const wa = digits(c.contact?.whatsapp);
   const text = extra ? `${c.contact?.message || ""} - ${extra}` : (c.contact?.message || "");

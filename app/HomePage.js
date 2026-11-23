@@ -361,7 +361,7 @@ export function Contact({ c, t, waLink, service, heading = "h2", title }) {
           <WaIcon size={26} /> {t.whatsapp} <span dir="ltr">{c.contact.phone}</span>
         </a>
         <p className="or">
-          {t.callDirect} <a href={`tel:${e164(c.contact.phone) || "+966555916989"}`} dir="ltr">{c.contact.phone}</a>
+          {t.callDirect} <a href={`tel:${e164(c.contact.phone) || "+966530779934"}`} dir="ltr">{c.contact.phone}</a>
         </p>
         {c.form?.show !== false && (
           <ContactForm
