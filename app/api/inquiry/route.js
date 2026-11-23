@@ -5,6 +5,7 @@ import { createInquiry, rateLimit, clientIp } from "@/lib/inquiries";
 import { verifyTurnstile } from "@/lib/turnstile";
 import { notify } from "@/lib/mail";
 import { cleanSrc, sourceLabel } from "@/lib/attribution";
+import { sendXConversion } from "@/lib/x-capi";
 
 export const dynamic = "force-dynamic";
 
@@ -77,6 +78,17 @@ export async function POST(req) {
     console.error("Inquiry save failed", e);
     return NextResponse.json({ error: m.failed }, { status: 503 });
   }
+
+  // تحويل X من الخادم (Conversion API)، برقم الاستفسار نفسه الذي يرسله بكسل المتصفح
+  const ip = clientIp(req);
+  await sendXConversion(raw.tracking, {
+    conversionId: item.id,
+    twclid: data.src?.twclid,
+    email: data.email,
+    phone: data.phone,
+    ip: ip === "anon" ? "" : ip,
+    ua: req.headers.get("user-agent") || "",
+  });
 
   // إشعار بالبريد (إذا فُعّل من «الاستفسارات» وأضيف RESEND_API_KEY)
   await notify(raw, `استفسار جديد ${item.id} من ${data.name}`, [

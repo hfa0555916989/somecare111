@@ -2416,8 +2416,11 @@ export default function Admin() {
             <Text label="TikTok Pixel ID" ltr value={d.tracking.tiktok} onChange={u(["tracking", "tiktok"])} />
             <div className="row">
               <Text label="X (Twitter) Pixel ID" ltr value={d.tracking.xPixel} onChange={u(["tracking", "xPixel"])} />
-              <Text label="X Event ID للتحويل (اختياري، مثل tw-xxxx-xxxx)" ltr value={d.tracking.xEventId} onChange={u(["tracking", "xEventId"])} />
+              <Text label="X Event ID للتحويل (مثل tw-rjzxq-xxxxx)" ltr value={d.tracking.xEventId} onChange={u(["tracking", "xEventId"])} />
             </div>
+            <span className="adm-hint">
+              X Conversion API: يُرسل الاستفسار ونقرات واتساب والاتصال إلى X من الخادم أيضاً، برقم التحويل نفسه فلا يُحسب مرتين. يعمل بعد إضافة Event ID هنا، وإضافة الرمز من X Ads ← مدير الأحداث ← Manual setup ← Generate access token في Vercel باسم <b>X_PIXEL_TOKEN</b> ثم Redeploy.
+            </span>
           </>
         )}
       </div>
