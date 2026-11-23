@@ -22,7 +22,7 @@ export const metadata = {
   twitter: { card: "summary_large_image", title: TITLE, description: DESC, images: ["/images/brand-og.png"] },
 };
 
-const wa = (text) => "https://wa.me/966555916989?text=" + encodeURIComponent(text);
+const wa = (text) => "https://wa.me/966530779934?text=" + encodeURIComponent(text);
 const WA = wa("السلام عليكم، أبغى عرض المتجر بـ 8500 ريال");
 
 // شراء لمرة واحدة بدون اشتراكات
@@ -109,7 +109,7 @@ const LD = {
       alternateName: "Developer Hassan",
       jobTitle: "مطوّر مواقع وتطبيقات",
       url: "https://www.hassandev.sa/",
-      telephone: "+966555916989",
+      telephone: "+966530779934",
       address: { "@type": "PostalAddress", addressLocality: "الرياض", addressCountry: "SA" },
     },
     {

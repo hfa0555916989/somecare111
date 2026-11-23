@@ -2153,7 +2153,7 @@ export default function Admin() {
         {tab === "contact" && (
           <>
             <Text label="رقم الجوال (للعرض)" ltr value={d.contact.phone} onChange={u(["contact", "phone"])} />
-            <Text label="رقم واتساب بالصيغة الدولية بدون + (مثال: 966555916989)" ltr value={d.contact.whatsapp} onChange={u(["contact", "whatsapp"])} />
+            <Text label="رقم واتساب بالصيغة الدولية بدون + (مثال: 966530779934)" ltr value={d.contact.whatsapp} onChange={u(["contact", "whatsapp"])} />
             <Text label="نص التواصل" value={d.contact.availability} onChange={u(["contact", "availability"])} />
             <Text label="رسالة واتساب الجاهزة" area value={d.contact.message} onChange={u(["contact", "message"])} />
           </>
