@@ -53,6 +53,52 @@ function Text({ label, value, onChange, area, ltr, hint, rows }) {
   );
 }
 
+// رمز X Conversion API: يُحفظ مشفّراً بزر مستقل، ولا تُعرض قيمته بعد الحفظ (فقط آخر 4 أحرف)
+function XTokenField() {
+  const [st, setSt] = useState(null);
+  const [val, setVal] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+  useEffect(() => {
+    fetch("/api/secrets").then((r) => r.json()).then((j) => setSt(j.xPixelToken || null)).catch(() => {});
+  }, []);
+  async function save(value) {
+    setBusy(true);
+    setMsg("");
+    const r = await fetch("/api/secrets", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: "xPixelToken", value }) });
+    const j = await r.json().catch(() => ({}));
+    setBusy(false);
+    if (!r.ok) return setMsg(j.error || "تعذر الحفظ");
+    setSt(j.xPixelToken);
+    setVal("");
+    setMsg(value ? "تم حفظ الرمز ✓" : "تم حذف الرمز");
+  }
+  return (
+    <div className="note info" style={{ display: "grid", gap: 8 }}>
+      <b>رمز X Conversion API</b>
+      <span className="adm-hint">
+        يرسل الاستفسار ونقرات واتساب والاتصال إلى X من الخادم مباشرة، فتُحسب حتى مع مانع الإعلانات، وبرقم التحويل نفسه فلا تتكرر. انسخه من X Ads ← مدير الأحداث ← Manual setup ← Generate access token. يعمل مع X Event ID أعلاه.
+      </span>
+      <div>
+        الحالة:{" "}
+        {!st ? "…" : st.set ? (
+          <span className="ok">مفعّل ✓ (ينتهي بـ <span dir="ltr">…{st.tail}</span>{st.source === "env" ? "، من Vercel" : ""})</span>
+        ) : (
+          <span className="err">غير مضاف</span>
+        )}
+      </div>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <input type="password" dir="ltr" autoComplete="off" placeholder={st?.set ? "الصق رمزاً جديداً لاستبداله" : "الصق الرمز هنا"} value={val} onChange={(e) => setVal(e.target.value)} style={{ flex: "1 1 240px" }} />
+        <button type="button" className="gold" disabled={busy || !val.trim()} onClick={() => save(val)}>حفظ الرمز</button>
+        {st?.source === "panel" && (
+          <button type="button" className="mini danger" disabled={busy} onClick={() => confirm("حذف رمز X Conversion API؟") && save("")}>حذف</button>
+        )}
+      </div>
+      {msg && <span className="adm-hint">{msg}</span>}
+    </div>
+  );
+}
+
 function IconPick({ value, onChange }) {
   const custom = value && !ICONS[value];
   return (
@@ -2418,9 +2464,7 @@ export default function Admin() {
               <Text label="X (Twitter) Pixel ID" ltr value={d.tracking.xPixel} onChange={u(["tracking", "xPixel"])} />
               <Text label="X Event ID للتحويل (مثل tw-rjzxq-xxxxx)" ltr value={d.tracking.xEventId} onChange={u(["tracking", "xEventId"])} />
             </div>
-            <span className="adm-hint">
-              X Conversion API: يُرسل الاستفسار ونقرات واتساب والاتصال إلى X من الخادم أيضاً، برقم التحويل نفسه فلا يُحسب مرتين. يعمل بعد إضافة Event ID هنا، وإضافة الرمز من X Ads ← مدير الأحداث ← Manual setup ← Generate access token في Vercel باسم <b>X_PIXEL_TOKEN</b> ثم Redeploy.
-            </span>
+            <XTokenField />
           </>
         )}
       </div>
