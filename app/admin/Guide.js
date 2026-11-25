@@ -18,7 +18,7 @@ const SERVICES = [
   ["mail", "إرسال الإيميل (Resend)", "يرسل لك إيميل عند كل استفسار وكل موافقة على عرض أو عقد.", "أنشئ حساباً في resend.com ← Domains ← أضف hassandev.sa وأضف سجلات DNS التي يعطيك إياها، ثم API Keys ← أضف RESEND_API_KEY. اختياري: MAIL_FROM مثل «المطوّر حسن <noreply@hassandev.sa>»."],
   ["mailTo", "إيميل الإشعارات", "العنوان الذي تصلك عليه الإشعارات.", "لوحة التحكم ← الاستفسارات ← إيميل الإشعارات، ثم «حفظ التغييرات»."],
   ["turnstile", "حماية النموذج من الروبوتات", "يمنع رسائل السبام في «تواصل معنا».", "أضف TURNSTILE_SITE_KEY و TURNSTILE_SECRET_KEY من Cloudflare."],
-  ["xCapi", "X Conversion API", "يرسل تحويلات الاستفسار ونقرات واتساب والاتصال إلى X من الخادم، فتُحسب حتى مع مانع الإعلانات.", "X Ads ← مدير الأحداث ← Manual setup ← Generate access token، ثم أضفه في Vercel باسم X_PIXEL_TOKEN وأعد النشر."],
+  ["xCapi", "X Conversion API", "يرسل تحويلات الاستفسار ونقرات واتساب والاتصال إلى X من الخادم، فتُحسب حتى مع مانع الإعلانات.", "X Ads ← مدير الأحداث ← Manual setup ← Generate access token، ثم الصقه في لوحة التحكم ← أدوات التتبع ← «رمز X Conversion API» واضغط «حفظ الرمز»."],
 ];
 
 const SECTIONS = [

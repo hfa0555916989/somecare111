@@ -6,6 +6,7 @@ import { verifyTurnstile } from "@/lib/turnstile";
 import { notify } from "@/lib/mail";
 import { cleanSrc, sourceLabel } from "@/lib/attribution";
 import { sendXConversion } from "@/lib/x-capi";
+import { getSecret } from "@/lib/site-secrets";
 
 export const dynamic = "force-dynamic";
 
@@ -88,7 +89,7 @@ export async function POST(req) {
     phone: data.phone,
     ip: ip === "anon" ? "" : ip,
     ua: req.headers.get("user-agent") || "",
-  });
+  }, await getSecret("xPixelToken"));
 
   // إشعار بالبريد (إذا فُعّل من «الاستفسارات» وأضيف RESEND_API_KEY)
   await notify(raw, `استفسار جديد ${item.id} من ${data.name}`, [

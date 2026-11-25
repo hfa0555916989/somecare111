@@ -28,27 +28,22 @@ test("nothing is built without an identifier", () => {
 });
 
 test("sending is skipped without a token or event id", async () => {
-  delete process.env.X_PIXEL_TOKEN;
-  assert.deepEqual(await sendXConversion({ xPixel: "rjzxq", xEventId: "tw-rjzxq-a" }, { twclid: "x" }), { skipped: true });
-  process.env.X_PIXEL_TOKEN = "t";
-  assert.deepEqual(await sendXConversion({ xPixel: "rjzxq", xEventId: "" }, { twclid: "x" }), { skipped: true });
-  delete process.env.X_PIXEL_TOKEN;
+  assert.deepEqual(await sendXConversion({ xPixel: "rjzxq", xEventId: "tw-rjzxq-a" }, { twclid: "x" }, ""), { skipped: true });
+  assert.deepEqual(await sendXConversion({ xPixel: "rjzxq", xEventId: "" }, { twclid: "x" }, "t"), { skipped: true });
 });
 
 test("the request goes to the pixel endpoint with the X-Pixel-Token header", async () => {
-  process.env.X_PIXEL_TOKEN = "secret";
   const orig = globalThis.fetch;
   let call;
   globalThis.fetch = async (url, init) => ((call = { url, init }), new Response("{}", { status: 200 }));
   try {
-    const r = await sendXConversion({ xPixel: "rjzxq", xEventId: "tw-rjzxq-a" }, { conversionId: "HD-1", twclid: "x" });
+    const r = await sendXConversion({ xPixel: "rjzxq", xEventId: "tw-rjzxq-a" }, { conversionId: "HD-1", twclid: "x" }, "secret");
     assert.equal(r.ok, true);
     assert.equal(call.url, "https://ads-api.x.com/12/measurement/conversions/rjzxq");
     assert.equal(call.init.headers["X-Pixel-Token"], "secret");
     assert.equal(JSON.parse(call.init.body).conversions[0].conversion_id, "HD-1");
   } finally {
     globalThis.fetch = orig;
-    delete process.env.X_PIXEL_TOKEN;
   }
 });
 
