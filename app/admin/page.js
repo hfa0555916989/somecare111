@@ -1270,6 +1270,14 @@ function Docs({ k, saved = {}, setK, about, site, packages, addons, siteFeatures
   const [msg, setMsg] = useState("");
   const [q, setQ] = useState("");
   const importRef = useRef(null);
+  // القوالب الجاهزة: من الخادم مع بيانات العميل الخاصة، وإلا القوالب كما هي
+  const [templates, setTemplates] = useState(DOC_TEMPLATES);
+  useEffect(() => {
+    fetch("/api/docs/templates")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => j?.items?.length && setTemplates(j.items))
+      .catch(() => {});
+  }, []);
 
   async function load() {
     const r = await fetch("/api/docs");
@@ -1424,19 +1432,19 @@ function Docs({ k, saved = {}, setK, about, site, packages, addons, siteFeatures
             <button type="button" className="gold" onClick={() => setEditing(blankDoc("contract", k))}>+ عقد جديد</button>
             <button type="button" className="gold" onClick={() => setEditing(blankDoc("invoice", k))}>+ فاتورة جديدة</button>
           </div>
-          {DOC_TEMPLATES.length > 0 && (
+          {templates.length > 0 && (
             <div className="adm-card">
               <b>قوالب جاهزة</b>
-              <span className="adm-hint">يفتح القالب كمسودة جديدة. أكمل اسم العميل وجواله ثم احفظ، والحساب البنكي يُضاف تلقائياً من الإعدادات.</span>
+              <span className="adm-hint">يفتح القالب كمسودة جديدة ببيانات العميل جاهزة. راجعه ثم احفظ، والحساب البنكي يُضاف تلقائياً من الإعدادات.</span>
               <div className="acc-chips small">
-                {DOC_TEMPLATES.map((t) => (
+                {templates.map((t) => (
                   <button
                     key={t.key}
                     type="button"
                     className="mini"
                     onClick={() => {
                       setEditing({ ...blankDoc(t.doc.type, k), ...structuredClone(t.doc), number: "", date: today(), status: "draft" });
-                      setMsg("راجع بيانات العميل والأسعار ثم احفظ.");
+                      setMsg("راجع الوثيقة ثم احفظ.");
                     }}
                   >
                     {t.label}
