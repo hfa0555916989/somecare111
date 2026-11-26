@@ -36,3 +36,18 @@ test("previous work lists the live sites with screenshots and no invented metric
     assert.equal(existsSync(new URL("../public" + item.image.replace(/\.webp$/, ".jpg"), import.meta.url)), false);
   }
 });
+
+test("harajna, hassan sciences and hassan tasks list their features", () => {
+  for (const id of ["hrajna", "hassanide", "hassantask"]) {
+    const item = PREVIOUS_WORK.find((w) => w.id === id);
+    assert.ok(item.featuresAr.length >= 4 && item.featuresAr.length === item.featuresEn.length, id);
+    assert.doesNotMatch(item.featuresAr.join() + item.featuresEn.join(), /\d{2,}|%|شهادة|testimonial/);
+  }
+  const view = readFileSync(new URL("../app/PreviousWork.js", import.meta.url), "utf8");
+  assert.match(view, /className="work-points"/);
+});
+
+test("the property management package shows no borrowed screenshots", () => {
+  const parts = readFileSync(new URL("../app/CodeParts.js", import.meta.url), "utf8");
+  assert.match(parts, /أملاك\|property management/);
+});

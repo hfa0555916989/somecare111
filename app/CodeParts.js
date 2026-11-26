@@ -85,13 +85,15 @@ export function Frame({ url, children }) {
 }
 
 // الصورة أعلى بطاقة الباقة في الرئيسية: صورة الباقة من لوحة التحكم إن وُجدت،
-// وإلا واجهة المتجر التجريبي للمتجر، ومواقع منشورة داخل إطار جوال لبقية الباقات
+// وإلا واجهة المتجر التجريبي للمتجر، ومواقع منشورة داخل إطار جوال لبقية الباقات، ونظام الأملاك بلا صورة
 export function PackageVisual({ p, lang }) {
   if (p.image) {
     return (
       <div className="pk-vis"><img className="pk-cover" src={p.image} alt="" loading="lazy" /></div>
     );
   }
+  // نظام إدارة الأملاك بلا صورة: صور المواقع المنشورة لا تعبّر عنه
+  if (/أملاك|property management/i.test(p.name || "")) return null;
   const en = lang === "en";
   const phone = (w, cls = "") => (
     <span key={w.id} className={"phone" + cls}>

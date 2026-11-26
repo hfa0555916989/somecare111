@@ -174,6 +174,7 @@ main>.sec:last-child{padding-bottom:var(--gap-sec)}
 .pk-vis .phone.sm{width:150px;border-radius:26px 26px 0 0}
 .pk-vis .phone+.phone{margin-top:62px}
 .pk-shot>.ic-ring{position:relative;z-index:1;align-self:flex-start;margin:-24px 24px 0}
+.pk-shot>.ic-ring:first-child{margin-top:24px}
 .pk-body{flex:1;display:flex;flex-direction:column;gap:14px;padding:16px 26px 26px}
 .pk-foot{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px 16px;margin-top:auto;padding-top:18px;border-top:1px solid var(--line)}
 .pk-foot .pk-price{align-self:auto}
@@ -318,6 +319,9 @@ main>.sec:last-child{padding-bottom:var(--gap-sec)}
 .work-body h3{margin:0;font-size:1.12rem;overflow-wrap:anywhere}
 .work-body p{margin:0;color:var(--muted);line-height:1.7;overflow-wrap:anywhere}
 .work-body .more-link{margin-top:auto;overflow-wrap:anywhere}
+.work-points{margin:0;padding:0 18px 0 0;display:flex;flex-direction:column;gap:4px;color:var(--muted);font-size:.86rem;line-height:1.6}
+[dir=ltr] .work-points{padding:0 0 0 18px}
+.work-wall .work-points{font-size:.74rem;gap:2px}
 @media(max-width:720px){
   .work-grid{grid-template-columns:minmax(0,1fr);max-width:420px;margin-inline:auto}
   .work-phone{width:min(100%,300px)}

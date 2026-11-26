@@ -30,6 +30,13 @@ export default function PreviousWork({ lang, showHeading = true }) {
                 <div className="work-body">
                   <h3>{name}</h3>
                   <p>{desc}</p>
+                  {(lang === "en" ? item.featuresEn : item.featuresAr)?.length > 0 && (
+                    <ul className="work-points">
+                      {(lang === "en" ? item.featuresEn : item.featuresAr).map((f) => (
+                        <li key={f}>{f}</li>
+                      ))}
+                    </ul>
+                  )}
                   <a className="more-link" href={item.url} target="_blank" rel="noopener noreferrer">
                     {copy.visit} <span dir="ltr">{hostOf(item.url)}</span>
                   </a>
@@ -56,6 +63,13 @@ export function WorkWall({ lang }) {
             </span>
             <b>{name}</b>
             <small dir="ltr">{hostOf(item.url)}</small>
+            {(lang === "en" ? item.featuresEn : item.featuresAr)?.length > 0 && (
+              <ul className="work-points">
+                {(lang === "en" ? item.featuresEn : item.featuresAr).map((f) => (
+                  <li key={f}>{f}</li>
+                ))}
+              </ul>
+            )}
           </a>
         );
       })}
