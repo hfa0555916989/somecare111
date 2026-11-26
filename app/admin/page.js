@@ -16,6 +16,7 @@ import Ideas from "./Ideas";
 import Guide from "./Guide";
 import Stores from "./Stores";
 import Subscriptions from "./Subscriptions";
+import { DOC_TEMPLATES } from "@/lib/doc-templates";
 
 // مسودة التعديلات على هذا الجهاز (تُحفظ تلقائياً حتى لا تضيع قبل الضغط على «حفظ التغييرات»)
 const DRAFT_KEY = "admin-draft";
@@ -1423,6 +1424,27 @@ function Docs({ k, saved = {}, setK, about, site, packages, addons, siteFeatures
             <button type="button" className="gold" onClick={() => setEditing(blankDoc("contract", k))}>+ عقد جديد</button>
             <button type="button" className="gold" onClick={() => setEditing(blankDoc("invoice", k))}>+ فاتورة جديدة</button>
           </div>
+          {DOC_TEMPLATES.length > 0 && (
+            <div className="adm-card">
+              <b>قوالب جاهزة</b>
+              <span className="adm-hint">يفتح القالب كمسودة جديدة. أكمل اسم العميل وجواله ثم احفظ، والحساب البنكي يُضاف تلقائياً من الإعدادات.</span>
+              <div className="acc-chips small">
+                {DOC_TEMPLATES.map((t) => (
+                  <button
+                    key={t.key}
+                    type="button"
+                    className="mini"
+                    onClick={() => {
+                      setEditing({ ...blankDoc(t.doc.type, k), ...structuredClone(t.doc), number: "", date: today(), status: "draft" });
+                      setMsg("راجع بيانات العميل والأسعار ثم احفظ.");
+                    }}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="adm-card">
             <b>استيراد من PDF بالذكاء الاصطناعي</b>
             <span className="acc-lbl">حوّل الملف إلى:</span>
